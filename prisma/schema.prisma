@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs https//pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Proprietario {
+  id_pessoa             String   @id
+  id_pessoa_demeter     String?
+  nm_pessoa             String
+  ds_apelido            String?
+  sn_pronaf             Int?
+  sn_ativo              Int?
+  tp_sexo               String?
+  nr_cpf_cnpj           String?
+  dt_nascimento         String?
+  nr_identidade         String?
+  ds_orgao_expedidor    String?
+  fk_uf_emissor         Int?
+  tp_desativacao        String?
+  dt_desativacao        String?
+  nm_nacionalidade      String?
+  fk_est_civil          Int?
+  nm_mae                String?
+  nm_pai                String?
+  nm_profissao          String?
+  nr_ins_produtor_rural String?
+  dap                   String?
+  tp_pessoa             String?
+  id_und_empresa        String?
+  sn_principal_provedor Int?
+  ds_email              String?
+  dt_update_record      String?
+  id_sincronismo        String?
+  sn_ctd                Boolean?
+  caf                   String?
+}
+
+model Propriedade {
+  id_pl_propriedade       String   @id
+  nome_propriedade        String
+  logradouro              String?
+  bairro                  String?
+  complemento             String?
+  cep                     String?
+  numero                  String?
+  area_total              String
+  geo_ponto               String?
+  geo_ponto_texto         String?
+  area_condominio         Boolean?
+  origem_ocupacao         String?
+  atividade_principal     String?
+  numero_registro_imovel  String?
+  nirf                    String?
+  car                     String?
+  ccir                    String?
+  numero_instalacao_cemig String?
+  distancia_sede          String?
+  tempo_ocupacao_imovel   Int?
+  id_emater               String?
+  id_distrito             String?
+  id_municipio            Int?
+  id_und_empresa          String?
+  id_sincronismo          String?
+  id_tipo_logradouro      Int?
+  dt_update_record        DateTime
+  ativo                   Boolean
+  ds_roteiro_acesso       String?
+  sn_ctd                  Boolean?
+}
