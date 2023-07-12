@@ -1,8 +1,10 @@
 type Query {
+  produtor(id: Int): Produtor
   produtores: [Produtor]
   propriedades: [Propriedade]
   produtoresFull: [ProdutorPropriedades]
   perfil: [Perfil]
+  perfilPropriedade(tipo_perfil: String, propriedade_id: Int): Perfil
 }
 
 type Propriedade {
