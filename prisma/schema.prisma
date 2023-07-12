@@ -10,67 +10,152 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Proprietario {
-  id_pessoa             String   @id
-  id_pessoa_demeter     String?
-  nm_pessoa             String
-  ds_apelido            String?
-  sn_pronaf             Int?
-  sn_ativo              Int?
-  tp_sexo               String?
-  nr_cpf_cnpj           String?
-  dt_nascimento         String?
-  nr_identidade         String?
-  ds_orgao_expedidor    String?
-  fk_uf_emissor         Int?
-  tp_desativacao        String?
-  dt_desativacao        String?
-  nm_nacionalidade      String?
-  fk_est_civil          Int?
-  nm_mae                String?
-  nm_pai                String?
-  nm_profissao          String?
-  nr_ins_produtor_rural String?
-  dap                   String?
-  tp_pessoa             String?
-  id_und_empresa        String?
-  sn_principal_provedor Int?
-  ds_email              String?
-  dt_update_record      String?
-  id_sincronismo        String?
-  sn_ctd                Boolean?
-  caf                   String?
+model Produtor {
+  id_pessoa             String                 @id @db.VarChar(36)
+  id_pessoa_demeter     BigInt                 @unique @default(autoincrement()) @db.BigInt
+  nm_pessoa             String?                @db.VarChar(100)
+  ds_apelido            String?                @db.VarChar(80)
+  sn_pronaf             Int?                   @db.SmallInt
+  sn_ativo              Int                    @default(1) @db.SmallInt
+  tp_sexo               String?                @db.Char(1)
+  nr_cpf_cnpj           String?                @db.VarChar(14)
+  dt_nascimento         DateTime?              @db.Date
+  nr_identidade         String?                @db.VarChar(15)
+  ds_orgao_expedidor    String?                @db.VarChar(10)
+  fk_uf_emissor         Int?                   @db.Integer
+  tp_desativacao        Int?                   @db.SmallInt
+  dt_desativacao        DateTime?              @db.Timestamp(0)
+  nm_nacionalidade      String?                @db.VarChar(100)
+  fk_est_civil          Int?                   @db.Integer
+  nm_mae                String?                @db.VarChar(100)
+  nm_pai                String?                @db.VarChar(100)
+  nm_profissao          String?                @db.VarChar(100)
+  nr_ins_produtor_rural String?                @db.VarChar(40)
+  dap                   String?                @db.VarChar(40)
+  tp_pessoa             String?                @db.Char(1)
+  id_und_empresa        String?                @db.Char(5)
+  sn_principal_provedor Int?                   @db.SmallInt
+  ds_email              String?                @db.VarChar(80)
+  dt_update_record      DateTime               @db.Timestamp(0)
+  id_sincronismo        String?                @db.VarChar(36)
+  sn_ctd                Int?                   @db.Integer
+  caf                   String?                @db.VarChar(24)
+  produtor_propriedades ProdutorPropriedades[]
+
+  @@map("ger_pessoa")
 }
 
 model Propriedade {
-  id_pl_propriedade       String   @id
+  id_pl_propriedade       BigInt                @id @default(autoincrement())
   nome_propriedade        String
-  logradouro              String?
-  bairro                  String?
-  complemento             String?
-  cep                     String?
-  numero                  String?
-  area_total              String
-  geo_ponto               String?
-  geo_ponto_texto         String?
-  area_condominio         Boolean?
-  origem_ocupacao         String?
-  atividade_principal     String?
-  numero_registro_imovel  String?
-  nirf                    String?
-  car                     String?
-  ccir                    String?
-  numero_instalacao_cemig String?
-  distancia_sede          String?
-  tempo_ocupacao_imovel   Int?
-  id_emater               String?
-  id_distrito             String?
-  id_municipio            Int?
-  id_und_empresa          String?
-  id_sincronismo          String?
-  id_tipo_logradouro      Int?
-  dt_update_record        DateTime
-  ativo                   Boolean
-  ds_roteiro_acesso       String?
-  sn_ctd                  Boolean?
+  logradouro              String?               @db.VarChar(80)
+  bairro                  String?               @db.VarChar(80)
+  complemento             String?               @db.VarChar(80)
+  cep                     String?               @db.VarChar(8)
+  numero                  String?               @db.VarChar(15)
+  area_total              Float?
+  geo_ponto               String? // The data type USER-DEFINED is not supported in Prisma, you can handle it in your application logic
+  geo_ponto_texto         String?               @db.VarChar(255)
+  area_condominio         Boolean?              @default(false) @db.Boolean
+  origem_ocupacao         String?               @db.VarChar(100)
+  atividade_principal     String?               @db.VarChar(100)
+  numero_registro_imovel  String?               @db.VarChar(50)
+  nirf                    String?               @db.VarChar(100)
+  car                     String?               @db.VarChar(100)
+  ccir                    String?               @db.VarChar(100)
+  numero_instalacao_cemig String?               @db.VarChar(15)
+  distancia_sede          Float?
+  tempo_ocupacao_imovel   Float?
+  id_emater               String?               @db.VarChar(36)
+  id_distrito             Int?                  @db.Integer
+  id_municipio            Int?                  @db.Integer
+  id_und_empresa          String?               @db.Char(5)
+  id_sincronismo          String?               @db.VarChar(36)
+  id_tipo_logradouro      Int?                  @db.Integer
+  dt_update_record        DateTime              @default(now()) @db.Timestamp(0)
+  ativo                   Boolean?              @db.Boolean
+  ds_roteiro_acesso       String?               @db.VarChar(500)
+  sn_ctd                  Int?                  @db.Integer
+  produtor_propriedade    ProdutorPropriedades?
+  atividade               Atividade?
+
+  @@map("pl_propriedade")
+}
+
+model ProdutorPropriedades {
+  id             BigInt      @id @default(autoincrement())
+  produtor       Produtor    @relation(fields: [produtor_id], references: [id_pessoa_demeter])
+  produtor_id    BigInt
+  propriedade    Propriedade @relation(fields: [propriedade_id], references: [id_pl_propriedade])
+  propriedade_id BigInt      @unique
+
+  //@@id(fields: [produtor_id, propriedade_id])
+}
+
+model Perfil {
+  id                                     String         @id @default(cuid())
+  tipo_perfil                            String
+  id_tecnico                             String
+  id_cliente                             String
+  data_preenchimento                     DateTime
+  data_atualizacao                       DateTime
+  participa_organizacao                  Boolean
+  grau_interesse_pnae                    String
+  nivel_tecnologico_cultivo              String?
+  sistema_producao                       String?
+  condicao_posse                         String?
+  dap_caf_vigente                        Boolean?
+  credito_rural                          Boolean?
+  fonte_captacao_agua                    String?
+  forma_esgotamento_sanitario            String?
+  atividades_usam_recursos_hidricos      String?
+  atividades_com_regularizacao_ambiental String?
+  possui_cadastro_car                    Boolean?
+  aderiu_pra                             Boolean?
+  id_dados_producao_in_natura            String?
+  ciente_iniciativas_regularizacao_pra   Boolean?
+  realiza_escalonamento_producao         Boolean?
+  procedimento_pos_colheita              String?
+  id_dados_producao_agro_industria       String?        @unique()
+  dados_producao                         DadosProducao? @relation(fields: [id_dados_producao_agro_industria], references: [id])
+  atividade                              Atividade?
+
+  tipo_gestao_unidade                          String?
+  pessoas_processamento_alimentos              Int?
+  tipo_estabelecimento                         String?
+  tipo_pessoa_juridica                         String?
+  agroindustria_precisa_adaptacao_reforma      Boolean?
+  possui_registro_orgao_fiscalizacao_sanitaria Boolean?
+  orgao_fiscalizacao_sanitaria                 String?
+  possui_agroindustria_propria                 Boolean?
+
+  @@map("at_prf_see")
+}
+
+model DadosProducao {
+  id                                       String  @id @default(cuid())
+  tipo_regularizacao_uso_recursos_hidricos String
+  tipo_regularizacao_ambiental             String
+  controla_custos_producao                 Boolean
+  local_comercializacao                    String
+  valor_total_obtido_pnae                  String
+  valor_total_obtido_outros                String
+  forma_entrega_produtos                   String
+  dificuldade_fornecimento                 String
+  informacoes_adicionais                   String?
+  perfil                                   Perfil?
+
+  @@map("at_prf_dados_producao")
+}
+
+model Atividade {
+  id                     String      @id @default(cuid())
+  id_perfil_see          String      @unique
+  id_propriedade         BigInt      @unique
+  atividade              String
+  producao_dedicada_pnae Boolean?
+  perfil                 Perfil      @relation(fields: [id_perfil_see], references: [id])
+  propriedade            Propriedade @relation(fields: [id_propriedade], references: [id_pl_propriedade])
+
+  @@map("at_prf_see_propriedade")
 }

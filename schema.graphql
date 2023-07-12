@@ -1,10 +1,12 @@
 type Query {
-  proprietarios: [Proprietario]
+  produtores: [Produtor]
   propriedades: [Propriedade]
+  produtoresFull: [ProdutorPropriedades]
+  perfil: [Perfil]
 }
 
 type Propriedade {
-  id_pl_propriedade: String
+  id_pl_propriedade: Int
   nome_propriedade: String
   logradouro: String
   bairro: String
@@ -34,11 +36,14 @@ type Propriedade {
   ativo: Boolean
   ds_roteiro_acesso: String
   sn_ctd: String
+  atividade: Atividade
+  produtor_propriedade: ProdutorPropriedades
+  produtor: Produtor
 }
 
-type Proprietario {
+type Produtor {
   id_pessoa: String
-  id_pessoa_demeter: String
+  id_pessoa_demeter: Int
   nm_pessoa: String
   ds_apelido: String
   sn_pronaf: String
@@ -66,6 +71,75 @@ type Proprietario {
   id_sincronismo: String
   sn_ctd: String
   caf: String
+  propriedades: [Propriedade]
+}
+
+type ProdutorPropriedades {
+  propriedade_id: Int
+  produtor_id: Int
+  produtor: Produtor
+  Propriedade: [Propriedade]
+}
+
+type Perfil {
+  id: ID!
+  data_preenchimento: String
+  data_atualizacao: String
+  tipo_perfil: String
+  id_cliente: String
+  participa_organizacao: Boolean
+  id_dados_producao_in_natura: String
+  nivel_tecnologico_cultivo: String
+  sistema_producao: String
+  condicao_posse: String
+  dap_caf_vigente: Boolean
+  credito_rural: Boolean
+  fonte_captacao_agua: String
+  forma_esgotamento_sanitario: String
+  possui_cadastro_car: Boolean
+  aderiu_pra: Boolean
+  ciente_iniciativas_regularizacao_pra: Boolean
+  realiza_escalonamento_producao: Boolean
+  procedimento_pos_colheita: String
+  id_dados_producao_agro_industria: String
+  tipo_gestao_unidade: String
+  pessoas_processamento_alimentos: Int
+  tipo_estabelecimento: String
+  tipo_pessoa_juridica: String
+  agroindustria_precisa_adaptacao_reforma: Boolean
+  possui_registro_orgao_fiscalizacao_sanitaria: Boolean
+  orgao_fiscalizacao_sanitaria: String
+  id_tecnico: String
+  atividades_usam_recursos_hidricos: String
+  atividades_com_regularizacao_ambiental: String
+  possui_agroindustria_propria: Boolean
+  grau_interesse_pnae: String
+  dados_producao: DadosProducao
+  atividade: Atividade
+}
+
+type DadosProducao {
+  id: ID!
+  controla_custos_producao: Boolean
+  local_comercializacao: String
+  valor_total_obtido_pnae: String
+  forma_entrega_produtos: String
+  dificuldade_fornecimento: String
+  informacoes_adicionais: String
+  tipo_regularizacao_uso_recursos_hidricos: String
+  tipo_regularizacao_ambiental: String
+  valor_total_obtido_outros: String
+  perfil: Perfil
+}
+
+type Atividade {
+  id: ID!
+  id_perfil_see: String!
+  id_propriedade: Int!
+  atividade: String
+  producao_dedicada_pnae: String
+  perfil: Perfil
+  propriedade: Propriedade
 }
 
 # FROM at_prf_propriedade_see => {"id":"41","id_perfil_see":"69","id_propriedade":"14845","atividade":"AMBAS","producao_dedicada_pnae":String},
