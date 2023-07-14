@@ -2,12 +2,15 @@ version: '3.9'
 services:
   graphql_server:
     build: .
-    ports: 4000:4000
+    volumes:
+      - .:/home/app
+    ports:
+      - 4000:4000
     depends_on:
       - postgres
   postgres:
     image: postgres:15
     volumes:
-      - ./data:/data/
+      - ${DB_FOLDER}:/var/lib/postgresql/data
     ports:
       - 5432:5432

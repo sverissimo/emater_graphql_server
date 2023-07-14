@@ -23,7 +23,6 @@ const server = new ApolloServer<MyContext>({
 });
 
 await server.start();
-
 app.use(
   "/",
   cors<cors.CorsRequest>(),
@@ -34,8 +33,6 @@ app.use(
 );
 
 const PORT = 4000;
-await new Promise<void>((resolve) =>
-  httpServer.listen({ port: PORT }, resolve)
-);
+await new Promise<void>((resolve) => httpServer.listen({ port: PORT }, resolve));
 
 console.log(`🚀 Server ready at http://localhost:${PORT}/`);
