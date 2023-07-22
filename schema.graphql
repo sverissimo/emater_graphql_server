@@ -1,5 +1,5 @@
 type Query {
-  produtor(id: Int): Produtor
+  produtor(id: Int, cpf: String): Produtor
   produtores: [Produtor]
   propriedades: [Propriedade]
   produtoresFull: [ProdutorPropriedades]

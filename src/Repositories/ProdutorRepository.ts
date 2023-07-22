@@ -2,17 +2,18 @@ import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "./Repository.js";
 
 export class ProdutorRepository extends PrismaRepository implements Repository {
-  async findOne(id: number) {
-    if (!id) {
+  async findOne({ id, cpf }: { id: number; cpf: string }) {
+    if (!id && !cpf) {
       this.throwError("NO_ID_PROVIDED");
     }
 
     const produtor = await this.prisma.produtor.findFirst({
-      where: { id_pessoa_demeter: id },
+      where: { OR: [{ id_pessoa_demeter: id }, { nr_cpf_cnpj: cpf }] },
       include: {
         produtor_propriedades: true,
       },
     });
+
     if (!produtor) {
       this.throwError("NOT_FOUND");
     }

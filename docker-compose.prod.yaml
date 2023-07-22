@@ -2,7 +2,9 @@ version: '3.9'
 services:
   graphql_server:
     container_name: graphql_server
-    build: .
+    build:
+      context: ${HOME_FOLDER}/emater_graphql_server
+      dockerfile: Dockerfile.prod
     image: graphql_server
     entrypoint: "dockerize -wait tcp://postgres:5432 -timeout 20s /usr/local/bin/docker-entrypoint.sh"
     command: "sh -c 'npm run start:dev || sleep infinity'"
@@ -12,8 +14,6 @@ services:
       - postgres
   postgres:
     image: postgres:15
-    env_file:
-      - .env
     volumes:
       - ${DB_FOLDER}:/var/lib/postgresql/data
     ports:

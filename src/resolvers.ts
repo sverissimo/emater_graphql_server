@@ -11,7 +11,8 @@ const perfilRepository = new PerfilRepository(prismaClient);
 
 export const resolvers = {
   Query: {
-    produtor: (_root: any, { id }: { id: number }) => produtorRepository.findOne(id),
+    produtor: (_root: any, { id, cpf }: { id: number; cpf: string }) =>
+      produtorRepository.findOne({ id, cpf }),
     produtores: () => produtorRepository.findAll(),
     propriedades: () => propriedadeRepository.findAll(),
     perfil: () => perfilRepository.findAll(),
