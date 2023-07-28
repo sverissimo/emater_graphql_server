@@ -2,10 +2,10 @@ import { Perfil } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "./Repository.js";
 
-export type findPerfilInput = { tipo_perfil: string; propriedade_id: number };
+export type findPerfilInput = { tipo_perfil: string; propriedade_id: number; id_cliente: number };
 
 export class PerfilRepository extends PrismaRepository implements Repository {
-  async findOne(id: string) {
+  async findOne(id: number) {
     if (!id) {
       this.throwError("NO_ID_PROVIDED");
     }
@@ -13,7 +13,26 @@ export class PerfilRepository extends PrismaRepository implements Repository {
     return await this.prisma.perfil.findUnique({ where: { id } });
   }
 
-  async findPerfilPropriedade(params: findPerfilInput) {
+  async findByProdutor(params: Partial<findPerfilInput>) {
+    const { tipo_perfil, id_cliente } = params;
+    const perfilData = await this.prisma.perfil.findMany({
+      include: {
+        atividade: true,
+        dados_producao: true,
+      },
+      where: {
+        id_cliente,
+        tipo_perfil,
+      },
+    });
+    console.log(
+      "🚀 ~ file: PerfilRepository.ts:29 ~ PerfilRepository ~ findByProdutor ~ perfilData:",
+      perfilData
+    );
+    return perfilData;
+  }
+
+  async findPerfilPropriedade(params: Partial<findPerfilInput>) {
     const { tipo_perfil, propriedade_id: propriedadeId } = params;
 
     const perfilData = await this.prisma.perfil.findFirst({

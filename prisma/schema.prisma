@@ -41,6 +41,7 @@ model Produtor {
   sn_ctd                Int?                   @db.Integer
   caf                   String?                @db.VarChar(24)
   produtor_propriedades ProdutorPropriedades[]
+  perfis                Perfil[]
 
   @@map("ger_pessoa")
 }
@@ -93,33 +94,27 @@ model ProdutorPropriedades {
 }
 
 model Perfil {
-  id                                     String         @id @default(cuid())
-  tipo_perfil                            String
-  id_tecnico                             String
-  id_cliente                             String
-  data_preenchimento                     DateTime
-  data_atualizacao                       DateTime
-  participa_organizacao                  Boolean
-  grau_interesse_pnae                    String
-  nivel_tecnologico_cultivo              String?
-  sistema_producao                       String?
-  condicao_posse                         String?
-  dap_caf_vigente                        Boolean?
-  credito_rural                          Boolean?
-  fonte_captacao_agua                    String?
-  forma_esgotamento_sanitario            String?
-  atividades_usam_recursos_hidricos      String?
-  atividades_com_regularizacao_ambiental String?
-  possui_cadastro_car                    Boolean?
-  aderiu_pra                             Boolean?
-  id_dados_producao_in_natura            String?
-  ciente_iniciativas_regularizacao_pra   Boolean?
-  realiza_escalonamento_producao         Boolean?
-  procedimento_pos_colheita              String?
-  id_dados_producao_agro_industria       String?        @unique()
-  dados_producao                         DadosProducao? @relation(fields: [id_dados_producao_agro_industria], references: [id])
-  atividade                              Atividade?
-
+  id                                           Int            @id @default(autoincrement())
+  tipo_perfil                                  String
+  id_tecnico                                   Int
+  id_cliente                                   BigInt
+  produtor                                     Produtor       @relation(fields: [id_cliente], references: [id_pessoa_demeter])
+  data_preenchimento                           DateTime
+  data_atualizacao                             DateTime
+  participa_organizacao                        Boolean
+  id_dados_producao_in_natura                  Int?
+  nivel_tecnologico_cultivo                    Int?
+  sistema_producao                             Int?
+  condicao_posse                               Int?
+  dap_caf_vigente                              Boolean?
+  credito_rural                                Boolean?
+  fonte_captacao_agua                          Int?
+  forma_esgotamento_sanitario                  Int?
+  possui_cadastro_car                          Boolean?
+  aderiu_pra                                   Boolean?
+  ciente_iniciativas_regularizacao_pra         Boolean?
+  realiza_escalonamento_producao               Boolean?
+  procedimento_pos_colheita                    Int?
   tipo_gestao_unidade                          String?
   pessoas_processamento_alimentos              Int?
   tipo_estabelecimento                         String?
@@ -127,30 +122,36 @@ model Perfil {
   agroindustria_precisa_adaptacao_reforma      Boolean?
   possui_registro_orgao_fiscalizacao_sanitaria Boolean?
   orgao_fiscalizacao_sanitaria                 String?
+  atividades_usam_recursos_hidricos            Int?
+  atividades_com_regularizacao_ambiental       Int?
   possui_agroindustria_propria                 Boolean?
+  grau_interesse_pnae                          String
+  id_dados_producao_agro_industria             Int?           @unique()
+  dados_producao                               DadosProducao? @relation(fields: [id_dados_producao_agro_industria], references: [id])
+  atividade                                    Atividade?
 
   @@map("at_prf_see")
 }
 
 model DadosProducao {
-  id                                       String  @id @default(cuid())
-  tipo_regularizacao_uso_recursos_hidricos String
-  tipo_regularizacao_ambiental             String
+  id                                       Int     @id //@default(autoincrement())
   controla_custos_producao                 Boolean
-  local_comercializacao                    String
-  valor_total_obtido_pnae                  String
-  valor_total_obtido_outros                String
-  forma_entrega_produtos                   String
-  dificuldade_fornecimento                 String
+  dificuldade_fornecimento                 Int
+  forma_entrega_produtos                   Int
   informacoes_adicionais                   String?
+  local_comercializacao                    Int
   perfil                                   Perfil?
+  tipo_regularizacao_ambiental             String
+  tipo_regularizacao_uso_recursos_hidricos String
+  valor_total_obtido_outros                Int
+  valor_total_obtido_pnae                  Int
 
   @@map("at_prf_dados_producao")
 }
 
 model Atividade {
-  id                     String      @id @default(cuid())
-  id_perfil_see          String      @unique
+  id                     Int         @id
+  id_perfil_see          Int         @unique
   id_propriedade         BigInt      @unique
   atividade              String
   producao_dedicada_pnae Boolean?

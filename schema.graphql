@@ -5,6 +5,7 @@ type Query {
   produtoresFull: [ProdutorPropriedades]
   perfil: [Perfil]
   perfilPropriedade(tipo_perfil: String, propriedade_id: Int): Perfil
+  dadosProducao: [DadosProducao]
 }
 
 type Propriedade {
@@ -74,6 +75,7 @@ type Produtor {
   sn_ctd: String
   caf: String
   propriedades: [Propriedade]
+  perfis: [Perfil]
 }
 
 type ProdutorPropriedades {
@@ -84,11 +86,12 @@ type ProdutorPropriedades {
 }
 
 type Perfil {
-  id: ID!
+  id: Int!
   data_preenchimento: String
   data_atualizacao: String
   tipo_perfil: String
-  id_cliente: String
+  id_cliente: Int
+  produtor: Produtor
   participa_organizacao: Boolean
   id_dados_producao_in_natura: String
   nivel_tecnologico_cultivo: String
@@ -103,7 +106,7 @@ type Perfil {
   ciente_iniciativas_regularizacao_pra: Boolean
   realiza_escalonamento_producao: Boolean
   procedimento_pos_colheita: String
-  id_dados_producao_agro_industria: String
+  id_dados_producao_agro_industria: Int
   tipo_gestao_unidade: String
   pessoas_processamento_alimentos: Int
   tipo_estabelecimento: String
@@ -121,7 +124,7 @@ type Perfil {
 }
 
 type DadosProducao {
-  id: ID!
+  id: Int!
   controla_custos_producao: Boolean
   local_comercializacao: String
   valor_total_obtido_pnae: String
@@ -135,9 +138,9 @@ type DadosProducao {
 }
 
 type Atividade {
-  id: ID!
-  id_perfil_see: String!
-  id_propriedade: Int!
+  id: Int!
+  id_perfil_see: Int!
+  id_propriedade: Int
   atividade: String
   producao_dedicada_pnae: String
   perfil: Perfil

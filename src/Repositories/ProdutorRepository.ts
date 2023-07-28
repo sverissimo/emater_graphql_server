@@ -11,6 +11,7 @@ export class ProdutorRepository extends PrismaRepository implements Repository {
       where: { OR: [{ id_pessoa_demeter: id }, { nr_cpf_cnpj: cpf }] },
       include: {
         produtor_propriedades: true,
+        perfis: true,
       },
     });
 

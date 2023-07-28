@@ -1,0 +1,11 @@
+# Use the official pgAdmin image as the base image
+FROM dpage/pgadmin4:latest
+
+# Set environment variables for pgAdmin configuration
+ENV PGADMIN_DEFAULT_EMAIL=admin
+ENV PGADMIN_DEFAULT_PASSWORD=admin
+ENV PGADMIN_LISTEN_PORT=5050
+ENV PGADMIN_SERVER_JSON_FILE=/pgadmin4/servers.json
+
+# Expose the port on which pgAdmin will be accessible
+EXPOSE 5050
