@@ -4,12 +4,12 @@ services:
     container_name: graphql_server
     build:
       context: ${HOME_FOLDER}/emater_graphql_server
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
     image: graphql_server
     entrypoint: "dockerize -wait tcp://postgres:5432 -timeout 20s /usr/local/bin/docker-entrypoint.sh"
     command: "sh -c 'npm run start:dev || sleep infinity'"
     volumes:
-      - ${HOME_FOLDER}/home/node/app
+      - ${HOME_FOLDER}/emater_graphql_server:/home/node/app
     ports:
       - 4000:4000
     depends_on:

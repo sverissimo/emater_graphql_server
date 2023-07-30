@@ -1,7 +1,7 @@
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "./Repository.js";
 
-export class ProdutorRepository extends PrismaRepository implements Repository {
+export class ProdutorRepository extends PrismaRepository implements Repository<any> {
   async findOne({ id, cpf }: { id: number; cpf: string }) {
     if (!id && !cpf) {
       this.throwError("NO_ID_PROVIDED");

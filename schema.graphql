@@ -6,6 +6,12 @@ type Query {
   perfil: [Perfil]
   perfilPropriedade(tipo_perfil: String, propriedade_id: Int): Perfil
   dadosProducao: [DadosProducao]
+  perfisPorProdutor(produtorId: Int): [Perfil]
+}
+
+type Mutation {
+  createPerfil(input: CreatePerfilInput): Perfil
+  updatePerfil(input: UpdatePerfilInput): Perfil
 }
 
 type Propriedade {
@@ -147,4 +153,20 @@ type Atividade {
   propriedade: Propriedade
 }
 
-# FROM at_prf_propriedade_see => {"id":"41","id_perfil_see":"69","id_propriedade":"14845","atividade":"AMBAS","producao_dedicada_pnae":String},
+input CreatePerfilInput {
+  id_tecnico: Int
+  participa_organizacao: Boolean
+  id_cliente: Int
+  tipo_perfil: String
+  grau_interesse_pnae: String
+}
+
+input UpdatePerfilInput {
+  id: Int!
+  participa_organizacao: Boolean
+  tipo_perfil: String
+  grau_interesse_pnae: String
+  nivel_tecnologico_cultivo: String
+  sistema_producao: String
+  condicao_posse: String
+}

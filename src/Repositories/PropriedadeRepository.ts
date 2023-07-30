@@ -1,7 +1,7 @@
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "./Repository.js";
 
-export class PropriedadeRepository extends PrismaRepository implements Repository {
+export class PropriedadeRepository extends PrismaRepository implements Repository<any> {
   async findOne(id: number) {
     if (!id) {
       this.throwError("NOT_FOUND");

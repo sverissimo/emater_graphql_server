@@ -99,8 +99,8 @@ model Perfil {
   id_tecnico                                   Int
   id_cliente                                   BigInt
   produtor                                     Produtor       @relation(fields: [id_cliente], references: [id_pessoa_demeter])
-  data_preenchimento                           DateTime
-  data_atualizacao                             DateTime
+  data_preenchimento                           DateTime?      @default(now())
+  data_atualizacao                             DateTime?      @updatedAt
   participa_organizacao                        Boolean
   id_dados_producao_in_natura                  Int?
   nivel_tecnologico_cultivo                    Int?

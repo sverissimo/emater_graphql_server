@@ -19,6 +19,14 @@ export const resolvers = {
     perfilPropriedade: (_root: any, { tipo_perfil, propriedade_id }: findPerfilInput) =>
       perfilRepository.findPerfilPropriedade({ tipo_perfil, propriedade_id }),
     dadosProducao: () => prismaClient.dadosProducao.findMany(),
+    perfisPorProdutor: (_root: any, produtorId: number) => perfilRepository.findByProdutor(produtorId),
+  },
+
+  Mutation: {
+    createPerfil: (_root: any, { input: perfilInput }: { input: Omit<Perfil, "id"> }) =>
+      perfilRepository.create(perfilInput),
+    updatePerfil: (_root: any, { input: perfilInput }: { input: Perfil }) =>
+      perfilRepository.update(perfilInput),
   },
 
   Atividade: {
