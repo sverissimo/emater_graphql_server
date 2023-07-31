@@ -11,14 +11,15 @@ export class ProdutorRepository extends PrismaRepository implements Repository<a
       where: { OR: [{ id_pessoa_demeter: id }, { nr_cpf_cnpj: cpf }] },
       include: {
         produtor_propriedades: true,
-        perfis: true,
+        perfis: {
+          include: { atividade: true, dados_producao: true },
+        },
       },
     });
 
     if (!produtor) {
       this.throwError("NOT_FOUND");
     }
-
     return produtor;
   }
 

@@ -4,7 +4,7 @@ export interface Repository<T> {
   findAll: () => void;
   create?: (input: T) => void;
   createMany?: () => void;
-  delete?: () => void;
+  delete?: (id: number) => void;
   update?: (input: T & { id: number }) => void;
   deleteMany?: () => void;
   updateMany?: () => void;

@@ -4,7 +4,7 @@ import { Repository } from "./Repository.js";
 
 export type findPerfilInput = { tipo_perfil: string; propriedade_id: number; id_cliente: number };
 
-export class PerfilRepository extends PrismaRepository implements Repository<Omit<Perfil, "id">> {
+export class PerfilRepository extends PrismaRepository implements Repository<Perfil> {
   async create(perfilInput: Omit<Perfil, "id">) {
     try {
       const { id_cliente, id_dados_producao_agro_industria, ...rest } = perfilInput;
@@ -34,8 +34,7 @@ export class PerfilRepository extends PrismaRepository implements Repository<Omi
     return await this.prisma.perfil.findUnique({ where: { id } });
   }
 
-  async findByProdutor(params: any) {
-    const { produtorId } = params;
+  async findByProdutor(produtorId: number) {
     const perfilData = await this.prisma.perfil.findMany({
       include: {
         atividade: true,
@@ -50,7 +49,6 @@ export class PerfilRepository extends PrismaRepository implements Repository<Omi
 
   async findPerfilPropriedade(params: Partial<findPerfilInput>) {
     const { tipo_perfil, propriedade_id: propriedadeId } = params;
-
     const perfilData = await this.prisma.perfil.findFirst({
       include: {
         atividade: {
@@ -105,6 +103,15 @@ export class PerfilRepository extends PrismaRepository implements Repository<Omi
       });
     } catch (error) {
       console.log("🚀 ~ file: PerfilRepository.ts:13 ~ PerfilRepository ~ create ~ error:", error);
+    }
+  }
+
+  async delete(id: number) {
+    try {
+      const result = await this.prisma.perfil.delete({ where: { id } });
+      return result;
+    } catch (error) {
+      console.log("🚀 ~ file: PerfilRepository.ts:114 ~ PerfilRepository ~ delete ~ error:", error);
     }
   }
 }

@@ -12,6 +12,7 @@ type Query {
 type Mutation {
   createPerfil(input: CreatePerfilInput): Perfil
   updatePerfil(input: UpdatePerfilInput): Perfil
+  deletePerfil(id: Int): Perfil
 }
 
 type Propriedade {

@@ -3,30 +3,29 @@ import { ProdutorRepository } from "./Repositories/ProdutorRepository.js";
 import { PropriedadeRepository } from "./Repositories/PropriedadeRepository.js";
 import { PerfilRepository, findPerfilInput } from "./Repositories/PerfilRepository.js";
 
-const prismaClient = new PrismaClient();
-
+const prismaClient = new PrismaClient({ log: ["query", "info", "warn", "error"] });
 const produtorRepository = new ProdutorRepository(prismaClient);
 const propriedadeRepository = new PropriedadeRepository(prismaClient);
 const perfilRepository = new PerfilRepository(prismaClient);
 
 export const resolvers = {
   Query: {
-    produtor: (_root: any, { id, cpf }: { id: number; cpf: string }) =>
-      produtorRepository.findOne({ id, cpf }),
+    produtor: (_root: any, { id, cpf }: { id: number; cpf: string }) => produtorRepository.findOne({ id, cpf }),
     produtores: () => produtorRepository.findAll(),
     propriedades: () => propriedadeRepository.findAll(),
     perfil: () => perfilRepository.findAll(),
     perfilPropriedade: (_root: any, { tipo_perfil, propriedade_id }: findPerfilInput) =>
       perfilRepository.findPerfilPropriedade({ tipo_perfil, propriedade_id }),
     dadosProducao: () => prismaClient.dadosProducao.findMany(),
-    perfisPorProdutor: (_root: any, produtorId: number) => perfilRepository.findByProdutor(produtorId),
+    perfisPorProdutor: (_root: any, { produtorId }: { produtorId: number }) =>
+      perfilRepository.findByProdutor(produtorId),
   },
 
   Mutation: {
     createPerfil: (_root: any, { input: perfilInput }: { input: Omit<Perfil, "id"> }) =>
       perfilRepository.create(perfilInput),
-    updatePerfil: (_root: any, { input: perfilInput }: { input: Perfil }) =>
-      perfilRepository.update(perfilInput),
+    updatePerfil: (_root: any, { input: perfilInput }: { input: Perfil }) => perfilRepository.update(perfilInput),
+    deletePerfil: (_root: any, { id }: { id: number }) => perfilRepository.delete(id),
   },
 
   Atividade: {
@@ -44,7 +43,6 @@ export const resolvers = {
   Produtor: {
     id_pessoa_demeter: (p: any) => parseInt(p.id_pessoa_demeter),
     propriedades: (p: Produtor) => propriedadeRepository.findByProdutorId(p.id_pessoa_demeter),
-    perfis: (p: Produtor) => perfilRepository.findByProdutor({ id_cliente: Number(p.id_pessoa_demeter) }),
   },
   Propriedade: {
     id_pl_propriedade: (p: any) => parseInt(p.id_pl_propriedade),
