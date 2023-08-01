@@ -5,7 +5,7 @@ export interface Repository<T> {
   create?: (input: T) => void;
   createMany?: () => void;
   delete?: (id: number) => void;
-  update?: (input: T & { id: number }) => void;
+  update?: (id: number, input: T) => void;
   deleteMany?: () => void;
   updateMany?: () => void;
   upsert?: () => void;

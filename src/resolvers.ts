@@ -1,9 +1,9 @@
 import { Perfil, PrismaClient, Produtor } from "@prisma/client";
 import { ProdutorRepository } from "./Repositories/ProdutorRepository.js";
 import { PropriedadeRepository } from "./Repositories/PropriedadeRepository.js";
-import { PerfilRepository, findPerfilInput } from "./Repositories/PerfilRepository.js";
+import { PerfilRepository } from "./Repositories/PerfilRepository.js";
 
-const prismaClient = new PrismaClient({ log: ["query", "info", "warn", "error"] });
+const prismaClient = new PrismaClient({ log: ["info", "warn", "error"] });
 const produtorRepository = new ProdutorRepository(prismaClient);
 const propriedadeRepository = new PropriedadeRepository(prismaClient);
 const perfilRepository = new PerfilRepository(prismaClient);
@@ -14,17 +14,19 @@ export const resolvers = {
     produtores: () => produtorRepository.findAll(),
     propriedades: () => propriedadeRepository.findAll(),
     perfil: () => perfilRepository.findAll(),
-    perfilPropriedade: (_root: any, { tipo_perfil, propriedade_id }: findPerfilInput) =>
-      perfilRepository.findPerfilPropriedade({ tipo_perfil, propriedade_id }),
     dadosProducao: () => prismaClient.dadosProducao.findMany(),
-    perfisPorProdutor: (_root: any, { produtorId }: { produtorId: number }) =>
-      perfilRepository.findByProdutor(produtorId),
+    perfisPorProdutor: (_root: any, { produtorId }: { produtorId: number }, { service }: any) => {
+      return perfilRepository.findByProdutor(produtorId);
+    },
   },
 
   Mutation: {
-    createPerfil: (_root: any, { input: perfilInput }: { input: Omit<Perfil, "id"> }) =>
-      perfilRepository.create(perfilInput),
-    updatePerfil: (_root: any, { input: perfilInput }: { input: Perfil }) => perfilRepository.update(perfilInput),
+    createPerfil: async (_root: any, { input: perfilInput }: { input: Omit<Perfil, "id"> }) => {
+      return await perfilRepository.create(perfilInput);
+    },
+    updatePerfil: (_root: any, { id, updatePerfilInput }: { id: number; updatePerfilInput: Perfil }) => {
+      return perfilRepository.update(id, updatePerfilInput);
+    },
     deletePerfil: (_root: any, { id }: { id: number }) => perfilRepository.delete(id),
   },
 

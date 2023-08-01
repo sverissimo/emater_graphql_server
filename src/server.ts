@@ -7,6 +7,7 @@ import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { resolvers } from "./resolvers.js";
 import { readFile } from "node:fs/promises";
+import { auth } from "./auth/auth.js";
 
 interface MyContext {
   token?: string;
@@ -27,8 +28,9 @@ app.use(
   "/",
   cors<cors.CorsRequest>(),
   bodyParser.json(),
+  auth,
   expressMiddleware(server, {
-    context: async ({ req }) => ({ token: req.headers.token }),
+    context: async ({ res }) => ({ service: res.locals.service }),
   })
 );
 

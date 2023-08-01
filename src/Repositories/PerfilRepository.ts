@@ -1,4 +1,4 @@
-import { Perfil } from "@prisma/client";
+import { Perfil, Prisma } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "./Repository.js";
 
@@ -22,8 +22,9 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
             : undefined,
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       console.log("🚀 ~ file: PerfilRepository.ts:13 ~ PerfilRepository ~ create ~ error:", error);
+      this.throwError(error.message);
     }
   }
 
@@ -42,32 +43,6 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
       },
       where: {
         id_cliente: produtorId,
-      },
-    });
-    return perfilData;
-  }
-
-  async findPerfilPropriedade(params: Partial<findPerfilInput>) {
-    const { tipo_perfil, propriedade_id: propriedadeId } = params;
-    const perfilData = await this.prisma.perfil.findFirst({
-      include: {
-        atividade: {
-          include: {
-            propriedade: {
-              include: {
-                produtor_propriedade: { include: { produtor: true } },
-              },
-            },
-          },
-        },
-
-        dados_producao: true,
-      },
-      where: {
-        atividade: {
-          is: { propriedade: { is: { id_pl_propriedade: propriedadeId } } },
-        },
-        tipo_perfil,
       },
     });
     return perfilData;
@@ -92,14 +67,16 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
     return perfilData;
   }
 
-  async update(updatePerfilInput: Perfil) {
+  async update(id: number, updatePerfilInput: Perfil) {
+    console.log(
+      "🚀 ~ file: PerfilRepository.ts:97 ~ PerfilRepository ~ update ~ updatePerfilInput:",
+      updatePerfilInput
+    );
     try {
-      const { id, id_cliente, id_dados_producao_agro_industria, ...rest } = updatePerfilInput;
+      //const { id_dados_producao_agro_industria, ...rest } = updatePerfilInput;
       return await this.prisma.perfil.update({
         where: { id },
-        data: {
-          ...rest,
-        },
+        data: updatePerfilInput,
       });
     } catch (error) {
       console.log("🚀 ~ file: PerfilRepository.ts:13 ~ PerfilRepository ~ create ~ error:", error);
@@ -109,9 +86,15 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
   async delete(id: number) {
     try {
       const result = await this.prisma.perfil.delete({ where: { id } });
+      console.log("🚀 ~ file: PerfilRepository.ts:117 ~ PerfilRepository ~ delete ~ result:", result);
+      if (!result) {
+        this.throwError("NOT_FOUND");
+      }
       return result;
     } catch (error) {
-      console.log("🚀 ~ file: PerfilRepository.ts:114 ~ PerfilRepository ~ delete ~ error:", error);
+      if (error instanceof Prisma.PrismaClientKnownRequestError)
+        console.log("🚀 ~ file: PerfilRepository.ts:114 ~ PerfilRepository ~ delete ~ error:", error);
+      return error;
     }
   }
 }

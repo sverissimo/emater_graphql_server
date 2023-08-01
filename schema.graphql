@@ -4,14 +4,13 @@ type Query {
   propriedades: [Propriedade]
   produtoresFull: [ProdutorPropriedades]
   perfil: [Perfil]
-  perfilPropriedade(tipo_perfil: String, propriedade_id: Int): Perfil
   dadosProducao: [DadosProducao]
   perfisPorProdutor(produtorId: Int): [Perfil]
 }
 
 type Mutation {
   createPerfil(input: CreatePerfilInput): Perfil
-  updatePerfil(input: UpdatePerfilInput): Perfil
+  updatePerfil(id: Int, updatePerfilInput: UpdatePerfilInput): Perfil
   deletePerfil(id: Int): Perfil
 }
 
@@ -163,7 +162,6 @@ input CreatePerfilInput {
 }
 
 input UpdatePerfilInput {
-  id: Int!
   participa_organizacao: Boolean
   tipo_perfil: String
   grau_interesse_pnae: String
