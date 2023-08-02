@@ -22,9 +22,9 @@ export class RelatorioRepository extends PrismaRepository implements Repository<
 
   findAll = async () => await this.prisma.relatorio.findMany();
 
-  async update(id: number, updateRelatorioInput: Partial<Relatorio>) {
+  async update(id: number, update: Partial<Relatorio>) {
     try {
-      const updated = await this.prisma.relatorio.update({ where: { id }, data: updateRelatorioInput });
+      const updated = await this.prisma.relatorio.update({ where: { id }, data: update });
       return updated;
     } catch (error) {
       this.handleRecordNotFound(error as Error);

@@ -5,7 +5,7 @@ type Query {
 
 type Mutation {
   createRelatorio(createRelatorioInput: CreateRelatorioInput): Relatorio
-  updateRelatorio(id: Int, updateRelatorioInput: CreateRelatorioInput): Relatorio
+  updateRelatorio(input: UpdateRelatorioInput): Relatorio
   deleteRelatorio(id: Int): Relatorio
 }
 
@@ -21,6 +21,15 @@ type Relatorio {
 input CreateRelatorioInput {
   id: Int
   produtorId: Int!
+  numeroRelatorio: Int
+  assunto: String
+  orientacao: String
+  createdAt: String
+}
+
+input UpdateRelatorioInput {
+  id: Int!
+  produtorId: Int
   numeroRelatorio: Int
   assunto: String
   orientacao: String

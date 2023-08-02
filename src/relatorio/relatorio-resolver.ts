@@ -17,14 +17,16 @@ export const relatorioResolver = {
     ) => {
       return await relatorioRepository.create(createRelatorioInput);
     },
-    updateRelatorio: (
-      _root: any,
-      { id, updateRelatorioInput }: { id: number; updateRelatorioInput: Relatorio }
-    ) => {
-      return relatorioRepository.update(id, updateRelatorioInput);
+    updateRelatorio: async (_root: any, { input }: { input: Partial<Omit<Relatorio, "id">> & { id: number } }) => {
+      const { id, ...update } = input;
+      return await relatorioRepository.update(id, update);
     },
-    deleteRelatorio: (_root: any, { id }: { id: number }) => relatorioRepository.delete(id),
+
+    deleteRelatorio: async (_root: any, { id }: { id: number }) => {
+      return await relatorioRepository.delete(id);
+    },
   },
+
   Relatorio: {
     createdAt: (p: any) => p.createdAt.toISOString().slice(0, "yyyy-mm-dd".length),
     produtorId: (p: any) => parseInt(p.produtorId),
