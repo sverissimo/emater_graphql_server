@@ -1,0 +1,16 @@
+{
+  "overwrite": true,
+  "schema": "./schema.graphql",
+  "generates": {
+    "src/types/schema.ts": { "plugins": ["typescript", "typescript-resolvers"] }
+  },
+  "config": {
+    "mapperTypeSuffix": "Model",
+    "mappers": {
+      "Produtor": "@prisma/client#Produtor as ProdutorEntity",
+      "Propriedade": "@prisma/client#Propriedade as PropriedadeEntity",
+      "Perfil": "@prisma/client#Perfil as PerfilEntity"
+    },
+    "skipTypename": true
+  }
+}

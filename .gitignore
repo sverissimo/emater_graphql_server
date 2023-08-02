@@ -1,9 +1,14 @@
 data
 dist
 node_modules
+
 # Keep environment variables out of version control
 .env
 *.txt
+
+#schema generated types
+/src/generated
+/src/types
 
 #temp files
 *.$pnae*

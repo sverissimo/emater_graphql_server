@@ -42,6 +42,7 @@ model Produtor {
   caf                   String?                @db.VarChar(24)
   produtor_propriedades ProdutorPropriedades[]
   perfis                Perfil[]
+  relatorios            Relatorio[]
 
   @@map("ger_pessoa")
 }
@@ -159,4 +160,31 @@ model Atividade {
   propriedade            Propriedade @relation(fields: [id_propriedade], references: [id_pl_propriedade])
 
   @@map("at_prf_see_propriedade")
+}
+
+model Relatorio {
+  id              Int           @id @default(autoincrement())
+  numeroRelatorio Int           @map("nr_relatorio")
+  assunto         String
+  orientacao      String
+  produtor        Produtor?     @relation(fields: [produtorId], references: [id_pessoa_demeter])
+  produtorId      BigInt        @map("produtor_id")
+  files           PictureFile[]
+  createdAt       DateTime?     @default(now()) @map("created_at")
+}
+
+model PictureFile {
+  id          String             @id @default(uuid())
+  fileName    String
+  size        Float
+  mimeType    String
+  description PictureDescription
+  relatorio   Relatorio?         @relation(fields: [relatorioId], references: [id])
+  relatorioId Int                @map("relatorio_id")
+  updloadDate DateTime?          @default(now()) @map("upload_date")
+}
+
+enum PictureDescription {
+  FOTO_RELATORIO
+  ASSINATURA_PRODUTOR
 }

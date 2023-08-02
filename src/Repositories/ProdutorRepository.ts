@@ -1,8 +1,9 @@
+import { Produtor } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "./Repository.js";
 
-export class ProdutorRepository extends PrismaRepository implements Repository<any> {
-  async findOne({ id, cpf }: { id: number; cpf: string }) {
+export class ProdutorRepository extends PrismaRepository implements Repository<Produtor> {
+  async findOne({ id, cpf }: { id: bigint; cpf: string }) {
     if (!id && !cpf) {
       this.throwError("NO_ID_PROVIDED");
     }
@@ -14,12 +15,14 @@ export class ProdutorRepository extends PrismaRepository implements Repository<a
         perfis: {
           include: { atividade: true, dados_producao: true },
         },
+        relatorios: true,
       },
     });
 
     if (!produtor) {
       this.throwError("NOT_FOUND");
     }
+    console.log("🚀 ~ file: ProdutorRepository.ts:26 ~ ProdutorRepository ~ findOne ~ produtor:", produtor);
     return produtor;
   }
 

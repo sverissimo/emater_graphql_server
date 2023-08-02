@@ -51,14 +51,14 @@ type Propriedade {
 }
 
 type Produtor {
-  id_pessoa: String
-  id_pessoa_demeter: Int
+  id_pessoa: String!
+  id_pessoa_demeter: Float!
   nm_pessoa: String
   ds_apelido: String
   sn_pronaf: String
   sn_ativo: String
   tp_sexo: String
-  nr_cpf_cnpj: String
+  nr_cpf_cnpj: String!
   dt_nascimento: String
   nr_identidade: String
   ds_orgao_expedidor: String

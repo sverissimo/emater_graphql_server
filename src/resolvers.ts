@@ -2,6 +2,7 @@ import { Perfil, PrismaClient, Produtor } from "@prisma/client";
 import { ProdutorRepository } from "./Repositories/ProdutorRepository.js";
 import { PropriedadeRepository } from "./Repositories/PropriedadeRepository.js";
 import { PerfilRepository } from "./Repositories/PerfilRepository.js";
+//import { Resolvers } from "./types/schema.js";
 
 const prismaClient = new PrismaClient({ log: ["info", "warn", "error"] });
 const produtorRepository = new ProdutorRepository(prismaClient);
@@ -10,7 +11,7 @@ const perfilRepository = new PerfilRepository(prismaClient);
 
 export const resolvers = {
   Query: {
-    produtor: (_root: any, { id, cpf }: { id: number; cpf: string }) => produtorRepository.findOne({ id, cpf }),
+    produtor: (_root: any, { id, cpf }: { id: bigint; cpf: string }) => produtorRepository.findOne({ id, cpf }),
     produtores: () => produtorRepository.findAll(),
     propriedades: () => propriedadeRepository.findAll(),
     perfil: () => perfilRepository.findAll(),
@@ -24,7 +25,7 @@ export const resolvers = {
     createPerfil: async (_root: any, { input: perfilInput }: { input: Omit<Perfil, "id"> }) => {
       return await perfilRepository.create(perfilInput);
     },
-    updatePerfil: (_root: any, { id, updatePerfilInput }: { id: number; updatePerfilInput: Perfil }) => {
+    updatePerfil: (_root: any, { id, updatePerfilInput }: { id: number; updatePerfilInput: Partial<Perfil> }) => {
       return perfilRepository.update(id, updatePerfilInput);
     },
     deletePerfil: (_root: any, { id }: { id: number }) => perfilRepository.delete(id),

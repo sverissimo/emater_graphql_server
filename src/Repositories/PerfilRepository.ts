@@ -67,34 +67,25 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
     return perfilData;
   }
 
-  async update(id: number, updatePerfilInput: Perfil) {
-    console.log(
-      "🚀 ~ file: PerfilRepository.ts:97 ~ PerfilRepository ~ update ~ updatePerfilInput:",
-      updatePerfilInput
-    );
+  async update(id: number, updatePerfilInput: Partial<Perfil>) {
     try {
       //const { id_dados_producao_agro_industria, ...rest } = updatePerfilInput;
-      return await this.prisma.perfil.update({
+      const updated = await this.prisma.perfil.update({
         where: { id },
         data: updatePerfilInput,
       });
+      return updated;
     } catch (error) {
-      console.log("🚀 ~ file: PerfilRepository.ts:13 ~ PerfilRepository ~ create ~ error:", error);
+      this.handleRecordNotFound(error as Error);
     }
   }
 
   async delete(id: number) {
     try {
       const result = await this.prisma.perfil.delete({ where: { id } });
-      console.log("🚀 ~ file: PerfilRepository.ts:117 ~ PerfilRepository ~ delete ~ result:", result);
-      if (!result) {
-        this.throwError("NOT_FOUND");
-      }
       return result;
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError)
-        console.log("🚀 ~ file: PerfilRepository.ts:114 ~ PerfilRepository ~ delete ~ error:", error);
-      return error;
+      this.handleRecordNotFound(error as Error);
     }
   }
 }

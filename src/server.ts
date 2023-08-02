@@ -5,21 +5,31 @@ import bodyParser from "body-parser";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
-import { resolvers } from "./resolvers.js";
+import { resolvers as miscResolvers } from "./resolvers.js";
 import { readFile } from "node:fs/promises";
 import { auth } from "./auth/auth.js";
+import { relatorioResolver } from "./relatorio/relatorio-resolver.js";
 
 interface MyContext {
   token?: string;
 }
 
+(BigInt.prototype as any).toJSON = function () {
+  const int = Number.parseInt(this.toString());
+  return int ?? this.toString();
+};
+
 const app = express();
 const httpServer = http.createServer(app);
 
-const typeDefs = await readFile("./schema.graphql", "utf-8");
+const typeDefsMisc = await readFile("./schema.graphql", "utf-8");
+const relatorioTypeDefs = await readFile("./src/relatorio/relatorio-schema.graphql", "utf-8");
+
+const typeDefs = [typeDefsMisc, relatorioTypeDefs];
+
 const server = new ApolloServer<MyContext>({
   typeDefs,
-  resolvers,
+  resolvers: [miscResolvers, relatorioResolver],
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 
