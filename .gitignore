@@ -12,3 +12,62 @@ node_modules
 
 #temp files
 *.$pnae*
+database/createPGDump.js
+database/tableNames
+database/_oldData/backup28jul.sql
+database/_oldData/createPGDump copy.js
+database/_oldData/dadosProducao.json
+database/_oldData/ger_pessoa.json
+database/_oldData/ger_pessoatst.json
+database/_oldData/getTables.sql
+database/_oldData/linkedTableInput copy.json
+database/_oldData/linkedTableInput.json
+database/_oldData/oldPrismaSchema
+database/_oldData/perfis.json
+database/_oldData/produtores.json
+database/_oldData/produtorPropriedades.json
+database/_oldData/propriedades.json
+database/_oldData/propriedadeVisitaLink.json
+database/_oldData/public_at_prf_grupo_produto_export_2023-07-07_002231.json
+database/_oldData/public_at_prf_produto_export_2023-07-07_001910.json
+database/_oldData/public_at_prf_see_dados_producao_export_2023-07-07_002104.json
+database/_oldData/public_at_prf_see_export_2023-07-07_002028.json
+database/_oldData/public_at_prf_see_produto_export_2023-07-07_002138.json
+database/_oldData/public_at_prf_see_propriedade_export_2023-07-07_002120.json
+database/_oldData/public_pl_propriedade_export_2023-07-06_231354.json
+database/_oldData/public_pl_propriedade_subset copy.json
+database/_oldData/public_pl_propriedade_subset.json
+database/_oldData/migrations/migration_lock.toml
+database/_oldData/migrations/20230711151508_init/migration.sql
+database/_oldData/migrations/20230711181209_init/migration.sql
+database/_oldData/migrations/20230711200414_init/migration.sql
+database/_oldData/migrations/20230728125220_clear/migration.sql
+database/_oldData/migrations/20230728181856_v2/migration.sql
+database/_oldData/migrations/20230728185849_v2/migration.sql
+database/_oldData/migrations/20230730152346_v2/migration.sql
+database/_oldData/migrations/20230802023815_v2/migration.sql
+database/dumps/Dump_dadosProd.sql
+database/dumps/Dump_ger_cargo.sql
+database/dumps/Dump_produtor.sql
+database/dumps/Dump_produtorPropriedade.sql
+database/dumps/Dump_propriedade.sql
+database/dumps/Dump_usuario.sql
+database/dumps/DumpGrupoProdutos.sql
+database/dumps/DumpPerfil.sql
+database/dumps/DumpProduto.sql
+database/dumps/DumpSEEPropriedade.sql
+database/schema/at_acao_sql_schema.json
+database/schema/at_arquivo_sql_schema.json
+database/schema/at_atendimento_sql_schema.json
+database/schema/at_grupo_indicador_sql_schema.json
+database/schema/at_prf_see_dados_producao_sql_description.json
+database/schema/at_prf_see_grupos_produtos_sql_schema.json
+database/schema/at_prf_see_produto_sql_schema.json
+database/schema/at_prf_see_propriedade_sql_schema.json
+database/schema/at_prf_see_sql_description.json
+database/schema/createUser.sql
+database/schema/ger_cargo_sql_schema.json
+database/schema/ger_pessoa_sql_schema.json
+database/schema/pl_propriedade_ger_pessoa_sql_schema.json
+database/schema/pl_propriedade_sql_schema.json
+database/schema/usuario_sql_description.json
