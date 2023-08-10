@@ -1,3 +1,6 @@
+scalar DateTime
+scalar BigInt
+
 type Query {
   produtor(id: Int, cpf: String): Produtor
   produtores: [Produtor]
@@ -15,7 +18,7 @@ type Mutation {
 }
 
 type Propriedade {
-  id_pl_propriedade: Int
+  id_pl_propriedade: BigInt
   nome_propriedade: String
   logradouro: String
   bairro: String
@@ -51,15 +54,15 @@ type Propriedade {
 }
 
 type Produtor {
+  id_pessoa_demeter: BigInt!
   id_pessoa: String!
-  id_pessoa_demeter: Float!
   nm_pessoa: String
   ds_apelido: String
   sn_pronaf: String
   sn_ativo: String
   tp_sexo: String
   nr_cpf_cnpj: String!
-  dt_nascimento: String
+  dt_nascimento: DateTime
   nr_identidade: String
   ds_orgao_expedidor: String
   fk_uf_emissor: String
@@ -76,7 +79,7 @@ type Produtor {
   id_und_empresa: String
   sn_principal_provedor: String
   ds_email: String
-  dt_update_record: String
+  dt_update_record: DateTime
   id_sincronismo: String
   sn_ctd: String
   caf: String
@@ -85,34 +88,33 @@ type Produtor {
 }
 
 type ProdutorPropriedades {
-  propriedade_id: Int
-  produtor_id: Int
+  propriedade_id: BigInt
+  produtor_id: BigInt
+  id_und_empresa: String
+  id_pl_tipo_posse: Int
   produtor: Produtor
   Propriedade: [Propriedade]
 }
 
 type Perfil {
-  id: Int!
-  data_preenchimento: String
-  data_atualizacao: String
+  id: BigInt!
+  data_preenchimento: DateTime
+  data_atualizacao: DateTime
   tipo_perfil: String
-  id_cliente: Int
-  produtor: Produtor
+  id_cliente: BigInt
   participa_organizacao: Boolean
-  id_dados_producao_in_natura: String
-  nivel_tecnologico_cultivo: String
-  sistema_producao: String
-  condicao_posse: String
+  nivel_tecnologico_cultivo: BigInt
+  sistema_producao: BigInt
+  condicao_posse: BigInt
   dap_caf_vigente: Boolean
   credito_rural: Boolean
-  fonte_captacao_agua: String
-  forma_esgotamento_sanitario: String
+  fonte_captacao_agua: BigInt
+  forma_esgotamento_sanitario: BigInt
   possui_cadastro_car: Boolean
   aderiu_pra: Boolean
   ciente_iniciativas_regularizacao_pra: Boolean
   realiza_escalonamento_producao: Boolean
-  procedimento_pos_colheita: String
-  id_dados_producao_agro_industria: Int
+  procedimento_pos_colheita: BigInt
   tipo_gestao_unidade: String
   pessoas_processamento_alimentos: Int
   tipo_estabelecimento: String
@@ -120,43 +122,47 @@ type Perfil {
   agroindustria_precisa_adaptacao_reforma: Boolean
   possui_registro_orgao_fiscalizacao_sanitaria: Boolean
   orgao_fiscalizacao_sanitaria: String
-  id_tecnico: String
-  atividades_usam_recursos_hidricos: String
-  atividades_com_regularizacao_ambiental: String
+  atividades_usam_recursos_hidricos: BigInt
+  atividades_com_regularizacao_ambiental: BigInt
   possui_agroindustria_propria: Boolean
   grau_interesse_pnae: String
-  dados_producao: DadosProducao
-  atividade: Atividade
+  id_tecnico: BigInt
+  id_dados_producao_agro_industria: BigInt
+  id_dados_producao_in_natura: BigInt
+  produtor: Produtor
+  dados_producao_agro_industria: DadosProducao
+  dados_producao_in_natura: DadosProducao
+  at_prf_see_propriedade: Atividade
 }
 
 type DadosProducao {
-  id: Int!
+  id: BigInt!
   controla_custos_producao: Boolean
-  local_comercializacao: String
-  valor_total_obtido_pnae: String
-  forma_entrega_produtos: String
-  dificuldade_fornecimento: String
+  local_comercializacao: BigInt
+  valor_total_obtido_pnae: BigInt
+  forma_entrega_produtos: BigInt
+  dificuldade_fornecimento: BigInt
   informacoes_adicionais: String
   tipo_regularizacao_uso_recursos_hidricos: String
   tipo_regularizacao_ambiental: String
-  valor_total_obtido_outros: String
+  valor_total_obtido_outros: BigInt
   perfil: Perfil
 }
 
 type Atividade {
-  id: Int!
-  id_perfil_see: Int!
-  id_propriedade: Int
+  id: BigInt!
+  id_perfil_see: BigInt!
+  id_propriedade: BigInt
   atividade: String
-  producao_dedicada_pnae: String
+  producao_dedicada_pnae: Boolean
   perfil: Perfil
   propriedade: Propriedade
 }
 
 input CreatePerfilInput {
-  id_tecnico: Int
+  id_tecnico: BigInt
   participa_organizacao: Boolean
-  id_cliente: Int
+  id_cliente: BigInt
   tipo_perfil: String
   grau_interesse_pnae: String
 }
@@ -165,7 +171,7 @@ input UpdatePerfilInput {
   participa_organizacao: Boolean
   tipo_perfil: String
   grau_interesse_pnae: String
-  nivel_tecnologico_cultivo: String
-  sistema_producao: String
-  condicao_posse: String
+  nivel_tecnologico_cultivo: BigInt
+  sistema_producao: BigInt
+  condicao_posse: BigInt
 }

@@ -7,253 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model at_acao {
-  id_at_acao         BigInt           @id(map: "pk_at_acao") @default(autoincrement())
-  descricao          String           @db.VarChar(100)
-  data_atualizacao   DateTime         @db.Date
-  ativo              Boolean
-  indice_propriedade Int              @default(0) @db.SmallInt
-  indice_periodo     Int              @default(0) @db.SmallInt
-  dt_update_record   DateTime?        @db.Timestamp(6)
-  quant_max_clientes Int?             @db.SmallInt
-  at_atendimento     at_atendimento[]
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model at_arquivo {
-  id_at_arquivo              BigInt         @id(map: "pk_at_arquivo") @default(autoincrement())
-  nome_arquivo               String         @db.VarChar(100)
-  arquivo                    String
-  id_at_atendimento          BigInt
-  ativo                      Boolean
-  tipo_arquivo               String         @db.VarChar(100)
-  dt_update_record           DateTime?      @default(now()) @db.Timestamp(6)
-  id_sincronismo             String?        @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
-  id_sincronismo_atendimento String?        @db.VarChar(36)
-  id_und_empresa             String?        @db.VarChar(5)
-  at_atendimento             at_atendimento @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_arquivo_atendimento")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model at_atendimento {
-  id_at_atendimento        BigInt                     @id(map: "pk_at_atendimento") @default(autoincrement())
-  descricao                String?                    @db.VarChar(60)
-  data_inicio_atendimento  DateTime                   @db.Date
-  data_fim_atendimento     DateTime?                  @db.Date
-  data_validacao           DateTime?                  @db.Date
-  usuario_validacao        BigInt?
-  data_atualizacao         DateTime                   @db.Date
-  id_at_status             Int                        @db.SmallInt
-  ativo                    Boolean
-  id_at_acao               BigInt
-  id_und_empresa           String                     @db.Char(5)
-  qtd_alunos               Int?
-  data_criacao             DateTime                   @db.Date
-  id_sincronismo           String?                    @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
-  orientacao_tecnica       String?
-  dt_update_record         DateTime?                  @db.Timestamp(6)
-  //geo_ponto                Unsupported("geometry")?
-  geo_ponto                String?                    @db.Text()
-  geo_ponto_texto          String?                    @db.VarChar(255)
-  sincroniza               Int?                       @default(0) @db.SmallInt
-  processamento            Int?                       @default(0) @db.SmallInt
-  login_usuario            String?
-  id_at_anterior           BigInt?
-  fk_und_empresa           String?                    @db.Char(5)
-  auto_atendimento         Int?                       @db.SmallInt
-  data_sei                 DateTime?                  @db.Date
-  at_arquivo               at_arquivo[]
-  usuario                  usuario?                   @relation(fields: [usuario_validacao], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk2wy9cxuwsh3cyhmip358l0l6c")
-  at_acao                  at_acao                    @relation(fields: [id_at_acao], references: [id_at_acao], onDelete: NoAction, onUpdate: NoAction, map: "fk8q4s39wy7we2slstaxkbxd737")
-  at_atendimento_indicador at_atendimento_indicador[]
-  at_atendimento_usuario   at_atendimento_usuario[]
-  at_cli_atend_prop        at_cli_atend_prop[]
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model at_atendimento_indicador {
-  id_at_atendimento_indicador BigInt         @id(map: "pk_at_atendimento_indicador") @default(autoincrement())
-  id_at_atendimento           BigInt
-  id_at_indicador             BigInt
-  id_und_empresa              String?        @db.VarChar(5)
-  id_sincronismo              String?        @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
-  id_sincronismo_atendimento  String?        @db.VarChar(36)
-  dt_update_record            DateTime?      @default(now()) @db.Timestamp(6)
-  at_indicador                at_indicador   @relation(fields: [id_at_indicador], references: [id_at_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk1xax2r08665xreflnwtecl0t4")
-  at_atendimento              at_atendimento @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_atendimento_indicador")
-
-  @@unique([id_at_atendimento, id_at_indicador], map: "ix_at_atendimento_indicador")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model at_atendimento_usuario {
-  id_at_atendimento          BigInt
-  id_usuario                 BigInt
-  id_und_empresa             String?        @db.VarChar(5)
-  id_sincronismo             String?        @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
-  id_sincronismo_atendimento String?        @db.VarChar(36)
-  dt_update_record           DateTime?      @default(now()) @db.Timestamp(6)
-  at_atendimento             at_atendimento @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_atendimento_usuario")
-  usuario                    usuario        @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_usuario_atendimento")
-
-  @@id([id_at_atendimento, id_usuario], map: "pk_at_atendimento_usuario")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model at_cli_atend_prop {
-  id_at_atendimento             BigInt
-  id_pessoa_demeter             BigInt
-  id_pl_propriedade             BigInt?
-  id_at_cli_atend_prop          BigInt          @id(map: "at_atendimento_cliente_propriedade_pkey") @default(autoincrement())
-  id_und_empresa                String?         @db.VarChar(5)
-  id_sincronismo_atendimento    String?         @db.VarChar(36)
-  id_sincronismo_ger_pessoa     String?         @db.VarChar(36)
-  id_sincronismo_pl_propriedade String?         @db.VarChar(36)
-  id_sincronismo                String?         @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
-  dt_update_record              DateTime?       @default(now()) @db.Timestamp(6)
-  fk_cat_pessoa                 Int?
-  ger_pessoa                    ger_pessoa      @relation(fields: [id_pessoa_demeter], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk29teh4plu2duhojqqnnf3j8cu")
-  pl_propriedade                pl_propriedade? @relation(fields: [id_pl_propriedade], references: [id_pl_propriedade], onDelete: NoAction, onUpdate: NoAction, map: "fk2hbjbvci9gd4tw04o1t2xrcku")
-  at_atendimento                at_atendimento  @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_atendimento_cliente")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model at_grupo_indicador {
-  id_at_grupo_indicador           BigInt              @id(map: "pk_at_grupo_indicador") @default(autoincrement())
-  descricao                       String              @db.VarChar(100)
-  data_atualizacao                DateTime            @db.Date
-  ativo                           Boolean
-  validar                         Boolean             @default(false)
-  data_max_validacao              DateTime?           @db.Date
-  dt_update_record                DateTime?           @db.Timestamp(6)
-  permitir_unica_meta_atendimento Boolean?            @default(false)
-  sn_super_grupo                  Int?                @db.SmallInt
-  tp_chamada                      Int?                @db.SmallInt
-  at_grupo_indicador              at_grupo_indicador  @relation("at_grupo_indicadorToat_grupo_indicador", fields: [id_at_grupo_indicador], references: [id_at_grupo_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fkpbyyndup2h4mhwv3q5x6ovj55")
-  other_at_grupo_indicador        at_grupo_indicador? @relation("at_grupo_indicadorToat_grupo_indicador")
-  at_indicador                    at_indicador[]
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model at_indicador {
-  id_at_indicador          BigInt                     @id(map: "pk_at_indicador") @default(autoincrement())
-  id_at_grupo_indicador    BigInt
-  data_atualizacao         DateTime                   @db.Date
-  ativo                    Boolean
-  id_at_produto            BigInt
-  dt_update_record         DateTime?                  @db.Timestamp(6)
-  anexo_obrigatorio        Boolean?                   @default(false)
-  foto_obrigatoria         Boolean                    @default(false)
-  at_atendimento_indicador at_atendimento_indicador[]
-  at_grupo_indicador       at_grupo_indicador         @relation(fields: [id_at_grupo_indicador], references: [id_at_grupo_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk3qnbwkkgwfu9fdtgl1gtry1bp")
-  at_produto               at_produto                 @relation(fields: [id_at_produto], references: [id_at_produto], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_produto")
-}
-
-model at_prf_see {
-  id                                                                                               BigInt                     @id(map: "pk_at_prf_see") @default(autoincrement())
-  data_preenchimento                                                                               DateTime                   @db.Date
-  data_atualizacao                                                                                 DateTime                   @db.Date
-  tipo_perfil                                                                                      String                     @db.VarChar(8)
-  id_cliente                                                                                       BigInt
-  participa_organizacao                                                                            Boolean?
-  id_dados_producao_in_natura                                                                      BigInt?
-  nivel_tecnologico_cultivo                                                                        BigInt?
-  sistema_producao                                                                                 BigInt?
-  condicao_posse                                                                                   BigInt?
-  dap_caf_vigente                                                                                  Boolean?
-  credito_rural                                                                                    Boolean?
-  fonte_captacao_agua                                                                              BigInt?
-  forma_esgotamento_sanitario                                                                      BigInt?
-  possui_cadastro_car                                                                              Boolean?
-  aderiu_pra                                                                                       Boolean?
-  ciente_iniciativas_regularizacao_pra                                                             Boolean?
-  realiza_escalonamento_producao                                                                   Boolean?
-  procedimento_pos_colheita                                                                        BigInt?
-  id_dados_producao_agro_industria                                                                 BigInt?
-  tipo_gestao_unidade                                                                              String?                    @db.VarChar(8)
-  pessoas_processamento_alimentos                                                                  Int?
-  tipo_estabelecimento                                                                             String?                    @db.VarChar(16)
-  tipo_pessoa_juridica                                                                             String?                    @db.VarChar(16)
-  agroindustria_precisa_adaptacao_reforma                                                          Boolean?
-  possui_registro_orgao_fiscalizacao_sanitaria                                                     Boolean?
-  orgao_fiscalizacao_sanitaria                                                                     String?                    @db.VarChar(64)
-  id_tecnico                                                                                       BigInt?
-  atividades_usam_recursos_hidricos                                                                BigInt?
-  atividades_com_regularizacao_ambiental                                                           BigInt?
-  possui_agroindustria_propria                                                                     Boolean?
-  grau_interesse_pnae                                                                              String?                    @db.VarChar(64)
-  usuario                                                                                          usuario?                   @relation(fields: [id_tecnico], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "at_prf_see_fk")
-  ger_pessoa                                                                                       ger_pessoa                 @relation(fields: [id_cliente], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente")
-  at_prf_see_dados_producao_at_prf_see_id_dados_producao_agro_industriaToat_prf_see_dados_producao at_prf_see_dados_producao? @relation("at_prf_see_id_dados_producao_agro_industriaToat_prf_see_dados_producao", fields: [id_dados_producao_agro_industria], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados_agroindustria")
-  at_prf_see_dados_producao_at_prf_see_id_dados_producao_in_naturaToat_prf_see_dados_producao      at_prf_see_dados_producao? @relation("at_prf_see_id_dados_producao_in_naturaToat_prf_see_dados_producao", fields: [id_dados_producao_in_natura], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados_in_natura")
-  at_prf_see_propriedade                                                                           at_prf_see_propriedade[]
-}
-
-model at_prf_see_dados_producao {
-  id                                                                                BigInt                       @id(map: "pk_at_prf_see_dados_producao") @default(autoincrement())
-  controla_custos_producao                                                          Boolean?
-  local_comercializacao                                                             BigInt?
-  valor_total_obtido_pnae                                                           BigInt?
-  forma_entrega_produtos                                                            BigInt?
-  dificuldade_fornecimento                                                          BigInt?
-  informacoes_adicionais                                                            String?                      @db.VarChar(2048)
-  tipo_regularizacao_uso_recursos_hidricos                                          String?                      @db.VarChar(32)
-  tipo_regularizacao_ambiental                                                      String?                      @db.VarChar(64)
-  valor_total_obtido_outros                                                         BigInt?
-  at_prf_see_at_prf_see_id_dados_producao_agro_industriaToat_prf_see_dados_producao at_prf_see[]                 @relation("at_prf_see_id_dados_producao_agro_industriaToat_prf_see_dados_producao")
-  at_prf_see_at_prf_see_id_dados_producao_in_naturaToat_prf_see_dados_producao      at_prf_see[]                 @relation("at_prf_see_id_dados_producao_in_naturaToat_prf_see_dados_producao")
-  at_prf_see_grupos_produtos                                                        at_prf_see_grupos_produtos[]
-}
-
-model at_prf_see_grupos_produtos {
-  id                                   BigInt                    @id(map: "pk_at_prf_see_grupos_produtos") @default(autoincrement())
-  id_dados_producao                    BigInt
-  id_grupo_produtos                    BigInt
-  producao_aproximada_ultimo_ano_pnae  BigInt?
-  area_utilizada                       Float?
-  producao_aproximada_ultimo_ano_total BigInt?
-  at_prf_see_dados_producao            at_prf_see_dados_producao @relation(fields: [id_dados_producao], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados")
-  at_prf_see_produto                   at_prf_see_produto[]
-}
-
-model at_prf_see_produto {
-  id                                   BigInt                     @id(map: "pk_at_prf_see_produto") @default(autoincrement())
-  id_perfil_grupo                      BigInt
-  id_produto                           BigInt
-  area_utilizada                       Float?
-  producao_aproximada_ultimo_ano_pnae  BigInt?
-  producao_aproximada_ultimo_ano_total BigInt?
-  at_prf_see_grupos_produtos           at_prf_see_grupos_produtos @relation(fields: [id_perfil_grupo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_perfil_see")
-}
-
-model at_prf_see_propriedade {
-  id                     BigInt         @id(map: "pk_at_prf_see_propriedade") @default(autoincrement())
-  id_perfil_see          BigInt
-  id_propriedade         BigInt
-  atividade              String?        @db.VarChar(64)
-  producao_dedicada_pnae Boolean?
-  at_prf_see             at_prf_see     @relation(fields: [id_perfil_see], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prf_see")
-  pl_propriedade         pl_propriedade @relation(fields: [id_propriedade], references: [id_pl_propriedade], onDelete: NoAction, onUpdate: NoAction, map: "fk_propriedade")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model at_produto {
-  id_at_produto    BigInt         @id(map: "pk_at_produto") @default(autoincrement())
-  nome             String         @db.VarChar(100)
-  dt_update_record DateTime?      @db.Timestamp(6)
-  at_indicador     at_indicador[]
-}
-
-model ger_cargo {
-  id_cargo         String    @id @db.Char(4)
-  nm_cargo         String    @db.VarChar(100)
-  dt_update_record DateTime  @db.Timestamp(6)
-  usuario          usuario[]
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model ger_pessoa {
+model Produtor {
   id_pessoa_demeter         BigInt                      @id @default(autoincrement())
   nm_pessoa                 String?                     @db.VarChar(255)
   tp_sexo                   String?                     @db.VarChar(255)
@@ -286,15 +40,15 @@ model ger_pessoa {
   id_sincronismo            String?                     @db.VarChar(36)
   caf                       String?                     @db.VarChar(24)
   at_cli_atend_prop         at_cli_atend_prop[]
-  at_prf_see                at_prf_see[]
+  at_prf_see                Perfil[]
   pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
 
   @@index([dt_update_record], map: "ix_ger_pessoa_dt_update_record")
   @@index([nm_pessoa], map: "ix_ger_pessoa_nm_pessoa")
+  @@map("ger_pessoa")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model pl_propriedade {
+model Propriedade {
   id_pl_propriedade         BigInt                      @id(map: "pk_pl_propiedade") @default(autoincrement())
   nome_propriedade          String                      @db.VarChar(100)
   logradouro                String?                     @db.VarChar(80)
@@ -331,21 +85,259 @@ model pl_propriedade {
   pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
 
   @@index([nome_propriedade, logradouro])
+  @@map("pl_propriedade")
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model Perfil {
+  id                                           BigInt                     @id(map: "pk_at_prf_see") @default(autoincrement())
+  data_preenchimento                           DateTime                   @db.Date
+  data_atualizacao                             DateTime                   @db.Date
+  tipo_perfil                                  String                     @db.VarChar(8)
+  id_cliente                                   BigInt
+  participa_organizacao                        Boolean?
+  nivel_tecnologico_cultivo                    BigInt?
+  sistema_producao                             BigInt?
+  condicao_posse                               BigInt?
+  dap_caf_vigente                              Boolean?
+  credito_rural                                Boolean?
+  fonte_captacao_agua                          BigInt?
+  forma_esgotamento_sanitario                  BigInt?
+  possui_cadastro_car                          Boolean?
+  aderiu_pra                                   Boolean?
+  ciente_iniciativas_regularizacao_pra         Boolean?
+  realiza_escalonamento_producao               Boolean?
+  procedimento_pos_colheita                    BigInt?
+  tipo_gestao_unidade                          String?                    @db.VarChar(8)
+  pessoas_processamento_alimentos              Int?
+  tipo_estabelecimento                         String?                    @db.VarChar(16)
+  tipo_pessoa_juridica                         String?                    @db.VarChar(16)
+  agroindustria_precisa_adaptacao_reforma      Boolean?
+  possui_registro_orgao_fiscalizacao_sanitaria Boolean?
+  orgao_fiscalizacao_sanitaria                 String?                    @db.VarChar(64)
+  id_tecnico                                   BigInt?
+  atividades_usam_recursos_hidricos            BigInt?
+  atividades_com_regularizacao_ambiental       BigInt?
+  possui_agroindustria_propria                 Boolean?
+  grau_interesse_pnae                          String?                    @db.VarChar(64)
+  usuario                                      usuario?                   @relation(fields: [id_tecnico], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "at_prf_see_fk")
+  ger_pessoa                                   Produtor                   @relation(fields: [id_cliente], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente")
+  id_dados_producao_in_natura                  BigInt?
+  id_dados_producao_agro_industria             BigInt?
+  dados_producao_agro_industria                at_prf_see_dados_producao? @relation("agro_industria", fields: [id_dados_producao_agro_industria], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados_agroindustria")
+  dados_producao_in_natura                     at_prf_see_dados_producao? @relation("in_natura", fields: [id_dados_producao_in_natura], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados_in_natura")
+  at_prf_see_propriedade                       at_prf_see_propriedade[]
+
+  @@map("at_prf_see")
+}
+
+model at_prf_see_dados_producao {
+  id                                       BigInt                       @id(map: "pk_at_prf_see_dados_producao") @default(autoincrement())
+  controla_custos_producao                 Boolean?
+  local_comercializacao                    BigInt?
+  valor_total_obtido_pnae                  BigInt?
+  forma_entrega_produtos                   BigInt?
+  dificuldade_fornecimento                 BigInt?
+  informacoes_adicionais                   String?                      @db.VarChar(2048)
+  tipo_regularizacao_uso_recursos_hidricos String?                      @db.VarChar(32)
+  tipo_regularizacao_ambiental             String?                      @db.VarChar(64)
+  valor_total_obtido_outros                BigInt?
+  perfis_com_agro_industria                Perfil[]                     @relation("agro_industria")
+  perfis_com_in_natura                     Perfil[]                     @relation("in_natura")
+  at_prf_see_grupos_produtos               at_prf_see_grupos_produtos[]
+}
+
+model at_prf_see_grupos_produtos {
+  id                                   BigInt                    @id(map: "pk_at_prf_see_grupos_produtos") @default(autoincrement())
+  id_dados_producao                    BigInt
+  id_grupo_produtos                    BigInt
+  producao_aproximada_ultimo_ano_pnae  BigInt?
+  area_utilizada                       Float?
+  producao_aproximada_ultimo_ano_total BigInt?
+  at_prf_see_dados_producao            at_prf_see_dados_producao @relation(fields: [id_dados_producao], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados")
+  at_prf_see_produto                   at_prf_see_produto[]
+}
+
+model at_prf_see_produto {
+  id                                   BigInt                     @id(map: "pk_at_prf_see_produto") @default(autoincrement())
+  id_perfil_grupo                      BigInt
+  id_produto                           BigInt
+  area_utilizada                       Float?
+  producao_aproximada_ultimo_ano_pnae  BigInt?
+  producao_aproximada_ultimo_ano_total BigInt?
+  at_prf_see_grupos_produtos           at_prf_see_grupos_produtos @relation(fields: [id_perfil_grupo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_perfil_see")
+}
+
+model at_prf_see_propriedade {
+  id                     BigInt      @id(map: "pk_at_prf_see_propriedade") @default(autoincrement())
+  id_perfil_see          BigInt
+  id_propriedade         BigInt
+  atividade              String?     @db.VarChar(64)
+  producao_dedicada_pnae Boolean?
+  at_prf_see             Perfil      @relation(fields: [id_perfil_see], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prf_see")
+  pl_propriedade         Propriedade @relation(fields: [id_propriedade], references: [id_pl_propriedade], onDelete: NoAction, onUpdate: NoAction, map: "fk_propriedade")
+}
+
+model at_acao {
+  id_at_acao         BigInt           @id(map: "pk_at_acao") @default(autoincrement())
+  descricao          String           @db.VarChar(100)
+  data_atualizacao   DateTime         @db.Date
+  ativo              Boolean
+  indice_propriedade Int              @default(0) @db.SmallInt
+  indice_periodo     Int              @default(0) @db.SmallInt
+  dt_update_record   DateTime?        @db.Timestamp(6)
+  quant_max_clientes Int?             @db.SmallInt
+  at_atendimento     at_atendimento[]
+}
+
+model at_arquivo {
+  id_at_arquivo              BigInt         @id(map: "pk_at_arquivo") @default(autoincrement())
+  nome_arquivo               String         @db.VarChar(100)
+  arquivo                    String
+  id_at_atendimento          BigInt
+  ativo                      Boolean
+  tipo_arquivo               String         @db.VarChar(100)
+  dt_update_record           DateTime?      @default(now()) @db.Timestamp(6)
+  id_sincronismo             String?        @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_atendimento String?        @db.VarChar(36)
+  id_und_empresa             String?        @db.VarChar(5)
+  at_atendimento             at_atendimento @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_arquivo_atendimento")
+}
+
+model at_atendimento {
+  id_at_atendimento        BigInt                     @id(map: "pk_at_atendimento") @default(autoincrement())
+  descricao                String?                    @db.VarChar(60)
+  data_inicio_atendimento  DateTime                   @db.Date
+  data_fim_atendimento     DateTime?                  @db.Date
+  data_validacao           DateTime?                  @db.Date
+  usuario_validacao        BigInt?
+  data_atualizacao         DateTime                   @db.Date
+  id_at_status             Int                        @db.SmallInt
+  ativo                    Boolean
+  id_at_acao               BigInt
+  id_und_empresa           String                     @db.Char(5)
+  qtd_alunos               Int?
+  data_criacao             DateTime                   @db.Date
+  id_sincronismo           String?                    @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  orientacao_tecnica       String?
+  dt_update_record         DateTime?                  @db.Timestamp(6)
+  //geo_ponto                Unsupported("geometry")?
+  geo_ponto                String?                    @db.Text()
+  geo_ponto_texto          String?                    @db.VarChar(255)
+  sincroniza               Int?                       @default(0) @db.SmallInt
+  processamento            Int?                       @default(0) @db.SmallInt
+  login_usuario            String?
+  id_at_anterior           BigInt?
+  fk_und_empresa           String?                    @db.Char(5)
+  auto_atendimento         Int?                       @db.SmallInt
+  data_sei                 DateTime?                  @db.Date
+  at_arquivo               at_arquivo[]
+  usuario                  usuario?                   @relation(fields: [usuario_validacao], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk2wy9cxuwsh3cyhmip358l0l6c")
+  at_acao                  at_acao                    @relation(fields: [id_at_acao], references: [id_at_acao], onDelete: NoAction, onUpdate: NoAction, map: "fk8q4s39wy7we2slstaxkbxd737")
+  at_atendimento_indicador at_atendimento_indicador[]
+  at_atendimento_usuario   at_atendimento_usuario[]
+  at_cli_atend_prop        at_cli_atend_prop[]
+}
+
+model at_atendimento_indicador {
+  id_at_atendimento_indicador BigInt         @id(map: "pk_at_atendimento_indicador") @default(autoincrement())
+  id_at_atendimento           BigInt
+  id_at_indicador             BigInt
+  id_und_empresa              String?        @db.VarChar(5)
+  id_sincronismo              String?        @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_atendimento  String?        @db.VarChar(36)
+  dt_update_record            DateTime?      @default(now()) @db.Timestamp(6)
+  at_indicador                at_indicador   @relation(fields: [id_at_indicador], references: [id_at_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk1xax2r08665xreflnwtecl0t4")
+  at_atendimento              at_atendimento @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_atendimento_indicador")
+
+  @@unique([id_at_atendimento, id_at_indicador], map: "ix_at_atendimento_indicador")
+}
+
+model at_atendimento_usuario {
+  id_at_atendimento          BigInt
+  id_usuario                 BigInt
+  id_und_empresa             String?        @db.VarChar(5)
+  id_sincronismo             String?        @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_atendimento String?        @db.VarChar(36)
+  dt_update_record           DateTime?      @default(now()) @db.Timestamp(6)
+  at_atendimento             at_atendimento @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_atendimento_usuario")
+  usuario                    usuario        @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_usuario_atendimento")
+
+  @@id([id_at_atendimento, id_usuario], map: "pk_at_atendimento_usuario")
+}
+
+model at_cli_atend_prop {
+  id_at_atendimento             BigInt
+  id_pessoa_demeter             BigInt
+  id_pl_propriedade             BigInt?
+  id_at_cli_atend_prop          BigInt         @id(map: "at_atendimento_cliente_propriedade_pkey") @default(autoincrement())
+  id_und_empresa                String?        @db.VarChar(5)
+  id_sincronismo_atendimento    String?        @db.VarChar(36)
+  id_sincronismo_ger_pessoa     String?        @db.VarChar(36)
+  id_sincronismo_pl_propriedade String?        @db.VarChar(36)
+  id_sincronismo                String?        @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  dt_update_record              DateTime?      @default(now()) @db.Timestamp(6)
+  fk_cat_pessoa                 Int?
+  ger_pessoa                    Produtor       @relation(fields: [id_pessoa_demeter], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk29teh4plu2duhojqqnnf3j8cu")
+  pl_propriedade                Propriedade?   @relation(fields: [id_pl_propriedade], references: [id_pl_propriedade], onDelete: NoAction, onUpdate: NoAction, map: "fk2hbjbvci9gd4tw04o1t2xrcku")
+  at_atendimento                at_atendimento @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_atendimento_cliente")
+}
+
+model at_grupo_indicador {
+  id_at_grupo_indicador           BigInt              @id(map: "pk_at_grupo_indicador") @default(autoincrement())
+  descricao                       String              @db.VarChar(100)
+  data_atualizacao                DateTime            @db.Date
+  ativo                           Boolean
+  validar                         Boolean             @default(false)
+  data_max_validacao              DateTime?           @db.Date
+  dt_update_record                DateTime?           @db.Timestamp(6)
+  permitir_unica_meta_atendimento Boolean?            @default(false)
+  sn_super_grupo                  Int?                @db.SmallInt
+  tp_chamada                      Int?                @db.SmallInt
+  at_grupo_indicador              at_grupo_indicador  @relation("at_grupo_indicadorToat_grupo_indicador", fields: [id_at_grupo_indicador], references: [id_at_grupo_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fkpbyyndup2h4mhwv3q5x6ovj55")
+  other_at_grupo_indicador        at_grupo_indicador? @relation("at_grupo_indicadorToat_grupo_indicador")
+  at_indicador                    at_indicador[]
+}
+
+model at_indicador {
+  id_at_indicador          BigInt                     @id(map: "pk_at_indicador") @default(autoincrement())
+  id_at_grupo_indicador    BigInt
+  data_atualizacao         DateTime                   @db.Date
+  ativo                    Boolean
+  id_at_produto            BigInt
+  dt_update_record         DateTime?                  @db.Timestamp(6)
+  anexo_obrigatorio        Boolean?                   @default(false)
+  foto_obrigatoria         Boolean                    @default(false)
+  at_atendimento_indicador at_atendimento_indicador[]
+  at_grupo_indicador       at_grupo_indicador         @relation(fields: [id_at_grupo_indicador], references: [id_at_grupo_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk3qnbwkkgwfu9fdtgl1gtry1bp")
+  at_produto               at_produto                 @relation(fields: [id_at_produto], references: [id_at_produto], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_produto")
+}
+
+model at_produto {
+  id_at_produto    BigInt         @id(map: "pk_at_produto") @default(autoincrement())
+  nome             String         @db.VarChar(100)
+  dt_update_record DateTime?      @db.Timestamp(6)
+  at_indicador     at_indicador[]
+}
+
+model ger_cargo {
+  id_cargo         String    @id @db.Char(4)
+  nm_cargo         String    @db.VarChar(100)
+  dt_update_record DateTime  @db.Timestamp(6)
+  usuario          usuario[]
+}
+
 model pl_propriedade_ger_pessoa {
   id_pl_propriedade          BigInt
   id_pessoa_demeter          BigInt
-  id_und_empresa             String?        @db.Char(5)
-  id_pl_tipo_posse           Int?           @db.SmallInt
-  id_sincronismo_cliente     String?        @db.VarChar(36)
-  id_sincronismo_propriedade String?        @db.VarChar(36)
-  dt_update_record           DateTime?      @default(now()) @db.Timestamp(6)
-  dt_inicio_contrato         DateTime?      @db.Timestamp(6)
-  dt_termino_contrato        DateTime?      @db.Timestamp(6)
-  ger_pessoa                 ger_pessoa     @relation(fields: [id_pessoa_demeter], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_ger_pessoa_propriedade")
-  pl_propriedade             pl_propriedade @relation(fields: [id_pl_propriedade], references: [id_pl_propriedade], onDelete: NoAction, onUpdate: NoAction, map: "fk_propriedade_ger_pessoa")
+  id_und_empresa             String?     @db.Char(5)
+  id_pl_tipo_posse           Int?        @db.SmallInt
+  id_sincronismo_cliente     String?     @db.VarChar(36)
+  id_sincronismo_propriedade String?     @db.VarChar(36)
+  dt_update_record           DateTime?   @default(now()) @db.Timestamp(6)
+  dt_inicio_contrato         DateTime?   @db.Timestamp(6)
+  dt_termino_contrato        DateTime?   @db.Timestamp(6)
+  ger_pessoa                 Produtor    @relation(fields: [id_pessoa_demeter], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_ger_pessoa_propriedade")
+  pl_propriedade             Propriedade @relation(fields: [id_pl_propriedade], references: [id_pl_propriedade], onDelete: NoAction, onUpdate: NoAction, map: "fk_propriedade_ger_pessoa")
 
   @@id([id_pl_propriedade, id_pessoa_demeter], map: "pk_propriedade_ger_pessoa")
 }
@@ -359,7 +351,6 @@ model spatial_ref_sys {
   proj4text String? @db.VarChar(2048)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model usuario {
   id_usuario                   BigInt                   @id(map: "pk_usuario") @default(autoincrement())
   login_usuario                String                   @unique(map: "uq_usuario_login") @db.VarChar(255)
@@ -381,6 +372,6 @@ model usuario {
   dt_update_record             DateTime?                @default(now()) @db.Date
   at_atendimento               at_atendimento[]
   at_atendimento_usuario       at_atendimento_usuario[]
-  at_prf_see                   at_prf_see[]
+  at_prf_see                   Perfil[]
   ger_cargo                    ger_cargo?               @relation(fields: [id_cargo], references: [id_cargo], onDelete: NoAction, onUpdate: NoAction, map: "fk5j2oxae47ac7gxtfitkc7jwlg")
 }

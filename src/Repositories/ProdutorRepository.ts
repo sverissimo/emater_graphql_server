@@ -11,25 +11,27 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
     const produtor = await this.prisma.produtor.findFirst({
       where: { OR: [{ id_pessoa_demeter: id }, { nr_cpf_cnpj: cpf }] },
       include: {
-        produtor_propriedades: true,
-        perfis: {
-          include: { atividade: true, dados_producao: true },
+        pl_propriedade_ger_pessoa: true,
+        at_prf_see: {
+          include: {
+            at_prf_see_propriedade: true,
+            dados_producao_agro_industria: true,
+            dados_producao_in_natura: true,
+          },
         },
-        relatorios: true,
       },
     });
 
     if (!produtor) {
       this.throwError("NOT_FOUND");
     }
-    console.log("🚀 ~ file: ProdutorRepository.ts:26 ~ ProdutorRepository ~ findOne ~ produtor:", produtor);
     return produtor;
   }
 
   async findAll() {
     const produtores = await this.prisma.produtor.findMany({
       include: {
-        produtor_propriedades: true,
+        pl_propriedade_ger_pessoa: true,
       },
     });
     return produtores;

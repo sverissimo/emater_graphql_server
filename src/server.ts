@@ -8,7 +8,9 @@ import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHt
 import { resolvers as miscResolvers } from "./resolvers.js";
 import { readFile } from "node:fs/promises";
 import { auth } from "./auth/auth.js";
-import { relatorioResolver } from "./relatorio/relatorio-resolver.js";
+import BigIntScalar from "./scalars/BigInt.js";
+import DateTime from "./scalars/DateTime.js";
+//import { relatorioResolver } from "./relatorio/relatorio-resolver.js";
 
 interface MyContext {
   token?: string;
@@ -21,15 +23,14 @@ interface MyContext {
 
 const app = express();
 const httpServer = http.createServer(app);
-
 const typeDefsMisc = await readFile("./schema.graphql", "utf-8");
-const relatorioTypeDefs = await readFile("./src/relatorio/relatorio-schema.graphql", "utf-8");
-
-const typeDefs = [typeDefsMisc, relatorioTypeDefs];
+//const relatorioTypeDefs = await readFile("./src/relatorio/relatorio-schema.graphql", "utf-8");
+const typeDefs = [typeDefsMisc];
+const scalars = { BigInt: BigIntScalar, DateTime: DateTime };
 
 const server = new ApolloServer<MyContext>({
   typeDefs,
-  resolvers: [miscResolvers, relatorioResolver],
+  resolvers: [scalars, miscResolvers],
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 });
 

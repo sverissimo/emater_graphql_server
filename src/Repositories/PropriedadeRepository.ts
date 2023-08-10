@@ -10,7 +10,7 @@ export class PropriedadeRepository extends PrismaRepository implements Repositor
     const propriedade = await this.prisma.propriedade.findFirst({
       where: { id_pl_propriedade: id },
       include: {
-        produtor_propriedade: true,
+        pl_propriedade_ger_pessoa: true,
       },
     });
 
@@ -18,16 +18,16 @@ export class PropriedadeRepository extends PrismaRepository implements Repositor
   }
 
   async findByProdutorId(produtorId: bigint) {
-    const produtoresFull = await this.prisma.produtorPropriedades.findMany({
+    const produtoresFull = await this.prisma.pl_propriedade_ger_pessoa.findMany({
       include: {
-        produtor: true,
-        propriedade: true,
+        ger_pessoa: true,
+        pl_propriedade: true,
       },
     });
 
     const propriedadeIds = produtoresFull
-      .filter((t) => t.produtor_id === produtorId)
-      .map((p) => p.propriedade_id);
+      .filter((t) => t.id_pessoa_demeter === produtorId)
+      .map((p) => p.id_pl_propriedade);
 
     return this.prisma.propriedade.findMany({ where: { id_pl_propriedade: { in: propriedadeIds } } });
   }
@@ -35,8 +35,8 @@ export class PropriedadeRepository extends PrismaRepository implements Repositor
   async findAll() {
     const propriedades = await this.prisma.propriedade.findMany({
       include: {
-        produtor_propriedade: {
-          include: { produtor: true },
+        pl_propriedade_ger_pessoa: {
+          include: { ger_pessoa: true },
         },
       },
     });

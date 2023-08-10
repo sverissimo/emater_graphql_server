@@ -1,25 +1,28 @@
-import { Perfil, Prisma } from "@prisma/client";
+import { Perfil } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "./Repository.js";
 
 export type findPerfilInput = { tipo_perfil: string; propriedade_id: number; id_cliente: number };
-
+export type CreatePerfilInput = Omit<Perfil, "id"> & {
+  id_propriedade: bigint;
+  atividade?: string;
+  producao_dedicada_pnae?: boolean;
+};
 export class PerfilRepository extends PrismaRepository implements Repository<Perfil> {
-  async create(perfilInput: Omit<Perfil, "id">) {
+  async create(perfilInput: CreatePerfilInput) {
     try {
-      const { id_cliente, id_dados_producao_agro_industria, ...rest } = perfilInput;
+      const { id_propriedade, producao_dedicada_pnae, atividade, ...perfilTableData } = perfilInput;
 
       return await this.prisma.perfil.create({
         data: {
-          ...rest,
-          produtor: {
-            connect: { id_pessoa_demeter: id_cliente },
+          ...perfilTableData,
+          at_prf_see_propriedade: {
+            create: {
+              id_propriedade,
+              atividade,
+              producao_dedicada_pnae,
+            },
           },
-          dados_producao: id_dados_producao_agro_industria
-            ? {
-                connect: { id: id_dados_producao_agro_industria },
-              }
-            : undefined,
         },
       });
     } catch (error: any) {
@@ -38,8 +41,9 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
   async findByProdutor(produtorId: number) {
     const perfilData = await this.prisma.perfil.findMany({
       include: {
-        atividade: true,
-        dados_producao: true,
+        at_prf_see_propriedade: true,
+        dados_producao_agro_industria: true,
+        dados_producao_in_natura: true,
       },
       where: {
         id_cliente: produtorId,
@@ -51,19 +55,12 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
   async findAll(): Promise<Perfil[]> {
     const perfilData = await this.prisma.perfil.findMany({
       include: {
-        atividade: {
-          include: {
-            propriedade: {
-              include: {
-                produtor_propriedade: { include: { produtor: true } },
-              },
-            },
-          },
-        },
-
-        dados_producao: true,
+        dados_producao_agro_industria: true,
+        dados_producao_in_natura: true,
+        ger_pessoa: true,
       },
     });
+
     return perfilData;
   }
 
