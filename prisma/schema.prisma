@@ -81,7 +81,8 @@ model Propriedade {
   ds_roteiro_acesso         String?                     @db.VarChar(500)
   sn_ctd                    Int?
   at_cli_atend_prop         at_cli_atend_prop[]
-  at_prf_see_propriedade    at_prf_see_propriedade[]
+  //at_prf_see_propriedade    at_prf_see_propriedade[]
+  at_prf_see_propriedade    at_prf_see_propriedade?
   pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
 
   @@index([nome_propriedade, logradouro])
@@ -125,9 +126,19 @@ model Perfil {
   id_dados_producao_agro_industria             BigInt?
   dados_producao_agro_industria                at_prf_see_dados_producao? @relation("agro_industria", fields: [id_dados_producao_agro_industria], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados_agroindustria")
   dados_producao_in_natura                     at_prf_see_dados_producao? @relation("in_natura", fields: [id_dados_producao_in_natura], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados_in_natura")
-  at_prf_see_propriedade                       at_prf_see_propriedade[]
+  at_prf_see_propriedade                       at_prf_see_propriedade?
 
   @@map("at_prf_see")
+}
+
+model at_prf_see_propriedade {
+  id                     BigInt      @id(map: "pk_at_prf_see_propriedade") @default(autoincrement())
+  id_propriedade         BigInt      @unique
+  id_perfil_see          BigInt      @unique
+  atividade              String?     @db.VarChar(64)
+  producao_dedicada_pnae Boolean?
+  at_prf_see             Perfil      @relation(fields: [id_perfil_see], references: [id], map: "fk_prf_see")
+  pl_propriedade         Propriedade @relation(fields: [id_propriedade], references: [id_pl_propriedade], map: "fk_propriedade")
 }
 
 model at_prf_see_dados_producao {
@@ -165,16 +176,6 @@ model at_prf_see_produto {
   producao_aproximada_ultimo_ano_pnae  BigInt?
   producao_aproximada_ultimo_ano_total BigInt?
   at_prf_see_grupos_produtos           at_prf_see_grupos_produtos @relation(fields: [id_perfil_grupo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_perfil_see")
-}
-
-model at_prf_see_propriedade {
-  id                     BigInt      @id(map: "pk_at_prf_see_propriedade") @default(autoincrement())
-  id_perfil_see          BigInt
-  id_propriedade         BigInt
-  atividade              String?     @db.VarChar(64)
-  producao_dedicada_pnae Boolean?
-  at_prf_see             Perfil      @relation(fields: [id_perfil_see], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prf_see")
-  pl_propriedade         Propriedade @relation(fields: [id_propriedade], references: [id_pl_propriedade], onDelete: NoAction, onUpdate: NoAction, map: "fk_propriedade")
 }
 
 model at_acao {

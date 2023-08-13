@@ -1,4 +1,4 @@
-import { Perfil, PrismaClient, Produtor } from "@prisma/client";
+import { Perfil, PrismaClient, Produtor, Propriedade } from "@prisma/client";
 import { ProdutorRepository } from "./Repositories/ProdutorRepository.js";
 import { PropriedadeRepository } from "./Repositories/PropriedadeRepository.js";
 import { CreatePerfilInput, PerfilRepository } from "./Repositories/PerfilRepository.js";

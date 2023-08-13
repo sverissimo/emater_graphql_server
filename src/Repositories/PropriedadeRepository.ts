@@ -18,18 +18,19 @@ export class PropriedadeRepository extends PrismaRepository implements Repositor
   }
 
   async findByProdutorId(produtorId: bigint) {
-    const produtoresFull = await this.prisma.pl_propriedade_ger_pessoa.findMany({
+    const propriedades = await this.prisma.pl_propriedade_ger_pessoa.findMany({
+      where: { id_pessoa_demeter: produtorId },
       include: {
-        ger_pessoa: true,
-        pl_propriedade: true,
+        pl_propriedade: {
+          include: {
+            at_prf_see_propriedade: true,
+          },
+        },
       },
     });
 
-    const propriedadeIds = produtoresFull
-      .filter((t) => t.id_pessoa_demeter === produtorId)
-      .map((p) => p.id_pl_propriedade);
-
-    return this.prisma.propriedade.findMany({ where: { id_pl_propriedade: { in: propriedadeIds } } });
+    const result = propriedades.map((p) => p.pl_propriedade);
+    return result;
   }
 
   async findAll() {

@@ -51,6 +51,7 @@ type Propriedade {
   atividade: Atividade
   produtor_propriedade: ProdutorPropriedades
   produtor: Produtor
+  at_prf_see_propriedade: Atividade
 }
 
 type Produtor {
@@ -130,6 +131,7 @@ type Perfil {
   id_dados_producao_agro_industria: BigInt
   id_dados_producao_in_natura: BigInt
   produtor: Produtor
+  usuario: Usuario
   dados_producao_agro_industria: DadosProducao
   dados_producao_in_natura: DadosProducao
   at_prf_see_propriedade: Atividade
@@ -158,6 +160,33 @@ type Atividade {
   perfil: Perfil
   propriedade: Propriedade
 }
+
+type Usuario {
+  id_usuario: BigInt!
+  login_usuario: String!
+  nome_usuario: String
+  email_usuario: String
+  celular_usuario: String
+  token_demeter: String!
+  data_cadastro: DateTime!
+  data_expiracao_token_demeter: DateTime!
+  ativo: Boolean!
+  cpf_usuario: String
+  matricula_usuario: String
+  digito_matricula: String
+  situacao_emater: String
+  id_und_empresa: String
+  id_cargo: String
+  orgao_classe: String
+  sexo_usuario: String
+  dt_update_record: DateTime
+  #at_atendimento: [Atendimento!]!
+  #at_atendimento_usuario: [AtendimentoUsuario!]!
+  at_prf_see: [Perfil!]!
+  #ger_cargo: GerCargo
+}
+
+scalar DateTime
 
 input CreatePerfilInput {
   id_tecnico: BigInt

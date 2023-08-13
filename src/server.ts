@@ -16,11 +16,6 @@ interface MyContext {
   token?: string;
 }
 
-(BigInt.prototype as any).toJSON = function () {
-  const int = Number.parseInt(this.toString());
-  return int ?? this.toString();
-};
-
 const app = express();
 const httpServer = http.createServer(app);
 const typeDefsMisc = await readFile("./schema.graphql", "utf-8");

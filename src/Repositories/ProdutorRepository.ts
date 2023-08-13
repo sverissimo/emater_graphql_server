@@ -11,12 +11,12 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
     const produtor = await this.prisma.produtor.findFirst({
       where: { OR: [{ id_pessoa_demeter: id }, { nr_cpf_cnpj: cpf }] },
       include: {
-        pl_propriedade_ger_pessoa: true,
         at_prf_see: {
           include: {
             at_prf_see_propriedade: true,
             dados_producao_agro_industria: true,
             dados_producao_in_natura: true,
+            usuario: true,
           },
         },
       },
@@ -25,6 +25,7 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
     if (!produtor) {
       this.throwError("NOT_FOUND");
     }
+
     return produtor;
   }
 

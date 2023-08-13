@@ -44,6 +44,7 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
         at_prf_see_propriedade: true,
         dados_producao_agro_industria: true,
         dados_producao_in_natura: true,
+        usuario: true,
       },
       where: {
         id_cliente: produtorId,
