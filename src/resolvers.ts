@@ -18,6 +18,12 @@ export const resolvers = {
     perfisPorProdutor: (_root: any, { produtorId }: { produtorId: number }, { service }: any) => {
       return perfilRepository.findByProdutor(produtorId);
     },
+    usuario: (_: any, { id, matricula_usuario }: { id: string; matricula_usuario: string }) => {
+      console.log({ id, matricula_usuario });
+      return prismaClient.usuario.findFirst({
+        where: { OR: [{ id_usuario: BigInt(id || 0) }, { matricula_usuario }] },
+      });
+    },
   },
   Mutation: {
     createPerfil: async (_root: any, { input: perfilInput }: { input: CreatePerfilInput }) => {

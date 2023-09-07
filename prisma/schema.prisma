@@ -120,7 +120,7 @@ model Perfil {
   atividades_com_regularizacao_ambiental       BigInt?
   possui_agroindustria_propria                 Boolean?
   grau_interesse_pnae                          String?                    @db.VarChar(64)
-  usuario                                      usuario?                   @relation(fields: [id_tecnico], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "at_prf_see_fk")
+  usuario                                      Usuario?                   @relation(fields: [id_tecnico], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "at_prf_see_fk")
   ger_pessoa                                   Produtor                   @relation(fields: [id_cliente], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente")
   id_dados_producao_in_natura                  BigInt?
   id_dados_producao_agro_industria             BigInt?
@@ -232,7 +232,7 @@ model at_atendimento {
   auto_atendimento         Int?                       @db.SmallInt
   data_sei                 DateTime?                  @db.Date
   at_arquivo               at_arquivo[]
-  usuario                  usuario?                   @relation(fields: [usuario_validacao], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk2wy9cxuwsh3cyhmip358l0l6c")
+  usuario                  Usuario?                   @relation(fields: [usuario_validacao], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk2wy9cxuwsh3cyhmip358l0l6c")
   at_acao                  at_acao                    @relation(fields: [id_at_acao], references: [id_at_acao], onDelete: NoAction, onUpdate: NoAction, map: "fk8q4s39wy7we2slstaxkbxd737")
   at_atendimento_indicador at_atendimento_indicador[]
   at_atendimento_usuario   at_atendimento_usuario[]
@@ -261,7 +261,7 @@ model at_atendimento_usuario {
   id_sincronismo_atendimento String?        @db.VarChar(36)
   dt_update_record           DateTime?      @default(now()) @db.Timestamp(6)
   at_atendimento             at_atendimento @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_atendimento_usuario")
-  usuario                    usuario        @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_usuario_atendimento")
+  usuario                    Usuario        @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk_usuario_atendimento")
 
   @@id([id_at_atendimento, id_usuario], map: "pk_at_atendimento_usuario")
 }
@@ -324,7 +324,7 @@ model ger_cargo {
   id_cargo         String    @id @db.Char(4)
   nm_cargo         String    @db.VarChar(100)
   dt_update_record DateTime  @db.Timestamp(6)
-  usuario          usuario[]
+  usuario          Usuario[]
 }
 
 model pl_propriedade_ger_pessoa {
@@ -352,7 +352,7 @@ model spatial_ref_sys {
   proj4text String? @db.VarChar(2048)
 }
 
-model usuario {
+model Usuario {
   id_usuario                   BigInt                   @id(map: "pk_usuario") @default(autoincrement())
   login_usuario                String                   @unique(map: "uq_usuario_login") @db.VarChar(255)
   nome_usuario                 String?                  @db.VarChar(255)

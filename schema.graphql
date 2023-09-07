@@ -9,6 +9,7 @@ type Query {
   perfil: [Perfil]
   dadosProducao: [DadosProducao]
   perfisPorProdutor(produtorId: Int): [Perfil]
+  usuario(id: String, matricula_usuario: String): Usuario
 }
 
 type Mutation {
