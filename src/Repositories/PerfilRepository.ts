@@ -1,6 +1,8 @@
 import { Perfil } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "./Repository.js";
+import humps from "humps";
+import { EnumPropsRepository } from "./EnumPropsRepository.js";
 
 export type findPerfilInput = { tipo_perfil: string; propriedade_id: number; id_cliente: number };
 export type CreatePerfilInput = Omit<Perfil, "id"> & {
@@ -53,7 +55,7 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
     return perfilData;
   }
 
-  async findAll(): Promise<Perfil[]> {
+  async findAll(): Promise<any[]> {
     const perfilData = await this.prisma.perfil.findMany({
       include: {
         dados_producao_agro_industria: true,
@@ -61,8 +63,10 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
         ger_pessoa: true,
       },
     });
-
-    return perfilData;
+    const parsedPerfis = perfilData.map(async (perfil) =>
+      new EnumPropsRepository(this.prisma).getPerfilProps(perfil)
+    );
+    return parsedPerfis;
   }
 
   async update(id: number, updatePerfilInput: Partial<Perfil>) {

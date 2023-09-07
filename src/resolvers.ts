@@ -2,11 +2,13 @@ import { Perfil, PrismaClient, Produtor, Propriedade } from "@prisma/client";
 import { ProdutorRepository } from "./Repositories/ProdutorRepository.js";
 import { PropriedadeRepository } from "./Repositories/PropriedadeRepository.js";
 import { CreatePerfilInput, PerfilRepository } from "./Repositories/PerfilRepository.js";
+import { EnumPropsRepository } from "./Repositories/EnumPropsRepository.js";
 
 const prismaClient = new PrismaClient({ log: ["info", "warn", "error"] });
 const produtorRepository = new ProdutorRepository(prismaClient);
 const propriedadeRepository = new PropriedadeRepository(prismaClient);
 const perfilRepository = new PerfilRepository(prismaClient);
+const enumPropsRepository = new EnumPropsRepository(prismaClient);
 
 export const resolvers = {
   Query: {
@@ -37,6 +39,6 @@ export const resolvers = {
 
   Produtor: {
     propriedades: (p: Produtor) => propriedadeRepository.findByProdutorId(p.id_pessoa_demeter),
-    perfis: (p: any) => p.at_prf_see,
+    perfis: (p: any) => p.at_prf_see.map(async (perfil: any) => await enumPropsRepository.getPerfilProps(perfil)),
   },
 };

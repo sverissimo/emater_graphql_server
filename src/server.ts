@@ -10,6 +10,7 @@ import { readFile } from "node:fs/promises";
 import { auth } from "./auth/auth.js";
 import BigIntScalar from "./scalars/BigInt.js";
 import DateTime from "./scalars/DateTime.js";
+import { RESTAPIRoutes } from "./routes.js";
 //import { relatorioResolver } from "./relatorio/relatorio-resolver.js";
 
 interface MyContext {
@@ -30,6 +31,7 @@ const server = new ApolloServer<MyContext>({
 });
 
 await server.start();
+app.use("/api", RESTAPIRoutes);
 app.use(
   "/",
   cors<cors.CorsRequest>(),
