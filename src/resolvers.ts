@@ -17,7 +17,7 @@ export const resolvers = {
     propriedades: () => propriedadeRepository.findAll(),
     perfil: () => perfilRepository.findAll(),
     dadosProducao: () => prismaClient.at_prf_see_dados_producao.findMany(),
-    perfisPorProdutor: (_root: any, { produtorId }: { produtorId: number }, { service }: any) => {
+    perfisPorProdutor: (_root: any, { produtorId }: { produtorId: string }, { service }: any) => {
       return perfilRepository.findByProdutor(produtorId);
     },
     usuario: (_: any, { id, matricula_usuario }: { id: string; matricula_usuario: string }) => {

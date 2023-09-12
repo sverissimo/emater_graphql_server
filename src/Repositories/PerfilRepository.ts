@@ -1,4 +1,4 @@
-import { Perfil } from "@prisma/client";
+import { Perfil, at_prf_see_dados_producao } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "./Repository.js";
 import humps from "humps";
@@ -40,7 +40,7 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
     return await this.prisma.perfil.findUnique({ where: { id } });
   }
 
-  async findByProdutor(produtorId: number) {
+  async findByProdutor(produtorId: string) {
     const perfilData = await this.prisma.perfil.findMany({
       include: {
         at_prf_see_propriedade: true,
@@ -49,23 +49,58 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
         usuario: true,
       },
       where: {
-        id_cliente: produtorId,
+        id_cliente: BigInt(produtorId),
       },
     });
+
     return perfilData;
   }
 
   async findAll(): Promise<any[]> {
     const perfilData = await this.prisma.perfil.findMany({
       include: {
-        dados_producao_agro_industria: true,
-        dados_producao_in_natura: true,
+        at_prf_see_propriedade: true,
+        usuario: true,
+        dados_producao_in_natura: {
+          include: {
+            at_prf_see_grupos_produtos: {
+              include: {
+                at_prf_grupo_produto: true,
+                at_prf_see_produto: {
+                  include: {
+                    at_prf_produto: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        dados_producao_agro_industria: {
+          include: {
+            at_prf_see_grupos_produtos: {
+              include: {
+                at_prf_grupo_produto: true,
+                at_prf_see_produto: {
+                  include: {
+                    at_prf_produto: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+
         ger_pessoa: true,
       },
     });
+
     const parsedPerfis = perfilData.map(async (perfil) =>
       new EnumPropsRepository(this.prisma).getPerfilProps(perfil)
     );
+    /* console.log(
+      "🚀 ~ file: PerfilRepository.ts:81 ~ PerfilRepository ~ findAll ~ parsedPerfis:",
+      perfilData[0].dados_producao_in_natura?.at_prf_see_grupos_produtos
+    ); */
     return parsedPerfis;
   }
 
@@ -89,5 +124,30 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
     } catch (error) {
       this.handleRecordNotFound(error as Error);
     }
+  }
+
+  async getProdutos(perfil: Perfil) {
+    const { id_dados_producao_in_natura, id_dados_producao_agro_industria } = perfil;
+    const ids = [];
+    if (id_dados_producao_agro_industria) {
+      ids.push({ id_dados_producao: id_dados_producao_agro_industria });
+    }
+    if (id_dados_producao_in_natura) {
+      ids.push({ id_dados_producao: id_dados_producao_in_natura });
+    }
+    let gruposProdutos;
+    if (ids.length) {
+      gruposProdutos = await this.prisma.at_prf_see_grupos_produtos.findMany({
+        where: {
+          OR: ids,
+        },
+      });
+    }
+    /* const produtos = await this.prisma.at_prf_see_produto.findMany({
+  where: {
+
+  }
+}) */
+    gruposProdutos;
   }
 }

@@ -8,7 +8,7 @@ type Query {
   produtoresFull: [ProdutorPropriedades]
   perfil: [Perfil]
   dadosProducao: [DadosProducao]
-  perfisPorProdutor(produtorId: Int): [Perfil]
+  perfisPorProdutor(produtorId: String): [Perfil]
   usuario(id: String, matricula_usuario: String): Usuario
 }
 
@@ -150,6 +150,49 @@ type DadosProducao {
   tipo_regularizacao_ambiental: String
   valor_total_obtido_outros: BigInt
   perfil: Perfil
+  at_prf_see_grupos_produtos: [GrupoProdutosPerfil]
+}
+
+type GrupoProdutosPerfil {
+  id: BigInt!
+  id_dados_producao: BigInt!
+  id_grupo_produtos: BigInt!
+  producao_aproximada_ultimo_ano_pnae: BigInt
+  area_utilizada: Float
+  producao_aproximada_ultimo_ano_total: BigInt
+  at_prf_see_dados_producao: DadosProducao!
+  at_prf_grupo_produto: GrupoProduto!
+  at_prf_see_produto: [ProdutoPerfil]
+}
+
+type GrupoProduto {
+  id_grupo: BigInt!
+  id_grupo_legado: Int
+  tipo: Int
+  nm_grupo: String
+  dados_producao_estratificados_por_produto: Boolean!
+  gruposProdutos: [GrupoProdutosPerfil]
+}
+
+type ProdutoPerfil {
+  id: BigInt!
+  id_perfil_grupo: BigInt!
+  id_produto: BigInt!
+  area_utilizada: Float
+  producao_aproximada_ultimo_ano_pnae: BigInt
+  producao_aproximada_ultimo_ano_total: BigInt
+  grupoProdutos: GrupoProdutosPerfil!
+  at_prf_produto: ProdutoDetails!
+}
+
+type ProdutoDetails {
+  id_produto: BigInt!
+  id_legado: Int
+  nm_produto: String
+  tipo: Int
+  id_grupo_legado: Int
+  sg_und_medida: String
+  produtos: [ProdutoPerfil]
 }
 
 type Atividade {

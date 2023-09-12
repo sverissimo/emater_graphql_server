@@ -165,7 +165,17 @@ model at_prf_see_grupos_produtos {
   area_utilizada                       Float?
   producao_aproximada_ultimo_ano_total BigInt?
   at_prf_see_dados_producao            at_prf_see_dados_producao @relation(fields: [id_dados_producao], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados")
+  at_prf_grupo_produto                 at_prf_grupo_produto      @relation(fields: [id_grupo_produtos], references: [id_grupo], onDelete: NoAction, onUpdate: NoAction)
   at_prf_see_produto                   at_prf_see_produto[]
+}
+
+model at_prf_grupo_produto {
+  id_grupo                                  BigInt                       @id
+  id_grupo_legado                           Int?
+  tipo                                      Int?
+  nm_grupo                                  String?                      @db.VarChar(100)
+  dados_producao_estratificados_por_produto Boolean                      @default(false)
+  at_prf_see_grupos_produtos                at_prf_see_grupos_produtos[]
 }
 
 model at_prf_see_produto {
@@ -176,6 +186,18 @@ model at_prf_see_produto {
   producao_aproximada_ultimo_ano_pnae  BigInt?
   producao_aproximada_ultimo_ano_total BigInt?
   at_prf_see_grupos_produtos           at_prf_see_grupos_produtos @relation(fields: [id_perfil_grupo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_perfil_see")
+  at_prf_produto                       at_prf_produto             @relation(fields: [id_produto], references: [id_produto], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model at_prf_produto {
+  id_produto          BigInt               @id
+  id_legado           Int?
+  nm_produto          String?              @db.VarChar(100)
+  tipo                Int?
+  id_grupo_legado     Int?
+  sg_und_medida       String?              @db.VarChar(10)
+  at_prf_see_produtos at_prf_see_produto[]
 }
 
 model at_acao {
@@ -313,13 +335,6 @@ model at_indicador {
   at_produto               at_produto                 @relation(fields: [id_at_produto], references: [id_at_produto], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_produto")
 }
 
-model at_produto {
-  id_at_produto    BigInt         @id(map: "pk_at_produto") @default(autoincrement())
-  nome             String         @db.VarChar(100)
-  dt_update_record DateTime?      @db.Timestamp(6)
-  at_indicador     at_indicador[]
-}
-
 model ger_cargo {
   id_cargo         String    @id @db.Char(4)
   nm_cargo         String    @db.VarChar(100)
@@ -375,4 +390,13 @@ model Usuario {
   at_atendimento_usuario       at_atendimento_usuario[]
   at_prf_see                   Perfil[]
   ger_cargo                    ger_cargo?               @relation(fields: [id_cargo], references: [id_cargo], onDelete: NoAction, onUpdate: NoAction, map: "fk5j2oxae47ac7gxtfitkc7jwlg")
+
+  @@map("usuario")
+}
+
+model at_produto {
+  id_at_produto    BigInt         @id(map: "pk_at_produto") @default(autoincrement())
+  nome             String         @db.VarChar(100)
+  dt_update_record DateTime?      @db.Timestamp(6)
+  at_indicador     at_indicador[]
 }
