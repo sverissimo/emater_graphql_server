@@ -1,6 +1,7 @@
 export interface Repository<T> {
   findOne: (...args: any[]) => void;
-  findFirst?: () => void;
+  findFirst?: (args: any) => void;
+  findMany?: (ids: string | string[]) => void;
   findAll: () => void;
   create?: (input: any) => void;
   createMany?: () => void;

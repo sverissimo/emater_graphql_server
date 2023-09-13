@@ -1,13 +1,24 @@
-import { Perfil, PrismaClient, Produtor, Propriedade } from "@prisma/client";
-import { ProdutorRepository } from "./Repositories/ProdutorRepository.js";
-import { PropriedadeRepository } from "./Repositories/PropriedadeRepository.js";
-import { CreatePerfilInput, PerfilRepository } from "./Repositories/PerfilRepository.js";
-import { EnumPropsRepository } from "./Repositories/EnumPropsRepository.js";
+import {
+  Perfil,
+  PrismaClient,
+  Produtor,
+} from '@prisma/client';
+
+import { EnumPropsRepository } from './Repositories/EnumPropsRepository.js';
+import {
+  CreatePerfilInput,
+  PerfilRepository,
+} from './Repositories/PerfilRepository.js';
+import { ProdutorRepository } from './Repositories/ProdutorRepository.js';
+import { PropriedadeRepository } from './Repositories/PropriedadeRepository.js';
+import { UsuarioRepository } from './Repositories/UsuarioRepository.js';
 
 const prismaClient = new PrismaClient({ log: ["info", "warn", "error"] });
+
 const produtorRepository = new ProdutorRepository(prismaClient);
 const propriedadeRepository = new PropriedadeRepository(prismaClient);
 const perfilRepository = new PerfilRepository(prismaClient);
+const usuarioRepository = new UsuarioRepository(prismaClient);
 const enumPropsRepository = new EnumPropsRepository(prismaClient);
 
 export const resolvers = {
@@ -20,13 +31,12 @@ export const resolvers = {
     perfisPorProdutor: (_root: any, { produtorId }: { produtorId: string }, { service }: any) => {
       return perfilRepository.findByProdutor(produtorId);
     },
-    usuario: (_: any, { id, matricula_usuario }: { id: string; matricula_usuario: string }) => {
-      console.log({ id, matricula_usuario });
-      return prismaClient.usuario.findFirst({
-        where: { OR: [{ id_usuario: BigInt(id || 0) }, { matricula_usuario }] },
-      });
-    },
+    usuario: (_: any, { id, matricula_usuario }: { id: string; matricula_usuario: string }) =>
+      usuarioRepository.find({ id, matricula_usuario }),
+    usuarios: (_: any, { ids, matriculas }: { ids?: string; matriculas?: string }) =>
+      usuarioRepository.find({ id: ids, matricula_usuario: matriculas }),
   },
+
   Mutation: {
     createPerfil: async (_root: any, { input: perfilInput }: { input: CreatePerfilInput }) => {
       return await perfilRepository.create(perfilInput);
