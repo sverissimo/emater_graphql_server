@@ -80,13 +80,32 @@ model Propriedade {
   ativo                     Boolean?
   ds_roteiro_acesso         String?                     @db.VarChar(500)
   sn_ctd                    Int?
+  municipio                 Municipio?                  @relation(fields: [id_municipio], references: [id_municipio])
   at_cli_atend_prop         at_cli_atend_prop[]
-  //at_prf_see_propriedade    at_prf_see_propriedade[]
   at_prf_see_propriedade    at_prf_see_propriedade?
   pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
 
   @@index([nome_propriedade, logradouro])
   @@map("pl_propriedade")
+}
+
+model Municipio {
+  id_municipio          Int           @id
+  fk_estado             Int
+  nm_municipio          String?       @db.VarChar(100)
+  cd_ibge               String?       @db.VarChar(15)
+  cd_cpi                String?       @db.VarChar(15)
+  fk_reg_planejamento   Int?
+  fk_reg_administrativa Int?
+  dt_update_record      DateTime      @db.Timestamptz()
+  fk_microterritorio    Int?
+  data_atualizacao_rm   DateTime?     @db.Date
+  tamanho_modulo_fiscal Float?
+  nr_latitude           String?       @db.VarChar(10)
+  nr_longitude          String?       @db.VarChar(10)
+  Propriedade           Propriedade[]
+
+  @@map("sep_municipio")
 }
 
 model Perfil {

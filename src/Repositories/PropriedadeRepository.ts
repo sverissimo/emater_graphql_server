@@ -1,5 +1,5 @@
-import { PrismaRepository } from "./PrismaRepository.js";
-import { Repository } from "./Repository.js";
+import { PrismaRepository } from './PrismaRepository.js';
+import { Repository } from './Repository.js';
 
 export class PropriedadeRepository extends PrismaRepository implements Repository<any> {
   async findOne(id: number) {
@@ -13,7 +13,6 @@ export class PropriedadeRepository extends PrismaRepository implements Repositor
         pl_propriedade_ger_pessoa: true,
       },
     });
-
     return propriedade;
   }
 
@@ -24,11 +23,11 @@ export class PropriedadeRepository extends PrismaRepository implements Repositor
         pl_propriedade: {
           include: {
             at_prf_see_propriedade: true,
+            municipio: true,
           },
         },
       },
     });
-
     const result = propriedades.map((p) => p.pl_propriedade);
     return result;
   }
@@ -39,8 +38,10 @@ export class PropriedadeRepository extends PrismaRepository implements Repositor
         pl_propriedade_ger_pessoa: {
           include: { ger_pessoa: true },
         },
+        municipio: true,
       },
     });
+
     return propriedades;
   }
 }
