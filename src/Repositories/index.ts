@@ -1,3 +1,4 @@
+export { AtendimentoRepository } from './AtendimentoRepository';
 export { EnumPropsRepository } from './EnumPropsRepository';
 export {
   CreatePerfilInput,

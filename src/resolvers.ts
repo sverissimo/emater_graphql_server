@@ -31,10 +31,14 @@ export const resolvers = {
     perfisPorProdutor: (_root: any, { produtorId }: { produtorId: string }, { service }: any) => {
       return perfilRepository.findByProdutor(produtorId);
     },
-    usuario: (_: any, { id, matricula_usuario }: { id: string; matricula_usuario: string }) =>
-      usuarioRepository.find({ id, matricula_usuario }),
+    usuario: async (_: any, { id }: { id: string }) => {
+      const usuario = usuarioRepository.findOne(id);
+      return usuario;
+    },
     usuarios: (_: any, { ids, matriculas }: { ids?: string; matriculas?: string }) =>
       usuarioRepository.find({ id: ids, matricula_usuario: matriculas }),
+    // getReadOnlyRelatorios: (_: any, { relatorios }: { relatorios: any[] }) =>
+    //   atendimentoRepository.getReadOnlyRelatorioIds(relatorios),
   },
 
   Mutation: {
