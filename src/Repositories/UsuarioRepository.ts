@@ -5,7 +5,7 @@ import { Repository } from './Repository.js';
 
 export class UsuarioRepository extends PrismaRepository implements Repository<Usuario> {
   async findOne(id: string) {
-    return await this.prisma.usuario.findFirst({ where: { id_usuario: BigInt(id) } });
+    return this.find({ id });
   }
 
   async find({ id, matricula_usuario }: { id?: string; matricula_usuario?: string }) {
@@ -21,7 +21,16 @@ export class UsuarioRepository extends PrismaRepository implements Repository<Us
 
       const usuarios = await this.prisma.usuario.findMany({
         where: { OR: query },
+        include: {
+          perfil_demeter: {
+            include: {
+              perfil: true,
+            },
+          },
+        },
       });
+
+      console.log("🚀 ~ file: UsuarioRepository.ts:34 ~ UsuarioRepository ~ find ~ usuarios:", usuarios);
       return usuarios;
     } catch (error) {
       console.log("🚀 ~ file: UsuarioRepository.ts:27 ~ UsuarioRepository ~ find ~ error:", error);

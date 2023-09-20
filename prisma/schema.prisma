@@ -410,8 +410,24 @@ model Usuario {
   at_atendimento_usuario       at_atendimento_usuario[]
   at_prf_see                   Perfil[]
   ger_cargo                    ger_cargo?               @relation(fields: [id_cargo], references: [id_cargo], onDelete: NoAction, onUpdate: NoAction, map: "fk5j2oxae47ac7gxtfitkc7jwlg")
+  perfil_demeter               perfil_usuario[]
 
   @@map("usuario")
+}
+
+model perfil {
+  id_perfil        BigInt           @id
+  descricao_perfil String           @db.VarChar(255)
+  dt_update_record DateTime?        @db.Timestamp(6)
+  perfil_usuario   perfil_usuario[]
+}
+
+model perfil_usuario {
+  id_perfil        BigInt    @unique
+  perfil           perfil    @relation(fields: [id_perfil], references: [id_perfil])
+  usuario          Usuario   @relation(fields: [id_usuario], references: [id_usuario])
+  id_usuario       BigInt
+  dt_update_record DateTime? @db.Timestamp(6)
 }
 
 model at_produto {

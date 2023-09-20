@@ -9,7 +9,7 @@ type Query {
   perfil: [Perfil]
   dadosProducao: [DadosProducao]
   perfisPorProdutor(produtorId: String): [Perfil]
-  usuario(id: String, matricula_usuario: String): Usuario
+  # usuario(id: String, matricula_usuario: String): Usuario
   usuarios(ids: String, matriculas: String): [Usuario]
 }
 
@@ -242,10 +242,26 @@ type Usuario {
   orgao_classe: String
   sexo_usuario: String
   dt_update_record: DateTime
+  at_prf_see: [Perfil!]!
+  perfil_demeter: [PerfilUsuario]
   #at_atendimento: [Atendimento!]!
   #at_atendimento_usuario: [AtendimentoUsuario!]!
-  at_prf_see: [Perfil!]!
   #ger_cargo: GerCargo
+}
+
+type PerfilDemeter {
+  id_perfil: BigInt
+  descricao_perfil: String
+  dt_update_record: String
+  perfil_usuario: [PerfilUsuario]
+}
+
+type PerfilUsuario {
+  id_perfil: BigInt
+  perfil: PerfilDemeter
+  usuario: Usuario
+  id_usuario: BigInt
+  dt_update_record: String
 }
 
 scalar DateTime
