@@ -1,0 +1,14 @@
+version: '3.9'
+services:
+  graphql_server:
+    container_name: graphql_server
+    build:
+      context: ${HOME_FOLDER}
+      dockerfile: Dockerfile.test
+    image: graphql_server
+    command: "npm run start:dev"
+    # command: "tail -f /dev/null"
+    volumes:
+      - ${HOME_FOLDER}:/home/node/app
+    ports:
+      - 4000:4000

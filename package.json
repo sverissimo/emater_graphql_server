@@ -12,7 +12,8 @@
     "start": "node --watch --loader ts-node/esm server.ts",
     "start:dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/server.js\"",
     "build": "tsc",
-    "codegen": "graphql-codegen --config codegen.yaml"
+    "codegen": "graphql-codegen --config codegen.yaml",
+    "start:prod": "NODE_ENV=production node dist/server.js"
   },
   "prisma": {
     "seed": "node --loader ts-node/esm prisma/seed.ts"

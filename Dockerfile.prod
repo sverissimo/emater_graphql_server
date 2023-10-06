@@ -1,15 +1,29 @@
+# ---- Build Stage ----
+FROM node:20-slim AS build
+
+WORKDIR /home/node/app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+
+RUN npx prisma generate
+
+RUN npm run build
+
+# ---- Run Stage ----
 FROM node:20-slim
 WORKDIR /home/node/app
 
-ENV DOCKERIZE_VERSION v0.7.0
-RUN apt-get update \
-    && apt-get install -y wget \
-    && wget -O - https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz | tar xzf - -C /usr/local/bin \
-    && apt-get autoremove -yqq --purge wget && rm -rf /var/lib/apt/lists/*
+COPY package*.json ./
 
-COPY . .
-RUN ["npm",  "ci"]
+RUN chown -R node:node /home/node/app
 USER node
-CMD ["npm", "run", "start:dev"]
-#CMD ["tail", "-f", "/dev/null"]
 
+# RUN npm ci --only=production
+RUN npm ci --omit=dev
+COPY --from=build /home/node/app/dist ./dist
+
+# COPY --from=build /home/node/app/node_modules/@prisma ./node_modules/@prisma
+
+ENV NODE_ENV production
+CMD ["npm", "run", "start:prod"]

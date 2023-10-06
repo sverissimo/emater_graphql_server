@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"] //SERVER ONLY
 }
 
 datasource db {
@@ -49,38 +50,38 @@ model Produtor {
 }
 
 model Propriedade {
-  id_pl_propriedade         BigInt                      @id(map: "pk_pl_propiedade") @default(autoincrement())
-  nome_propriedade          String                      @db.VarChar(100)
-  logradouro                String?                     @db.VarChar(80)
-  bairro                    String?                     @db.VarChar(80)
-  complemento               String?                     @db.VarChar(80)
-  cep                       String?                     @db.VarChar(8)
-  numero                    String?                     @db.VarChar(15)
-  area_total                Decimal?                    @db.Decimal(13, 4)
-  //geo_ponto                 Unsupported("geometry")?
-  geo_ponto                 String?                     @db.Text()
-  geo_ponto_texto           String?                     @db.VarChar(255)
-  area_condominio           Boolean?                    @default(false)
-  origem_ocupacao           String?                     @db.VarChar(100)
-  atividade_principal       String?                     @db.VarChar(100)
-  numero_registro_imovel    String?                     @db.VarChar(50)
-  nirf                      String?                     @db.VarChar(100)
-  car                       String?                     @db.VarChar(100)
-  ccir                      String?                     @db.VarChar(100)
-  numero_instalacao_cemig   String?                     @db.VarChar(15)
-  distancia_sede            Decimal?                    @db.Decimal(15, 2)
+  id_pl_propriedade         BigInt                       @id(map: "pk_pl_propiedade") @default(autoincrement())
+  nome_propriedade          String                       @db.VarChar(100)
+  logradouro                String?                      @db.VarChar(80)
+  bairro                    String?                      @db.VarChar(80)
+  complemento               String?                      @db.VarChar(80)
+  cep                       String?                      @db.VarChar(8)
+  numero                    String?                      @db.VarChar(15)
+  area_total                Decimal?                     @db.Decimal(13, 4)
+  geo_ponto                 Unsupported("USER-DEFINED")?
+  // geo_ponto                 String?                     @db.Text()
+  geo_ponto_texto           String?                      @db.VarChar(255)
+  area_condominio           Boolean?                     @default(false)
+  origem_ocupacao           String?                      @db.VarChar(100)
+  atividade_principal       String?                      @db.VarChar(100)
+  numero_registro_imovel    String?                      @db.VarChar(50)
+  nirf                      String?                      @db.VarChar(100)
+  car                       String?                      @db.VarChar(100)
+  ccir                      String?                      @db.VarChar(100)
+  numero_instalacao_cemig   String?                      @db.VarChar(15)
+  distancia_sede            Decimal?                     @db.Decimal(15, 2)
   tempo_ocupacao_imovel     Float?
-  id_emater                 String?                     @db.VarChar(36)
+  id_emater                 String?                      @db.VarChar(36)
   id_distrito               Int?
   id_municipio              Int?
-  id_und_empresa            String?                     @db.Char(5)
-  id_sincronismo            String?                     @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_und_empresa            String?                      @db.Char(5)
+  id_sincronismo            String?                      @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
   id_tipo_logradouro        Int?
-  dt_update_record          DateTime?                   @default(now()) @db.Timestamp(6)
+  dt_update_record          DateTime?                    @default(now()) @db.Timestamp(6)
   ativo                     Boolean?
-  ds_roteiro_acesso         String?                     @db.VarChar(500)
+  ds_roteiro_acesso         String?                      @db.VarChar(500)
   sn_ctd                    Int?
-  municipio                 Municipio?                  @relation(fields: [id_municipio], references: [id_municipio])
+  municipio                 Municipio?                   @relation(fields: [id_municipio], references: [id_municipio])
   at_cli_atend_prop         at_cli_atend_prop[]
   at_prf_see_propriedade    at_prf_see_propriedade?
   pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
@@ -246,35 +247,35 @@ model at_arquivo {
 }
 
 model at_atendimento {
-  id_at_atendimento        BigInt                     @id(map: "pk_at_atendimento") @default(autoincrement())
-  descricao                String?                    @db.VarChar(60)
-  data_inicio_atendimento  DateTime                   @db.Date
-  data_fim_atendimento     DateTime?                  @db.Date
-  data_validacao           DateTime?                  @db.Date
+  id_at_atendimento        BigInt                       @id(map: "pk_at_atendimento") @default(autoincrement())
+  descricao                String?                      @db.VarChar(60)
+  data_inicio_atendimento  DateTime                     @db.Date
+  data_fim_atendimento     DateTime?                    @db.Date
+  data_validacao           DateTime?                    @db.Date
   usuario_validacao        BigInt?
-  data_atualizacao         DateTime                   @db.Date
-  id_at_status             Int                        @db.SmallInt
+  data_atualizacao         DateTime                     @db.Date
+  id_at_status             Int                          @db.SmallInt
   ativo                    Boolean
   id_at_acao               BigInt
-  id_und_empresa           String                     @db.Char(5)
+  id_und_empresa           String                       @db.Char(5)
   qtd_alunos               Int?
-  data_criacao             DateTime                   @db.Date
-  id_sincronismo           String?                    @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  data_criacao             DateTime                     @db.Date
+  id_sincronismo           String?                      @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
   orientacao_tecnica       String?
-  dt_update_record         DateTime?                  @db.Timestamp(6)
-  //geo_ponto                Unsupported("geometry")?
-  geo_ponto                String?                    @db.Text()
-  geo_ponto_texto          String?                    @db.VarChar(255)
-  sincroniza               Int?                       @default(0) @db.SmallInt
-  processamento            Int?                       @default(0) @db.SmallInt
+  dt_update_record         DateTime?                    @db.Timestamp(6)
+  geo_ponto                Unsupported("USER-DEFINED")?
+  // geo_ponto                String?                    @db.Text()
+  geo_ponto_texto          String?                      @db.VarChar(255)
+  sincroniza               Int?                         @default(0) @db.SmallInt
+  processamento            Int?                         @default(0) @db.SmallInt
   login_usuario            String?
   id_at_anterior           BigInt?
-  fk_und_empresa           String?                    @db.Char(5)
-  auto_atendimento         Int?                       @db.SmallInt
-  data_sei                 DateTime?                  @db.Date
+  fk_und_empresa           String?                      @db.Char(5)
+  auto_atendimento         Int?                         @db.SmallInt
+  data_sei                 DateTime?                    @db.Date
   at_arquivo               at_arquivo[]
-  usuario                  Usuario?                   @relation(fields: [usuario_validacao], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk2wy9cxuwsh3cyhmip358l0l6c")
-  at_acao                  at_acao                    @relation(fields: [id_at_acao], references: [id_at_acao], onDelete: NoAction, onUpdate: NoAction, map: "fk8q4s39wy7we2slstaxkbxd737")
+  usuario                  Usuario?                     @relation(fields: [usuario_validacao], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk2wy9cxuwsh3cyhmip358l0l6c")
+  at_acao                  at_acao                      @relation(fields: [id_at_acao], references: [id_at_acao], onDelete: NoAction, onUpdate: NoAction, map: "fk8q4s39wy7we2slstaxkbxd737")
   link_pdf                 String?
   at_atendimento_indicador at_atendimento_indicador[]
   at_atendimento_usuario   at_atendimento_usuario[]
