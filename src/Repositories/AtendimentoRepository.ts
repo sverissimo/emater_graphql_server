@@ -1,6 +1,13 @@
-import { PrismaRepository } from './PrismaRepository.js';
+import { PrismaRepository } from "./PrismaRepository.js";
 
 export class AtendimentoRepository extends PrismaRepository {
+  async findAll() {
+    console.log("Fetching 10 atendimentos...");
+    return await this.prisma.at_atendimento.findMany({
+      take: 10,
+    });
+  }
+
   async getReadOnlyRelatorioIds(relatorioIds: string[]) {
     const readOnlyURLs = (await this.prisma.$queryRaw`
           SELECT link_pdf FROM at_atendimento
