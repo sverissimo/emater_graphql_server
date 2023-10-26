@@ -1,9 +1,9 @@
-import { Router } from 'express';
+import { Router } from "express";
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
-import { AtendimentoRepository } from './Repositories/AtendimentoRepository.js';
-import { EnumPropsRepository } from './Repositories/EnumPropsRepository.js';
+import { AtendimentoRepository } from "./atendimento/AtendimentoRepository.js";
+import { EnumPropsRepository } from "./Repositories/EnumPropsRepository.js";
 
 const router = Router();
 

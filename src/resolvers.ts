@@ -1,17 +1,10 @@
-import {
-  Perfil,
-  PrismaClient,
-  Produtor,
-} from '@prisma/client';
+import { Perfil, PrismaClient, Produtor } from "@prisma/client";
 
-import { EnumPropsRepository } from './Repositories/EnumPropsRepository.js';
-import {
-  CreatePerfilInput,
-  PerfilRepository,
-} from './Repositories/PerfilRepository.js';
-import { ProdutorRepository } from './Repositories/ProdutorRepository.js';
-import { PropriedadeRepository } from './Repositories/PropriedadeRepository.js';
-import { UsuarioRepository } from './Repositories/UsuarioRepository.js';
+import { EnumPropsRepository } from "./Repositories/EnumPropsRepository.js";
+import { CreatePerfilInput, PerfilRepository } from "./Repositories/PerfilRepository.js";
+import { ProdutorRepository } from "./Repositories/ProdutorRepository.js";
+import { PropriedadeRepository } from "./Repositories/PropriedadeRepository.js";
+import { UsuarioRepository } from "./Repositories/UsuarioRepository.js";
 
 const prismaClient = new PrismaClient({ log: ["info", "warn", "error"] });
 

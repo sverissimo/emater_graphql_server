@@ -26,7 +26,8 @@
         "chakrounanas.turbo-console-log",
         "prisma.prisma",
         "mikestead.dotenv",
-        "ms-azuretools.vscode-docker"
+        "ms-azuretools.vscode-docker",
+        "github.copilot"
       ]
     }
   }

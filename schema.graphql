@@ -11,7 +11,6 @@ type Query {
   perfisPorProdutor(produtorId: String): [Perfil]
   # usuario(id: String, matricula_usuario: String): Usuario
   usuarios(ids: String, matriculas: String): [Usuario]
-  atendimentos: [Atendimento]
 }
 
 type Mutation {
@@ -263,100 +262,4 @@ type PerfilUsuario {
   usuario: Usuario
   id_usuario: BigInt
   dt_update_record: String
-}
-
-type at_atendimento_usuario {
-  id_at_atendimento: BigInt
-  id_usuario: BigInt
-  id_und_empresa: String
-}
-
-# Corresponds to at_atendimento_indicador TypeScript type
-type at_atendimento_indicador {
-  id_at_atendimento_indicador: BigInt
-  id_at_atendimento: BigInt
-  id_at_indicador: BigInt
-  id_und_empresa: String
-}
-
-# Corresponds to at_cli_atend_prop TypeScript type
-type at_cli_atend_prop {
-  id_at_cli_atend_prop: BigInt
-  id_at_atendimento: BigInt
-  id_pessoa_demeter: BigInt
-  id_pl_propriedade: BigInt
-  id_und_empresa: String
-}
-
-type Atendimento {
-  id_at_atendimento: BigInt
-  id_at_acao: BigInt
-  at_id_status: Int
-  ativo: Boolean
-  # id_at_grupo_indicador: BigInt
-  usuario_validacao: BigInt
-  id_und_empresa: String
-  link_pdf: String
-  data_criacao: DateTime
-  data_inicio_atendimento: DateTime
-  data_fim_atendimento: DateTime
-  data_atualizacao: DateTime
-  atendimento_usuario: at_atendimento_usuario
-  atendimento_indicador: at_atendimento_indicador
-  at_cli_atend_prop: at_cli_atend_prop
-}
-
-input at_atendimento_usuario_input {
-  id_at_atendimento: BigInt
-  id_usuario: BigInt
-  id_und_empresa: String
-}
-
-input at_atendimento_indicador_input {
-  id_at_atendimento_indicador: BigInt
-  id_at_atendimento: BigInt
-  id_at_indicador: BigInt
-  id_und_empresa: String
-}
-
-input at_cli_atend_prop_input {
-  id_at_cli_atend_prop: BigInt
-  id_at_atendimento: BigInt
-  id_pessoa_demeter: BigInt
-  id_pl_propriedade: BigInt
-  id_und_empresa: String
-}
-
-input CreateAtendimentoInput {
-  data_inicio_atendimento: String!
-  data_fim_atendimento: String!
-  data_atualizacao: String!
-  at_id_status: Int!
-  ativo: Boolean!
-  id_at_acao: ID!
-  id_und_empresa: ID!
-  data_criacao: String!
-  id_at_grupo_indicador: ID!
-  usuario_validacao: ID!
-  link_pdf: String!
-  atendimento_usuario: at_atendimento_usuario_input
-  atendimento_indicador: at_atendimento_indicador_input
-  at_cli_atend_prop: at_cli_atend_prop_input
-}
-
-input CreatePerfilInput {
-  id_tecnico: BigInt
-  participa_organizacao: Boolean
-  id_cliente: BigInt
-  tipo_perfil: String
-  grau_interesse_pnae: String
-}
-
-input UpdatePerfilInput {
-  participa_organizacao: Boolean
-  tipo_perfil: String
-  grau_interesse_pnae: String
-  nivel_tecnologico_cultivo: BigInt
-  sistema_producao: BigInt
-  condicao_posse: BigInt
 }
