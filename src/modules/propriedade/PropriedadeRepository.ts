@@ -1,5 +1,5 @@
-import { PrismaRepository } from './PrismaRepository.js';
-import { Repository } from './Repository.js';
+import { PrismaRepository } from "../../shared/repositories/PrismaRepository.js";
+import { Repository } from "../../shared/repositories/Repository.js";
 
 export class PropriedadeRepository extends PrismaRepository implements Repository<any> {
   async findOne(id: number) {

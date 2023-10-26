@@ -1,7 +1,7 @@
-import { Usuario } from '@prisma/client';
+import { Usuario } from "@prisma/client";
 
-import { PrismaRepository } from './PrismaRepository.js';
-import { Repository } from './Repository.js';
+import { PrismaRepository } from "../../shared/repositories/PrismaRepository.js";
+import { Repository } from "../../shared/repositories/Repository.js";
 
 export class UsuarioRepository extends PrismaRepository implements Repository<Usuario> {
   async findOne(id: string) {
@@ -30,7 +30,6 @@ export class UsuarioRepository extends PrismaRepository implements Repository<Us
         },
       });
 
-      console.log("🚀 ~ file: UsuarioRepository.ts:34 ~ UsuarioRepository ~ find ~ usuarios:", usuarios);
       return usuarios;
     } catch (error) {
       console.log("🚀 ~ file: UsuarioRepository.ts:27 ~ UsuarioRepository ~ find ~ error:", error);

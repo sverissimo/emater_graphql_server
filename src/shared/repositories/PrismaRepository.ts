@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { ErrorHandlerImpl } from "../utils/ErrorHandlerImpl.js";
-import { CustomError, DefaultError, ErrorHandler } from "../utils/ErrorHandler";
+import { CustomError, DefaultError, ErrorHandler } from "../utils/ErrorHandler.js";
 
 export class PrismaRepository {
   errorHandler: ErrorHandler = new ErrorHandlerImpl();

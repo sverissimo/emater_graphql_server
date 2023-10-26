@@ -1,4 +1,4 @@
-import { PrismaRepository } from "../Repositories/PrismaRepository.js";
+import { PrismaRepository } from "../../shared/repositories/PrismaRepository.js";
 import { CreateAtendimentoDTO } from "./CreateAtendimentoDTO.js";
 
 export class AtendimentoRepository extends PrismaRepository {
@@ -29,6 +29,7 @@ export class AtendimentoRepository extends PrismaRepository {
     console.log("Fetching 10 atendimentos...");
     return await this.prisma.at_atendimento.findMany({
       take: 10,
+      orderBy: { id_at_atendimento: "desc" },
     });
   }
 

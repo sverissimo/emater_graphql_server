@@ -1,8 +1,8 @@
-import { Perfil } from '@prisma/client';
+import { Perfil } from "@prisma/client";
 
-import { EnumPropsRepository } from './EnumPropsRepository.js';
-import { PrismaRepository } from './PrismaRepository.js';
-import { Repository } from './Repository.js';
+import { EnumPropsRepository } from "../../shared/repositories/EnumPropsRepository.js";
+import { PrismaRepository } from "../../shared/repositories/PrismaRepository.js";
+import { Repository } from "../../shared/repositories/Repository.js";
 
 export type findPerfilInput = { tipo_perfil: string; propriedade_id: number; id_cliente: number };
 export type CreatePerfilInput = Omit<Perfil, "id"> & {

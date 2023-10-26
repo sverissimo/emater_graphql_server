@@ -1,0 +1,39 @@
+type Query {
+  produtor(id: Int, cpf: String): Produtor
+  produtores: [Produtor]
+  produtoresFull: [ProdutorPropriedades]
+}
+
+type Produtor {
+  id_pessoa_demeter: BigInt!
+  id_pessoa: String!
+  nm_pessoa: String
+  ds_apelido: String
+  sn_pronaf: String
+  sn_ativo: String
+  tp_sexo: String
+  nr_cpf_cnpj: String!
+  dt_nascimento: DateTime
+  nr_identidade: String
+  ds_orgao_expedidor: String
+  fk_uf_emissor: String
+  tp_desativacao: String
+  dt_desativacao: String
+  nm_nacionalidade: String
+  fk_est_civil: String
+  nm_mae: String
+  nm_pai: String
+  nm_profissao: String
+  nr_ins_produtor_rural: String
+  dap: String
+  tp_pessoa: String
+  id_und_empresa: String
+  sn_principal_provedor: String
+  ds_email: String
+  dt_update_record: DateTime
+  id_sincronismo: String
+  sn_ctd: String
+  caf: String
+  propriedades: [Propriedade]
+  perfis: [Perfil]
+}

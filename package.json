@@ -5,15 +5,15 @@
   "keywords": [],
   "author": "Sandro Veríssimo",
   "license": "MIT",
-  "main": "server.ts",
+  "main": "main.ts",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --watch --loader ts-node/esm server.ts",
-    "start:dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/server.js\"",
+    "start": "node --watch --loader ts-node/esm main.ts",
+    "start:dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/main.js\"",
     "build": "tsc",
     "codegen": "graphql-codegen --config codegen.yaml",
-    "start:prod": "NODE_ENV=production node dist/server.js"
+    "start:prod": "NODE_ENV=production node dist/main.js"
   },
   "prisma": {
     "seed": "node --loader ts-node/esm prisma/seed.ts"

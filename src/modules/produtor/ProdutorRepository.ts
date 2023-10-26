@@ -1,7 +1,7 @@
-import { Produtor } from '@prisma/client';
+import { Produtor } from "@prisma/client";
 
-import { PrismaRepository } from './PrismaRepository.js';
-import { Repository } from './Repository.js';
+import { PrismaRepository } from "../../shared/repositories/PrismaRepository.js";
+import { Repository } from "../../shared/repositories/Repository.js";
 
 export class ProdutorRepository extends PrismaRepository implements Repository<Produtor> {
   async findOne({ id, cpf }: { id: bigint; cpf: string }) {

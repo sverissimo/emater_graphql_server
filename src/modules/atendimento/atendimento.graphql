@@ -83,20 +83,3 @@ input CreateAtendimentoInput {
   atendimento_indicador: at_atendimento_indicador_input
   at_cli_atend_prop: at_cli_atend_prop_input
 }
-
-input CreatePerfilInput {
-  id_tecnico: BigInt
-  participa_organizacao: Boolean
-  id_cliente: BigInt
-  tipo_perfil: String
-  grau_interesse_pnae: String
-}
-
-input UpdatePerfilInput {
-  participa_organizacao: Boolean
-  tipo_perfil: String
-  grau_interesse_pnae: String
-  nivel_tecnologico_cultivo: BigInt
-  sistema_producao: BigInt
-  condicao_posse: BigInt
-}

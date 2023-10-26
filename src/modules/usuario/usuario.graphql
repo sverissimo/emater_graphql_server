@@ -1,0 +1,45 @@
+type Query {
+  # usuario(id: String, matricula_usuario: String): Usuario
+  usuarios(ids: String, matriculas: String): [Usuario]
+}
+
+type Usuario {
+  id_usuario: BigInt!
+  login_usuario: String!
+  nome_usuario: String
+  email_usuario: String
+  celular_usuario: String
+  token_demeter: String!
+  data_cadastro: DateTime!
+  data_expiracao_token_demeter: DateTime!
+  ativo: Boolean!
+  cpf_usuario: String
+  matricula_usuario: String
+  digito_matricula: String
+  situacao_emater: String
+  id_und_empresa: String
+  id_cargo: String
+  orgao_classe: String
+  sexo_usuario: String
+  dt_update_record: DateTime
+  at_prf_see: [Perfil!]!
+  perfil_demeter: [PerfilUsuario]
+  #at_atendimento: [Atendimento!]!
+  #at_atendimento_usuario: [AtendimentoUsuario!]!
+  #ger_cargo: GerCargo
+}
+
+type PerfilDemeter {
+  id_perfil: BigInt
+  descricao_perfil: String
+  dt_update_record: String
+  perfil_usuario: [PerfilUsuario]
+}
+
+type PerfilUsuario {
+  id_perfil: BigInt
+  perfil: PerfilDemeter
+  usuario: Usuario
+  id_usuario: BigInt
+  dt_update_record: String
+}
