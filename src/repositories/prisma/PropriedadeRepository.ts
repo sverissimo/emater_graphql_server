@@ -1,7 +1,8 @@
-import { PrismaRepository } from "../../shared/repositories/PrismaRepository.js";
-import { Repository } from "../../shared/repositories/Repository.js";
+import { PrismaRepository } from "./PrismaRepository.js";
+import { Repository } from "../Repository.js";
+import { Propriedade } from "@prisma/client";
 
-export class PropriedadeRepository extends PrismaRepository implements Repository<any> {
+export class PropriedadeRepository extends PrismaRepository implements Repository<Propriedade> {
   async findOne(id: number) {
     if (!id) {
       this.throwError("NOT_FOUND");
@@ -43,5 +44,9 @@ export class PropriedadeRepository extends PrismaRepository implements Repositor
     });
 
     return propriedades;
+  }
+
+  async create(input: any) {
+    return "This method is not implemented yet.";
   }
 }

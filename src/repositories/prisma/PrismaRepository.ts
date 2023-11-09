@@ -1,10 +1,11 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { ErrorHandlerImpl } from "../utils/ErrorHandlerImpl.js";
-import { CustomError, DefaultError, ErrorHandler } from "../utils/ErrorHandler.js";
+import { ErrorHandlerImpl } from "../../shared/utils/ErrorHandlerImpl.js";
+import { CustomError, DefaultError, ErrorHandler } from "../../shared/utils/ErrorHandler.js";
+import { prismaClient } from "../../config/prismaClient.js";
 
 export class PrismaRepository {
   errorHandler: ErrorHandler = new ErrorHandlerImpl();
-  constructor(protected prisma: PrismaClient) {}
+  constructor(protected prisma: PrismaClient = prismaClient) {}
 
   throwError(error: DefaultError | CustomError): void {
     this.errorHandler.throwError(error);

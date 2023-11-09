@@ -1,10 +1,9 @@
-import { UsuarioRepository } from "./UsuarioRepository.js";
-import { prismaClient } from "../../config/prismaClient.js";
+import { Repository } from "@repositories/Repository.js";
+import { Usuario } from "@prisma/client";
 
-const usuarioRepository = new UsuarioRepository(prismaClient);
-export const usuarioResolver = {
+export const usuarioResolver = (usuarioRepository: Repository<Usuario>) => ({
   Query: {
     usuarios: (_: any, { ids, matriculas }: { ids?: string; matriculas?: string }) =>
-      usuarioRepository.find({ id: ids, matricula_usuario: matriculas }),
+      usuarioRepository.findMany!({ id: ids, matricula_usuario: matriculas }),
   },
-};
+});

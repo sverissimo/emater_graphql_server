@@ -1,17 +1,15 @@
-import { PrismaClient } from "@prisma/client";
-import { AtendimentoRepository } from "./AtendimentoRepository.js";
+import { at_atendimento } from "@prisma/client";
 import { CreateAtendimentoDTO } from "./CreateAtendimentoDTO.js";
+import { Repository } from "../../repositories/Repository.js";
 
-const prismaClient = new PrismaClient({ log: ["info", "warn", "error"] });
-const atendimentoRepository = new AtendimentoRepository(prismaClient);
-
-export const atendimentoResolver = {
+export const atendimentoResolver = (atendimentoRepository: Repository<at_atendimento>) => ({
   Query: {
     atendimentos: () => atendimentoRepository.findAll(),
   },
+
   Mutation: {
     createAtendimento: (_root: any, { input }: { input: CreateAtendimentoDTO }) => {
-      return atendimentoRepository.create(input);
+      return atendimentoRepository.create!(input);
     },
   },
-};
+});

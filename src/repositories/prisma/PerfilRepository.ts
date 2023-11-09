@@ -1,8 +1,8 @@
 import { Perfil } from "@prisma/client";
 
-import { EnumPropsRepository } from "../../shared/repositories/EnumPropsRepository.js";
-import { PrismaRepository } from "../../shared/repositories/PrismaRepository.js";
-import { Repository } from "../../shared/repositories/Repository.js";
+import { EnumPropsRepository } from "./EnumPropsRepository.js";
+import { PrismaRepository } from "./PrismaRepository.js";
+import { Repository } from "../Repository.js";
 
 export type findPerfilInput = { tipo_perfil: string; propriedade_id: number; id_cliente: number };
 export type CreatePerfilInput = Omit<Perfil, "id"> & {
@@ -40,7 +40,7 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
     return await this.prisma.perfil.findUnique({ where: { id } });
   }
 
-  async findByProdutor(produtorId: string) {
+  async findByProdutorId(produtorId: bigint) {
     const perfilData = await this.prisma.perfil.findMany({
       include: {
         at_prf_see_propriedade: true,

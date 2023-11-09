@@ -1,7 +1,7 @@
 import { Produtor } from "@prisma/client";
 
-import { PrismaRepository } from "../../shared/repositories/PrismaRepository.js";
-import { Repository } from "../../shared/repositories/Repository.js";
+import { PrismaRepository } from "./PrismaRepository.js";
+import { Repository } from "../Repository.js";
 
 export class ProdutorRepository extends PrismaRepository implements Repository<Produtor> {
   async findOne({ id, cpf }: { id: bigint; cpf: string }) {
@@ -71,5 +71,9 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
       },
     });
     return produtores;
+  }
+
+  async create(input: any) {
+    return "This method is not implemented yet.";
   }
 }

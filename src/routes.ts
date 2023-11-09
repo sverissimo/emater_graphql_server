@@ -2,8 +2,8 @@ import { Router } from "express";
 
 import { PrismaClient } from "@prisma/client";
 
-import { AtendimentoRepository } from "./modules/atendimento/AtendimentoRepository.js";
-import { EnumPropsRepository } from "./shared/repositories/EnumPropsRepository.js";
+import { AtendimentoRepository } from "./repositories/prisma/AtendimentoRepository.js";
+import { EnumPropsRepository } from "./repositories/prisma/EnumPropsRepository.js";
 
 const router = Router();
 

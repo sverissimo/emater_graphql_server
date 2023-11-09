@@ -11,7 +11,6 @@ type at_atendimento_usuario {
   id_und_empresa: String
 }
 
-# Corresponds to at_atendimento_indicador TypeScript type
 type at_atendimento_indicador {
   id_at_atendimento_indicador: BigInt
   id_at_atendimento: BigInt
@@ -19,7 +18,6 @@ type at_atendimento_indicador {
   id_und_empresa: String
 }
 
-# Corresponds to at_cli_atend_prop TypeScript type
 type at_cli_atend_prop {
   id_at_cli_atend_prop: BigInt
   id_at_atendimento: BigInt
@@ -33,7 +31,6 @@ type Atendimento {
   id_at_acao: BigInt
   id_at_status: Int
   ativo: Boolean
-  # id_at_grupo_indicador: BigInt
   usuario_validacao: BigInt
   id_und_empresa: String
   link_pdf: String

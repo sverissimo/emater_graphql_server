@@ -1,7 +1,9 @@
-import { PrismaRepository } from "../../shared/repositories/PrismaRepository.js";
-import { CreateAtendimentoDTO } from "./CreateAtendimentoDTO.js";
+import { PrismaRepository } from "./PrismaRepository.js";
+import { CreateAtendimentoDTO } from "../../modules/atendimento/CreateAtendimentoDTO.js";
+import { at_atendimento } from "@prisma/client";
+import { Repository } from "../Repository.js";
 
-export class AtendimentoRepository extends PrismaRepository {
+export class AtendimentoRepository extends PrismaRepository implements Repository<at_atendimento> {
   async create(createAtendimentoDTO: CreateAtendimentoDTO) {
     try {
       console.log("🚀 ~ file: AtendimentoRepository.ts:7 ~ createAtendimentoDTO:", createAtendimentoDTO);
@@ -31,6 +33,13 @@ export class AtendimentoRepository extends PrismaRepository {
       take: 10,
       orderBy: { id_at_atendimento: "desc" },
     });
+  }
+
+  async findOne(id: number) {
+    if (!id) {
+      this.throwError("NO_ID_PROVIDED");
+    }
+    return await this.prisma.at_atendimento.findUnique({ where: { id_at_atendimento: id } });
   }
 
   async getReadOnlyRelatorioIds(relatorioIds: string[]) {

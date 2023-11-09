@@ -1,10 +1,8 @@
-import { prismaClient } from "../../config/prismaClient.js";
-import { PropriedadeRepository } from "./PropriedadeRepository.js";
+import { Repository } from "@repositories/Repository.js";
+import { Propriedade } from "@prisma/client";
 
-const propriedadeRepository = new PropriedadeRepository(prismaClient);
-
-export const propriedadeResolver = {
+export const propriedadeResolver = (propriedadeRepository: Repository<Propriedade>) => ({
   Query: {
     propriedades: () => propriedadeRepository.findAll(),
   },
-};
+});

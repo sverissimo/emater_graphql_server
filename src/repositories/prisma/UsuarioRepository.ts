@@ -1,14 +1,14 @@
 import { Usuario } from "@prisma/client";
 
-import { PrismaRepository } from "../../shared/repositories/PrismaRepository.js";
-import { Repository } from "../../shared/repositories/Repository.js";
+import { PrismaRepository } from "./PrismaRepository.js";
+import { Repository } from "../Repository.js";
 
 export class UsuarioRepository extends PrismaRepository implements Repository<Usuario> {
   async findOne(id: string) {
-    return this.find({ id });
+    return this.findMany({ id });
   }
 
-  async find({ id, matricula_usuario }: { id?: string; matricula_usuario?: string }) {
+  async findMany({ id, matricula_usuario }: { id?: string; matricula_usuario?: string }) {
     try {
       const ids = id ? id.split(",").map((id) => BigInt(id)) : undefined;
       const matriculas = matricula_usuario ? matricula_usuario.split(",") : undefined;

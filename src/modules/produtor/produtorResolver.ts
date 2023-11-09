@@ -1,15 +1,13 @@
 import { Produtor } from "@prisma/client";
-// import { EnumPropsRepository, PropriedadeRepository } from "../Repositories";
 import { prismaClient } from "../../config/prismaClient.js";
-import { ProdutorRepository } from "./ProdutorRepository.js";
-import { EnumPropsRepository } from "../../shared/repositories/EnumPropsRepository.js";
-import { PropriedadeRepository } from "../propriedade/PropriedadeRepository.js";
+import { EnumPropsRepository } from "../../repositories/prisma/EnumPropsRepository.js";
+import { PropriedadeRepository } from "../../repositories/prisma/PropriedadeRepository.js";
+import { Repository } from "@repositories/Repository.js";
 
-const produtorRepository = new ProdutorRepository(prismaClient);
 const propriedadeRepository = new PropriedadeRepository(prismaClient);
 const enumPropsRepository = new EnumPropsRepository(prismaClient);
 
-export const produtorResolver = {
+export const produtorResolver = (produtorRepository: Repository<Produtor>) => ({
   Query: {
     produtor: (_root: any, { id, cpf }: { id: bigint; cpf: string }) => produtorRepository.findOne({ id, cpf }),
     produtores: () => produtorRepository.findAll(),
@@ -19,4 +17,4 @@ export const produtorResolver = {
     propriedades: (p: Produtor) => propriedadeRepository.findByProdutorId(p.id_pessoa_demeter),
     perfis: (p: any) => p.at_prf_see.map(async (perfil: any) => await enumPropsRepository.getPerfilProps(perfil)),
   },
-};
+});
