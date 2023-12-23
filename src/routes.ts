@@ -16,7 +16,16 @@ router.get("/getPerfilOptions", async (req, res) => {
     const perfilOptions = await enumPropsRepository.getPerfilOptions();
     return res.send(perfilOptions);
   } catch (error) {
-    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+    console.log("🚀 ~ file: routes.ts:19 ~ router.get ~ error:", error);
+  }
+});
+
+router.get("/getGruposProdutos", async (req, res) => {
+  try {
+    const perfilOptions = await enumPropsRepository.getGruposProdutos();
+    return res.send(perfilOptions);
+  } catch (error) {
+    console.log("🚀 ~ file: routes.ts:28 ~ router.get ~ error:", error);
   }
 });
 

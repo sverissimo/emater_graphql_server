@@ -1,3 +1,4 @@
+import { serializeBigInts } from "../../shared/utils/serializeBigInt.js";
 import { PrismaRepository } from "./PrismaRepository.js";
 import humps from "humps";
 
@@ -62,6 +63,16 @@ export class EnumPropsRepository extends PrismaRepository {
       return prev;
     }, {} as any);
     return perfilOptions;
+  }
+
+  async getGruposProdutos() {
+    const queryResultGrupos = await this.prisma.$queryRaw`SELECT * FROM at_prf_grupo_produto`;
+    const queryResultProdutos = await this.prisma.$queryRaw`SELECT * FROM at_prf_produto`;
+
+    const grupos = serializeBigInts(queryResultGrupos);
+    const produtos = serializeBigInts(queryResultProdutos);
+
+    return { grupos, produtos };
   }
 }
 
