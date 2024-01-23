@@ -6,7 +6,7 @@ type Query {
 
 type Mutation {
   createPerfil(input: CreatePerfilInput): Perfil
-  updatePerfil(id: Int, updatePerfilInput: UpdatePerfilInput): Perfil
+  # updatePerfil(id: Int, updatePerfilInput: UpdatePerfilInput): Perfil
   deletePerfil(id: Int): Perfil
 }
 
@@ -69,8 +69,8 @@ type GrupoProdutosPerfil {
   id: BigInt!
   id_dados_producao: BigInt!
   id_grupo_produtos: BigInt!
-  producao_aproximada_ultimo_ano_pnae: BigInt
   area_utilizada: Float
+  producao_aproximada_ultimo_ano_pnae: BigInt
   producao_aproximada_ultimo_ano_total: BigInt
   at_prf_see_dados_producao: DadosProducao!
   at_prf_grupo_produto: GrupoProduto!
@@ -118,18 +118,69 @@ type Atividade {
 }
 
 input CreatePerfilInput {
-  id_tecnico: BigInt
-  participa_organizacao: Boolean
+  data_preenchimento: DateTime
+  data_atualizacao: DateTime
+  tipo_perfil: String
   id_cliente: BigInt
-  tipo_perfil: String
-  grau_interesse_pnae: String
-}
-
-input UpdatePerfilInput {
   participa_organizacao: Boolean
-  tipo_perfil: String
-  grau_interesse_pnae: String
   nivel_tecnologico_cultivo: BigInt
   sistema_producao: BigInt
   condicao_posse: BigInt
+  dap_caf_vigente: Boolean
+  credito_rural: Boolean
+  fonte_captacao_agua: BigInt
+  forma_esgotamento_sanitario: BigInt
+  possui_cadastro_car: Boolean
+  aderiu_pra: Boolean
+  ciente_iniciativas_regularizacao_pra: Boolean
+  realiza_escalonamento_producao: Boolean
+  procedimento_pos_colheita: BigInt
+  tipo_gestao_unidade: String
+  pessoas_processamento_alimentos: Int
+  tipo_estabelecimento: String
+  tipo_pessoa_juridica: String
+  agroindustria_precisa_adaptacao_reforma: Boolean
+  possui_registro_orgao_fiscalizacao_sanitaria: Boolean
+  orgao_fiscalizacao_sanitaria: String
+  atividades_usam_recursos_hidricos: BigInt
+  atividades_com_regularizacao_ambiental: BigInt
+  possui_agroindustria_propria: Boolean
+  grau_interesse_pnae: String
+  id_tecnico: BigInt
+  # id_dados_producao_agro_industria: BigInt
+  # id_dados_producao_in_natura: BigInt
+  dados_producao_agro_industria: DadosProducaoInput
+  dados_producao_in_natura: DadosProducaoInput
+  atividade: String
+}
+
+input DadosProducaoInput {
+  id: BigInt!
+  controla_custos_producao: Boolean
+  local_comercializacao: BigInt
+  valor_total_obtido_pnae: BigInt
+  forma_entrega_produtos: BigInt
+  dificuldade_fornecimento: BigInt
+  informacoes_adicionais: String
+  tipo_regularizacao_uso_recursos_hidricos: String
+  tipo_regularizacao_ambiental: String
+  valor_total_obtido_outros: BigInt
+  at_prf_see_grupos_produtos: [CreateGrupoProdutoInput]
+}
+
+input CreateGrupoProdutoInput {
+  # id_dados_producao: BigInt!
+  id_grupo: BigInt!
+  area_utilizada: Float
+  producao_aproximada_ultimo_ano_pnae: BigInt
+  producao_aproximada_ultimo_ano_total: BigInt
+  at_prf_see_grupos_produtos: [CreateProdutoInput]
+}
+
+input CreateProdutoInput {
+  # id_perfil_grupo: BigInt!
+  id_produto: BigInt!
+  area_utilizada: Float
+  producao_aproximada_ultimo_ano_pnae: BigInt
+  producao_aproximada_ultimo_ano_total: BigInt
 }
