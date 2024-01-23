@@ -14,8 +14,9 @@ export const perfilResolver = (perfilRepository: Repository<Perfil>) => ({
   },
 
   Mutation: {
-    createPerfil: async (_root: any, { input: perfilInput }: { input: CreatePerfilInput }) => {
-      return await perfilRepository.create!(perfilInput);
+    createPerfil: async (_root: any, { input }: { input: CreatePerfilInput }) => {
+      await perfilRepository.create!(input);
+      return true;
     },
     // updatePerfil: (_root: any, { id, updatePerfilInput }: { id: number; updatePerfilInput: Perfil }) => {
     //   return perfilRepository.update!(id, updatePerfilInput);

@@ -1,5 +1,11 @@
 export type CreatePerfilInput = {
+  id_tecnico: string;
+  id_cliente: string;
+  id_propriedade: string;
   atividade: string;
+  tipo_perfil: string;
+  data_preenchimento: string;
+  data_atualizacao: string;
   atividades_usam_recursos_hidricos: string;
   atividades_com_regularizacao_ambiental: string;
   possui_cadastro_car: boolean;
@@ -17,10 +23,10 @@ export type CreatePerfilInput = {
   dap_caf_vigente: boolean;
   credito_rural: boolean;
   fonte_captacao_agua: string;
-  id_tecnico: string;
-  id_cliente: string;
   dados_producao_in_natura: CreateDadosProducaoDTO;
   dados_producao_agro_industria: CreateDadosProducaoDTO;
+  ativo?: boolean;
+  id_contrato?: number;
 };
 
 export type CreatePerfilDTO = Omit<
@@ -32,20 +38,20 @@ export type CreateDadosProducaoDTO = {
   tipo_regularizacao_uso_recursos_hidricos: string;
   tipo_regularizacao_ambiental: string;
   controla_custos_producao: boolean;
-  local_comercializacao: string;
-  dificuldade_fornecimento: string;
-  forma_entrega_produtos: string;
-  valor_total_obtido_pnae: string;
-  valor_total_obtido_outros: string;
+  local_comercializacao: bigint;
+  dificuldade_fornecimento: bigint;
+  forma_entrega_produtos: bigint;
+  valor_total_obtido_pnae: bigint;
+  valor_total_obtido_outros: bigint;
   informacoes_adicionais: string;
   at_prf_see_grupos_produtos: CreateGrupoProdutosInput[];
 };
 
 export type CreateGrupoProdutosInput = {
-  id_grupo: string;
+  id_grupo: bigint;
   area_utilizada?: number;
-  producao_aproximada_ultimo_ano_pnae: string;
-  producao_aproximada_ultimo_ano_total: string;
+  producao_aproximada_ultimo_ano_pnae: bigint;
+  producao_aproximada_ultimo_ano_total: bigint;
   at_prf_see_produto: CreateProdutoDTO[];
 };
 
@@ -54,10 +60,10 @@ export type CreateGrupoProdutosDTO = CreateGrupoProdutosInput & {
 };
 
 export type CreateProdutoInput = {
-  id_produto: string;
+  id_produto: bigint;
   area_utilizada?: number;
-  producao_aproximada_ultimo_ano_pnae?: string;
-  producao_aproximada_ultimo_ano_total?: string;
+  producao_aproximada_ultimo_ano_pnae?: bigint;
+  producao_aproximada_ultimo_ano_total?: bigint;
 };
 
 export type CreateProdutoDTO = CreateProdutoInput & {

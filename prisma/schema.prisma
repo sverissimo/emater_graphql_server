@@ -115,6 +115,7 @@ model Perfil {
   data_atualizacao                             DateTime                   @db.Date
   tipo_perfil                                  String                     @db.VarChar(8)
   id_cliente                                   BigInt
+  id_tecnico                                   BigInt?
   participa_organizacao                        Boolean?
   nivel_tecnologico_cultivo                    BigInt?
   sistema_producao                             BigInt?
@@ -135,15 +136,16 @@ model Perfil {
   agroindustria_precisa_adaptacao_reforma      Boolean?
   possui_registro_orgao_fiscalizacao_sanitaria Boolean?
   orgao_fiscalizacao_sanitaria                 String?                    @db.VarChar(64)
-  id_tecnico                                   BigInt?
   atividades_usam_recursos_hidricos            BigInt?
   atividades_com_regularizacao_ambiental       BigInt?
   possui_agroindustria_propria                 Boolean?
   grau_interesse_pnae                          String?                    @db.VarChar(64)
-  usuario                                      Usuario?                   @relation(fields: [id_tecnico], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "at_prf_see_fk")
-  ger_pessoa                                   Produtor                   @relation(fields: [id_cliente], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente")
   id_dados_producao_in_natura                  BigInt?
   id_dados_producao_agro_industria             BigInt?
+  ativo                                        Boolean?
+  id_contrato                                  Int?
+  usuario                                      Usuario?                   @relation(fields: [id_tecnico], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "at_prf_see_fk")
+  ger_pessoa                                   Produtor                   @relation(fields: [id_cliente], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente")
   dados_producao_agro_industria                at_prf_see_dados_producao? @relation("agro_industria", fields: [id_dados_producao_agro_industria], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados_agroindustria")
   dados_producao_in_natura                     at_prf_see_dados_producao? @relation("in_natura", fields: [id_dados_producao_in_natura], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados_in_natura")
   at_prf_see_propriedade                       at_prf_see_propriedade?

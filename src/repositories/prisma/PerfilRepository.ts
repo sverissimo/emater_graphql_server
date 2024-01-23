@@ -1,15 +1,17 @@
-import { Perfil } from "@prisma/client";
-
-import { EnumPropsRepository } from "./EnumPropsRepository.js";
+import { Perfil, Prisma } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
+import { EnumPropsRepository } from "./EnumPropsRepository.js";
 import { Repository } from "../Repository.js";
-import { CreatePerfilInput, CreateGrupoProdutosInput } from "@modules/perfil/dto/perfil.js";
+import { CreatePerfilInput, CreateDadosProducaoDTO } from "@modules/perfil/dto/perfil.js";
 
 export type findPerfilInput = { tipo_perfil: string; propriedade_id: number; id_cliente: number };
 
 export class PerfilRepository extends PrismaRepository implements Repository<Perfil> {
   async create(perfilInput: CreatePerfilInput) {
     try {
+      await this.createTransaction(perfilInput);
+
+      return true;
     } catch (error: any) {
       console.log("🚀 ~ file: PerfilRepository.ts:13 ~ PerfilRepository ~ create ~ error:", error);
       this.throwError(error.message);
@@ -109,84 +111,62 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
     }
   }
 
-  async getProdutos(perfil: Perfil) {
-    const { id_dados_producao_in_natura, id_dados_producao_agro_industria } = perfil;
-    const ids = [];
-    if (id_dados_producao_agro_industria) {
-      ids.push({ id_dados_producao: id_dados_producao_agro_industria });
-    }
-    if (id_dados_producao_in_natura) {
-      ids.push({ id_dados_producao: id_dados_producao_in_natura });
-    }
-    let gruposProdutos;
-    if (ids.length) {
-      gruposProdutos = await this.prisma.at_prf_see_grupos_produtos.findMany({
-        where: {
-          OR: ids,
+  private async createTransaction(perfil: CreatePerfilInput) {
+    const { dados_producao_agro_industria, dados_producao_in_natura, atividade, id_propriedade, ...perfilProps } =
+      perfil;
+
+    await this.prisma.$transaction(async (tx) => {
+      const id_dados_producao_in_natura = await this.createDadosProducao(tx, dados_producao_in_natura);
+      const id_dados_producao_agro_industria = await this.createDadosProducao(tx, dados_producao_agro_industria);
+
+      const perfilDTO = {
+        ...perfilProps,
+        id_dados_producao_in_natura,
+        id_dados_producao_agro_industria,
+      } as unknown as Perfil;
+
+      const createdPerfil = await tx.perfil.create({
+        data: {
+          ...perfilDTO,
+          at_prf_see_propriedade: {
+            create: {
+              id_propriedade: BigInt(id_propriedade),
+              atividade,
+            },
+          },
         },
       });
-    }
-    /* const produtos = await this.prisma.at_prf_see_produto.findMany({
-  where: {
-
-  }
-}) */
-    gruposProdutos;
+      console.log("🚀 - PerfilRepository - awaitthis.prisma.$transaction - createdPerfil:", createdPerfil);
+    });
   }
 
-  private async createTransaction(perfil: CreatePerfilInput) {
-    const { dados_producao_agro_industria, dados_producao_in_natura, atividade } = perfil;
-    const gruposProdutosNatura = [] as CreateGrupoProdutosInput[];
-    const gruposProdutosIndustrial = [] as CreateGrupoProdutosInput[];
-    if (dados_producao_in_natura) {
-      const SQLQuery = this.createInsertStatement("at_prf_see_dados_producao", dados_producao_in_natura);
-      console.log("🚀 - PerfilRepository - createTransaction - SQLQuery:", SQLQuery);
-      return SQLQuery;
-      // gruposProdutosNatura.push(...dados_producao_agro_industria.at_prf_see_grupos_produtos);
-    }
-    if (dados_producao_agro_industria) {
-      // await this.prisma.at_prf_see_dados_producao.create({});
-      // const updated = dados_producao_agro_industria.at_prf_see_grupos_produtos.map((grupo) => ({}));
-      // gruposProdutosIndustrial.push(...dados_producao_in_natura.at_prf_see_grupos_produtos);
-    }
-  }
+  private async createDadosProducao(tx: Prisma.TransactionClient, dadosProducao: CreateDadosProducaoDTO) {
+    if (!dadosProducao) return null;
 
-  private async createInsertStatement(tableName: string, object: Record<string, any>) {
-    const columns = Object.keys(object)
-      .map((col) => `"${col}"`)
-      .join(", ");
-    const placeholders = Object.keys(object)
-      .map((_, index) => `$${index + 1}`)
-      .join(", ");
-    const params = Object.values(object);
+    const { at_prf_see_grupos_produtos, ...prodData } = dadosProducao;
+    const createdData = await tx.at_prf_see_dados_producao.create({
+      data: {
+        ...prodData,
+        at_prf_see_grupos_produtos: {
+          create: at_prf_see_grupos_produtos.map(({ at_prf_see_produto, id_grupo, ...grupoProdutos }) => ({
+            ...grupoProdutos,
+            id_grupo_produtos: id_grupo,
+            at_prf_see_produto: {
+              create: at_prf_see_produto,
+            },
+          })),
+        },
+      },
+    });
 
-    return {
-      query: `INSERT INTO "${tableName}" (${columns}) VALUES (${placeholders}) RETURNING id;`,
-      params,
-    };
-  }
-
-  private createInsertManyStatement(tableName: string, objects: Record<string, any>[]) {
-    if (objects.length === 0) return { query: "", params: [] };
-
-    const columns = Object.keys(objects[0])
-      .map((col) => `"${col}"`)
-      .join(", ");
-    const placeholders = objects
-      .map(
-        (_, index) =>
-          "(" +
-          Object.keys(objects[0])
-            .map((_, colIndex) => `$${index * Object.keys(objects[0]).length + colIndex + 1}`)
-            .join(", ") +
-          ")"
-      )
-      .join(", ");
-    const params = objects.flatMap((obj) => Object.values(obj));
-
-    return {
-      query: `INSERT INTO "${tableName}" (${columns}) VALUES ${placeholders} RETURNING id;`,
-      params,
-    };
+    return createdData?.id;
   }
 }
+
+/**
+ *
+
+Conversion of type '{ id_dados_producao_in_natura: bigint | null; id_dados_producao_agro_industria: bigint | null; tipo_perfil: string; atividades_usam_recursos_hidricos: string; atividades_com_regularizacao_ambiental: string; ... 16 more ...; id_cliente: string; }' to type 'GetResult<{ id: bigint; data_preenchimento: Date; data_atualizacao: Date; tipo_perfil: string; id_cliente: bigint; participa_organizacao: boolean | null; nivel_tecnologico_cultivo: bigint | null; ... 24 more ...; id_dados_producao_agro_industria: bigint | null; }, unknown> & {}' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ id_dados_producao_in_natura: bigint | null; id_dados_producao_agro_industria: bigint | null; tipo_perfil: string; atividades_usam_recursos_hidricos: string; atividades_com_regularizacao_ambiental: string; ... 16 more ...; id_cliente: string; }' is missing the following properties from type 'GetResult<{ id: bigint; data_preenchimento: Date; data_atualizacao: Date; tipo_perfil: string; id_cliente: bigint; participa_organizacao: boolean | null; nivel_tecnologico_cultivo: bigint | null; ... 24 more ...; id_dados_producao_agro_industria: bigint | null; }, unknown>': id, data_preenchimento, data_atualizacao, participa_organizacao, and 6 more.
+
+ */

@@ -5,7 +5,7 @@ type Query {
 }
 
 type Mutation {
-  createPerfil(input: CreatePerfilInput): Perfil
+  createPerfil(input: CreatePerfilInput): String
   # updatePerfil(id: Int, updatePerfilInput: UpdatePerfilInput): Perfil
   deletePerfil(id: Int): Perfil
 }
@@ -41,6 +41,7 @@ type Perfil {
   possui_agroindustria_propria: Boolean
   grau_interesse_pnae: String
   id_tecnico: BigInt
+  id_propriedade: BigInt
   id_dados_producao_agro_industria: BigInt
   id_dados_producao_in_natura: BigInt
   produtor: Produtor
@@ -118,10 +119,12 @@ type Atividade {
 }
 
 input CreatePerfilInput {
-  data_preenchimento: DateTime
-  data_atualizacao: DateTime
   tipo_perfil: String
   id_cliente: BigInt
+  id_tecnico: BigInt
+  id_propriedade: BigInt
+  data_preenchimento: DateTime
+  data_atualizacao: DateTime
   participa_organizacao: Boolean
   nivel_tecnologico_cultivo: BigInt
   sistema_producao: BigInt
@@ -146,16 +149,15 @@ input CreatePerfilInput {
   atividades_com_regularizacao_ambiental: BigInt
   possui_agroindustria_propria: Boolean
   grau_interesse_pnae: String
-  id_tecnico: BigInt
-  # id_dados_producao_agro_industria: BigInt
-  # id_dados_producao_in_natura: BigInt
   dados_producao_agro_industria: DadosProducaoInput
   dados_producao_in_natura: DadosProducaoInput
   atividade: String
+  ativo: Boolean
+  id_contrato: Int
 }
 
 input DadosProducaoInput {
-  id: BigInt!
+  # id: BigInt!
   controla_custos_producao: Boolean
   local_comercializacao: BigInt
   valor_total_obtido_pnae: BigInt
@@ -174,7 +176,7 @@ input CreateGrupoProdutoInput {
   area_utilizada: Float
   producao_aproximada_ultimo_ano_pnae: BigInt
   producao_aproximada_ultimo_ano_total: BigInt
-  at_prf_see_grupos_produtos: [CreateProdutoInput]
+  at_prf_see_produto: [CreateProdutoInput]
 }
 
 input CreateProdutoInput {
