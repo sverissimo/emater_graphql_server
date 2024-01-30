@@ -39,4 +39,13 @@ router.get("/getReadOnlyRelatorios/:ids", async (req, res) => {
   }
 });
 
+router.get("/getContractInfo", async (_, res) => {
+  try {
+    const contractInfo = await enumPropsRepository.getContractInfo();
+    return res.send(contractInfo);
+  } catch (error) {
+    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+  }
+});
+
 export const RESTAPIRoutes = router;

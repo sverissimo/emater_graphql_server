@@ -42,6 +42,7 @@ type Perfil {
   grau_interesse_pnae: String
   id_tecnico: BigInt
   id_propriedade: BigInt
+  id_contrato: Int
   id_dados_producao_agro_industria: BigInt
   id_dados_producao_in_natura: BigInt
   produtor: Produtor
@@ -123,6 +124,7 @@ input CreatePerfilInput {
   id_cliente: BigInt
   id_tecnico: BigInt
   id_propriedade: BigInt
+  id_contrato: Int
   data_preenchimento: DateTime
   data_atualizacao: DateTime
   participa_organizacao: Boolean
@@ -153,7 +155,6 @@ input CreatePerfilInput {
   dados_producao_in_natura: DadosProducaoInput
   atividade: String
   ativo: Boolean
-  id_contrato: Int
 }
 
 input DadosProducaoInput {

@@ -71,31 +71,11 @@ export class EnumPropsRepository extends PrismaRepository {
 
     const grupos = serializeBigInts(queryResultGrupos);
     const produtos = serializeBigInts(queryResultProdutos);
-
     return { grupos, produtos };
   }
-}
 
-const all_ger_enum_keys = [
-  "TipoPessoaJuridica",
-  "FormaEsgotamentoSanitario",
-  "TipoProducao",
-  "ProcedimentosPosColheita",
-  "LocalComercializacao",
-  "TipoPerfil",
-  "SistemaProducao",
-  "TipoRegularizacaoUsoRecursosHidricos",
-  "TipoOrganizacaoEstabelecimento",
-  "CondicaoPosse",
-  "GrauInteresse",
-  "PerfilSeeAtividade",
-  "TipoGestaoUnidade",
-  "TipoRegularizacaoAmbiental",
-  "FonteCaptacaoAgua",
-  "OrgaoFiscalizacaoSanitaria",
-  "NivelTecnologicoCultivo",
-  "AtividadesComRegularizacaoAmbiental",
-  "DificuldadeFornecimento",
-  "AtividadesUsamRecursosHidricos",
-  "FormaEntregaProdutos",
-];
+  async getContractInfo() {
+    const queryResult = await this.prisma.$queryRaw`SELECT * FROM at_prf_config`;
+    return queryResult;
+  }
+}

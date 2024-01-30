@@ -114,7 +114,6 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
   private async createTransaction(perfil: CreatePerfilInput) {
     const { dados_producao_agro_industria, dados_producao_in_natura, atividade, id_propriedade, ...perfilProps } =
       perfil;
-
     await this.prisma.$transaction(async (tx) => {
       const id_dados_producao_in_natura = await this.createDadosProducao(tx, dados_producao_in_natura);
       const id_dados_producao_agro_industria = await this.createDadosProducao(tx, dados_producao_agro_industria);
@@ -136,6 +135,7 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
           },
         },
       });
+
       console.log("🚀 - PerfilRepository - awaitthis.prisma.$transaction - createdPerfil:", createdPerfil);
     });
   }
@@ -162,11 +162,3 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
     return createdData?.id;
   }
 }
-
-/**
- *
-
-Conversion of type '{ id_dados_producao_in_natura: bigint | null; id_dados_producao_agro_industria: bigint | null; tipo_perfil: string; atividades_usam_recursos_hidricos: string; atividades_com_regularizacao_ambiental: string; ... 16 more ...; id_cliente: string; }' to type 'GetResult<{ id: bigint; data_preenchimento: Date; data_atualizacao: Date; tipo_perfil: string; id_cliente: bigint; participa_organizacao: boolean | null; nivel_tecnologico_cultivo: bigint | null; ... 24 more ...; id_dados_producao_agro_industria: bigint | null; }, unknown> & {}' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Type '{ id_dados_producao_in_natura: bigint | null; id_dados_producao_agro_industria: bigint | null; tipo_perfil: string; atividades_usam_recursos_hidricos: string; atividades_com_regularizacao_ambiental: string; ... 16 more ...; id_cliente: string; }' is missing the following properties from type 'GetResult<{ id: bigint; data_preenchimento: Date; data_atualizacao: Date; tipo_perfil: string; id_cliente: bigint; participa_organizacao: boolean | null; nivel_tecnologico_cultivo: bigint | null; ... 24 more ...; id_dados_producao_agro_industria: bigint | null; }, unknown>': id, data_preenchimento, data_atualizacao, participa_organizacao, and 6 more.
-
- */
