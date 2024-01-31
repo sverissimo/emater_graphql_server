@@ -119,6 +119,12 @@ type Atividade {
   pl_propriedade: Propriedade
 }
 
+input AtividadeInput {
+  id_propriedade: BigInt
+  atividade: String
+  producao_dedicada_pnae: Boolean
+}
+
 input CreatePerfilInput {
   tipo_perfil: String
   id_cliente: BigInt
@@ -155,6 +161,7 @@ input CreatePerfilInput {
   dados_producao_in_natura: DadosProducaoInput
   atividade: String
   ativo: Boolean
+  at_prf_see_propriedade: AtividadeInput
 }
 
 input DadosProducaoInput {

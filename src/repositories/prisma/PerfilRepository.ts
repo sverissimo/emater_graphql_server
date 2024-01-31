@@ -114,6 +114,7 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
   private async createTransaction(perfil: CreatePerfilInput) {
     const { dados_producao_agro_industria, dados_producao_in_natura, atividade, id_propriedade, ...perfilProps } =
       perfil;
+
     await this.prisma.$transaction(async (tx) => {
       const id_dados_producao_in_natura = await this.createDadosProducao(tx, dados_producao_in_natura);
       const id_dados_producao_agro_industria = await this.createDadosProducao(tx, dados_producao_agro_industria);
@@ -135,7 +136,6 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
           },
         },
       });
-
       console.log("🚀 - PerfilRepository - awaitthis.prisma.$transaction - createdPerfil:", createdPerfil);
     });
   }
