@@ -1,6 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-1.1.x"] //SERVER ONLY
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
 datasource db {
@@ -9,43 +9,45 @@ datasource db {
 }
 
 model Produtor {
-  id_pessoa_demeter         BigInt                      @id @default(autoincrement())
-  nm_pessoa                 String?                     @db.VarChar(255)
-  tp_sexo                   String?                     @db.VarChar(255)
-  nr_cpf_cnpj               String?                     @unique @db.VarChar(255)
-  dt_nascimento             DateTime?                   @db.Timestamptz(6)
-  id_und_empresa            String?                     @db.VarChar(255)
-  ds_email                  String?                     @db.VarChar(255)
-  dt_update_record          DateTime                    @default(dbgenerated("'2023-03-29 17:22:54.641-03'::timestamp with time zone")) @db.Timestamptz(6)
-  senha                     String?                     @db.VarChar(255)
-  telefone                  String?                     @db.VarChar(255)
-  status_account            String?                     @db.VarChar(255)
-  ds_apelido                String?                     @db.VarChar(80)
-  sn_ativo                  Int                         @default(1) @db.SmallInt
-  dap                       String?                     @db.VarChar(40)
-  dt_desativacao            DateTime?                   @db.Timestamp(6)
-  nr_identidade             String?                     @db.VarChar(15)
-  nr_ins_produtor_rural     String?                     @db.VarChar(40)
-  nm_mae                    String?                     @db.VarChar(100)
-  nm_nacionalidade          String?                     @db.VarChar(100)
-  ds_orgao_expedidor        String?                     @db.VarChar(10)
-  nm_pai                    String?                     @db.VarChar(100)
-  sn_principal_provedor     Int?                        @db.SmallInt
-  nm_profissao              String?                     @db.VarChar(100)
-  sn_pronaf                 Int?                        @db.SmallInt
-  tp_desativacao            Int?                        @db.SmallInt
-  tp_pessoa                 String?                     @db.Char(1)
-  fk_est_civil              Int?
-  fk_uf_emissor             Int?
   id_pessoa                 String?                     @db.Char(36)
-  id_sincronismo            String?                     @db.VarChar(36)
+  id_pessoa_demeter         BigInt                      @id @default(autoincrement())
+  nm_pessoa                 String?                     @db.VarChar(100)
+  ds_apelido                String?                     @db.VarChar(80)
+  sn_pronaf                 Int?                        @db.SmallInt
+  sn_ativo                  Int                         @default(1) @db.SmallInt
+  tp_sexo                   String?                     @db.Char(1)
+  nr_cpf_cnpj               String?                     @unique(map: "uk_ger_pessoa_nr_cpf_cnpj") @db.VarChar(14)
+  dt_nascimento             DateTime?                   @db.Date
+  nr_identidade             String?                     @db.VarChar(15)
+  ds_orgao_expedidor        String?                     @db.VarChar(10)
+  fk_uf_emissor             Int?
+  tp_desativacao            Int?                        @db.SmallInt
+  dt_desativacao            DateTime?                   @db.Timestamp(6)
+  nm_nacionalidade          String?                     @db.VarChar(100)
+  fk_est_civil              Int?
+  nm_mae                    String?                     @db.VarChar(100)
+  nm_pai                    String?                     @db.VarChar(100)
+  nm_profissao              String?                     @db.VarChar(100)
+  nr_ins_produtor_rural     String?                     @db.VarChar(40)
+  dap                       String?                     @db.VarChar(40)
+  tp_pessoa                 String?                     @db.Char(1)
+  id_und_empresa            String?                     @db.Char(5)
+  sn_principal_provedor     Int?                        @db.SmallInt
+  ds_email                  String?                     @db.VarChar(80)
+  dt_update_record          DateTime                    @db.Timestamp(6)
+  id_sincronismo            String?                     @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar
+  sn_ctd                    Int?
   caf                       String?                     @db.VarChar(24)
+  sn_plantao_tecnico        Int?                        @db.SmallInt
   at_cli_atend_prop         at_cli_atend_prop[]
   at_prf_see                Perfil[]
+  ger_pes_cat_ramo_relacao  ger_pes_cat_ramo_relacao[]
+  ger_und_empresa           ger_und_empresa?            @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk_ger_pessoa_ger_und_empresa")
   pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
 
   @@index([dt_update_record], map: "ix_ger_pessoa_dt_update_record")
   @@index([nm_pessoa], map: "ix_ger_pessoa_nm_pessoa")
+  @@index([nr_identidade], map: "ix_ger_pessoa_nr_identidade")
   @@map("ger_pessoa")
 }
 
@@ -59,7 +61,7 @@ model Propriedade {
   numero                    String?                      @db.VarChar(15)
   area_total                Decimal?                     @db.Decimal(13, 4)
   geo_ponto                 Unsupported("USER-DEFINED")?
-  // geo_ponto                 String?                     @db.Text()
+  // geo_ponto                 Unsupported("geometry")?
   geo_ponto_texto           String?                      @db.VarChar(255)
   area_condominio           Boolean?                     @default(false)
   origem_ocupacao           String?                      @db.VarChar(100)
@@ -81,9 +83,11 @@ model Propriedade {
   ativo                     Boolean?
   ds_roteiro_acesso         String?                      @db.VarChar(500)
   sn_ctd                    Int?
-  municipio                 Municipio?                   @relation(fields: [id_municipio], references: [id_municipio])
+  id_car                    Int?                         @db.SmallInt
   at_cli_atend_prop         at_cli_atend_prop[]
-  at_prf_see_propriedade    at_prf_see_propriedade?
+  at_prf_see_propriedade    at_prf_see_propriedade[]
+  municipio                 Municipio?                   @relation(fields: [id_municipio], references: [id_municipio], onDelete: NoAction, onUpdate: NoAction, map: "fk_pl_propriedade_municipio")
+  ger_und_empresa           ger_und_empresa?             @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk_pl_propriedade_uregi")
   pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
 
   @@index([nome_propriedade, logradouro])
@@ -91,21 +95,23 @@ model Propriedade {
 }
 
 model Municipio {
-  id_municipio          Int           @id
+  id_municipio          Int               @id
   fk_estado             Int
-  nm_municipio          String?       @db.VarChar(100)
-  cd_ibge               String?       @db.VarChar(15)
-  cd_cpi                String?       @db.VarChar(15)
-  fk_reg_planejamento   Int?
-  fk_reg_administrativa Int?
-  dt_update_record      DateTime      @db.Timestamptz()
+  nm_municipio          String?           @db.VarChar(100)
+  cd_ibge               String?           @db.VarChar(15)
+  cd_cpi                String?           @db.VarChar(15)
+  fk_reg_planejamento   Int?              @db.SmallInt
+  fk_reg_administrativa Int?              @db.SmallInt
+  dt_update_record      DateTime          @db.Timestamp(6)
   fk_microterritorio    Int?
-  data_atualizacao_rm   DateTime?     @db.Date
+  data_atualizacao_rm   DateTime?         @db.Date
   tamanho_modulo_fiscal Float?
-  nr_latitude           String?       @db.VarChar(10)
-  nr_longitude          String?       @db.VarChar(10)
+  nr_latitude           String?           @db.VarChar(10)
+  nr_longitude          String?           @db.VarChar(10)
+  ger_und_empresa       ger_und_empresa[]
   Propriedade           Propriedade[]
 
+  @@index([nm_municipio], map: "sep_municipio_idx1")
   @@map("sep_municipio")
 }
 
@@ -142,25 +148,27 @@ model Perfil {
   grau_interesse_pnae                          String?                    @db.VarChar(64)
   id_dados_producao_in_natura                  BigInt?
   id_dados_producao_agro_industria             BigInt?
-  ativo                                        Boolean?
-  id_contrato                                  Int?
+  ativo                                        Boolean                    @default(true)
+  id_contrato                                  Int                        @db.SmallInt
   usuario                                      Usuario?                   @relation(fields: [id_tecnico], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "at_prf_see_fk")
   ger_pessoa                                   Produtor                   @relation(fields: [id_cliente], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente")
+  at_prf_config                                at_prf_config              @relation(fields: [id_contrato], references: [id_contrato], onDelete: NoAction, onUpdate: NoAction, map: "fk_contrato")
   dados_producao_agro_industria                at_prf_see_dados_producao? @relation("agro_industria", fields: [id_dados_producao_agro_industria], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados_agroindustria")
   dados_producao_in_natura                     at_prf_see_dados_producao? @relation("in_natura", fields: [id_dados_producao_in_natura], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados_in_natura")
-  at_prf_see_propriedade                       at_prf_see_propriedade?
+  at_prf_see_propriedade                       at_prf_see_propriedade[]
 
+  @@unique([id_cliente, tipo_perfil, id_contrato], map: "unq_perfil_contrato")
   @@map("at_prf_see")
 }
 
 model at_prf_see_propriedade {
   id                     BigInt      @id(map: "pk_at_prf_see_propriedade") @default(autoincrement())
-  id_propriedade         BigInt      @unique
-  id_perfil_see          BigInt      @unique
+  id_perfil_see          BigInt
+  id_propriedade         BigInt
   atividade              String?     @db.VarChar(64)
   producao_dedicada_pnae Boolean?
-  at_prf_see             Perfil      @relation(fields: [id_perfil_see], references: [id], map: "fk_prf_see")
-  pl_propriedade         Propriedade @relation(fields: [id_propriedade], references: [id_pl_propriedade], map: "fk_propriedade")
+  at_prf_see             Perfil      @relation(fields: [id_perfil_see], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prf_see")
+  pl_propriedade         Propriedade @relation(fields: [id_propriedade], references: [id_pl_propriedade], onDelete: NoAction, onUpdate: NoAction, map: "fk_propriedade")
 }
 
 model at_prf_see_dados_producao {
@@ -187,17 +195,21 @@ model at_prf_see_grupos_produtos {
   area_utilizada                       Float?
   producao_aproximada_ultimo_ano_total BigInt?
   at_prf_see_dados_producao            at_prf_see_dados_producao @relation(fields: [id_dados_producao], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_dados")
-  at_prf_grupo_produto                 at_prf_grupo_produto      @relation(fields: [id_grupo_produtos], references: [id_grupo], onDelete: NoAction, onUpdate: NoAction)
+  at_prf_grupo_produto                 at_prf_grupo_produto      @relation(fields: [id_grupo_produtos], references: [id_grupo], onDelete: NoAction, onUpdate: NoAction, map: "fk_grupo")
   at_prf_see_produto                   at_prf_see_produto[]
 }
 
 model at_prf_grupo_produto {
-  id_grupo                                  BigInt                       @id
+  id_grupo                                  BigInt                       @id(map: "at_prf_grupo_produto_pk")
   id_grupo_legado                           Int?
   tipo                                      Int?
   nm_grupo                                  String?                      @db.VarChar(100)
   dados_producao_estratificados_por_produto Boolean                      @default(false)
+  at_prf_produto                            at_prf_produto[]
   at_prf_see_grupos_produtos                at_prf_see_grupos_produtos[]
+
+  @@unique([id_grupo_legado, tipo], map: "at_prf_grupo_produto_un")
+  @@index([id_grupo_legado, tipo], map: "idx_at_prf_grupo_produto_lookup")
 }
 
 model at_prf_see_produto {
@@ -208,18 +220,22 @@ model at_prf_see_produto {
   producao_aproximada_ultimo_ano_pnae  BigInt?
   producao_aproximada_ultimo_ano_total BigInt?
   at_prf_see_grupos_produtos           at_prf_see_grupos_produtos @relation(fields: [id_perfil_grupo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_perfil_see")
-  at_prf_produto                       at_prf_produto             @relation(fields: [id_produto], references: [id_produto], onDelete: NoAction, onUpdate: NoAction)
+  at_prf_produto                       at_prf_produto             @relation(fields: [id_produto], references: [id_produto], onDelete: NoAction, onUpdate: NoAction, map: "fk_produto")
 }
 
 /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
 model at_prf_produto {
-  id_produto          BigInt               @id
-  id_legado           Int?
-  nm_produto          String?              @db.VarChar(100)
-  tipo                Int?
-  id_grupo_legado     Int?
-  sg_und_medida       String?              @db.VarChar(10)
-  at_prf_see_produtos at_prf_see_produto[]
+  id_produto           BigInt                @id(map: "at_prf_produto_pk")
+  id_legado            Int?
+  nm_produto           String?               @db.VarChar(100)
+  tipo                 Int?
+  id_grupo_legado      Int?
+  sg_und_medida        String?               @db.VarChar(10)
+  at_prf_grupo_produto at_prf_grupo_produto? @relation(fields: [id_grupo_legado, tipo], references: [id_grupo_legado, tipo], onDelete: NoAction, onUpdate: NoAction, map: "fk_grupo")
+  at_prf_see_produtos  at_prf_see_produto[]
+
+  @@unique([id_legado, tipo], map: "at_prf_produto_un")
+  @@index([id_legado, tipo], map: "idx_at_prf_produto_lookup")
 }
 
 model at_acao {
@@ -266,7 +282,7 @@ model at_atendimento {
   orientacao_tecnica       String?
   dt_update_record         DateTime?                    @db.Timestamp(6)
   geo_ponto                Unsupported("USER-DEFINED")?
-  // geo_ponto                String?                    @db.Text()
+  // geo_ponto                Unsupported("geometry")?
   geo_ponto_texto          String?                      @db.VarChar(255)
   sincroniza               Int?                         @default(0) @db.SmallInt
   processamento            Int?                         @default(0) @db.SmallInt
@@ -275,10 +291,11 @@ model at_atendimento {
   fk_und_empresa           String?                      @db.Char(5)
   auto_atendimento         Int?                         @db.SmallInt
   data_sei                 DateTime?                    @db.Date
+  link_pdf                 String?
   at_arquivo               at_arquivo[]
   usuario                  Usuario?                     @relation(fields: [usuario_validacao], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk2wy9cxuwsh3cyhmip358l0l6c")
   at_acao                  at_acao                      @relation(fields: [id_at_acao], references: [id_at_acao], onDelete: NoAction, onUpdate: NoAction, map: "fk8q4s39wy7we2slstaxkbxd737")
-  link_pdf                 String?
+  ger_und_empresa          ger_und_empresa              @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk93s2tv2b5mc4n607j88ipaxhm")
   at_atendimento_indicador at_atendimento_indicador[]
   at_atendimento_usuario   at_atendimento_usuario[]
   at_cli_atend_prop        at_cli_atend_prop[]
@@ -339,6 +356,7 @@ model at_grupo_indicador {
   permitir_unica_meta_atendimento Boolean?            @default(false)
   sn_super_grupo                  Int?                @db.SmallInt
   tp_chamada                      Int?                @db.SmallInt
+  sn_spa                          Int?                @db.SmallInt
   at_grupo_indicador              at_grupo_indicador  @relation("at_grupo_indicadorToat_grupo_indicador", fields: [id_at_grupo_indicador], references: [id_at_grupo_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fkpbyyndup2h4mhwv3q5x6ovj55")
   other_at_grupo_indicador        at_grupo_indicador? @relation("at_grupo_indicadorToat_grupo_indicador")
   at_indicador                    at_indicador[]
@@ -368,15 +386,16 @@ model ger_cargo {
 model pl_propriedade_ger_pessoa {
   id_pl_propriedade          BigInt
   id_pessoa_demeter          BigInt
-  id_und_empresa             String?     @db.Char(5)
-  id_pl_tipo_posse           Int?        @db.SmallInt
-  id_sincronismo_cliente     String?     @db.VarChar(36)
-  id_sincronismo_propriedade String?     @db.VarChar(36)
-  dt_update_record           DateTime?   @default(now()) @db.Timestamp(6)
-  dt_inicio_contrato         DateTime?   @db.Timestamp(6)
-  dt_termino_contrato        DateTime?   @db.Timestamp(6)
-  ger_pessoa                 Produtor    @relation(fields: [id_pessoa_demeter], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_ger_pessoa_propriedade")
-  pl_propriedade             Propriedade @relation(fields: [id_pl_propriedade], references: [id_pl_propriedade], onDelete: NoAction, onUpdate: NoAction, map: "fk_propriedade_ger_pessoa")
+  id_und_empresa             String?          @db.Char(5)
+  id_pl_tipo_posse           Int?             @db.SmallInt
+  id_sincronismo_cliente     String?          @db.VarChar(36)
+  id_sincronismo_propriedade String?          @db.VarChar(36)
+  dt_update_record           DateTime?        @default(now()) @db.Timestamp(6)
+  dt_inicio_contrato         DateTime?        @db.Timestamp(6)
+  dt_termino_contrato        DateTime?        @db.Timestamp(6)
+  ger_pessoa                 Produtor         @relation(fields: [id_pessoa_demeter], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_ger_pessoa_propriedade")
+  pl_propriedade             Propriedade      @relation(fields: [id_pl_propriedade], references: [id_pl_propriedade], onDelete: NoAction, onUpdate: NoAction, map: "fk_propriedade_ger_pessoa")
+  ger_und_empresa            ger_und_empresa? @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk_propriedade_ger_und_empresa")
 
   @@id([id_pl_propriedade, id_pessoa_demeter], map: "pk_propriedade_ger_pessoa")
 }
@@ -412,30 +431,105 @@ model Usuario {
   at_atendimento               at_atendimento[]
   at_atendimento_usuario       at_atendimento_usuario[]
   at_prf_see                   Perfil[]
-  ger_cargo                    ger_cargo?               @relation(fields: [id_cargo], references: [id_cargo], onDelete: NoAction, onUpdate: NoAction, map: "fk5j2oxae47ac7gxtfitkc7jwlg")
   perfil_demeter               perfil_usuario[]
+  ger_cargo                    ger_cargo?               @relation(fields: [id_cargo], references: [id_cargo], onDelete: NoAction, onUpdate: NoAction, map: "fk5j2oxae47ac7gxtfitkc7jwlg")
+  ger_und_empresa              ger_und_empresa?         @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk_usuario_empresa")
 
   @@map("usuario")
 }
 
 model perfil {
-  id_perfil        BigInt           @id
+  id_perfil        BigInt           @id(map: "pk_perfil") @default(autoincrement())
   descricao_perfil String           @db.VarChar(255)
   dt_update_record DateTime?        @db.Timestamp(6)
   perfil_usuario   perfil_usuario[]
 }
 
 model perfil_usuario {
-  id_perfil        BigInt    @unique
-  perfil           perfil    @relation(fields: [id_perfil], references: [id_perfil])
-  usuario          Usuario   @relation(fields: [id_usuario], references: [id_usuario])
+  id_perfil        BigInt
   id_usuario       BigInt
   dt_update_record DateTime? @db.Timestamp(6)
+  usuario          Usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk4fufsx76e5t1sjsi7wd9bb76")
+  perfil           perfil    @relation(fields: [id_perfil], references: [id_perfil], onDelete: NoAction, onUpdate: NoAction, map: "fk9yj8yi3w6sgcnwlakjp6jppes")
+
+  @@id([id_perfil, id_usuario], map: "pk_perfil_usuario")
 }
 
 model at_produto {
   id_at_produto    BigInt         @id(map: "pk_at_produto") @default(autoincrement())
   nome             String         @db.VarChar(100)
   dt_update_record DateTime?      @db.Timestamp(6)
+  sn_spa           Int?           @db.SmallInt
   at_indicador     at_indicador[]
+}
+
+model at_prf_config {
+  id_contrato       Int      @id(map: "at_prf_config_pk") @db.SmallInt
+  ano_contrato      Int      @db.SmallInt
+  contrato_ativo    Boolean
+  inclusao_entrada  Boolean
+  inclusao_saida    Boolean
+  alteracao_entrada Boolean
+  alteracao_saida   Boolean
+  at_prf_see        Perfil[]
+}
+
+model ger_enum_descricao {
+  tipo      String? @db.VarChar(64)
+  id        Int?
+  descricao String? @db.VarChar(256)
+
+  @@ignore
+}
+
+model ger_pes_cat_ramo_relacao {
+  id_pes_cat_ramo_relacao_demeter Int              @id @default(autoincrement())
+  id_pes_cat_ramo_relacao         String?          @db.Char(36)
+  fk_pessoa                       Int
+  fk_cat_pessoa                   Int              @db.SmallInt
+  id_und_empresa                  String?          @db.Char(5)
+  dt_update_record                DateTime         @db.Timestamp(6)
+  id_sincronismo                  String?          @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_cliente          String?          @db.VarChar(36)
+  ger_und_empresa                 ger_und_empresa? @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk_ger_cat_ger_und_empresa")
+  // ger_pessoa                      Produtor         @relation(fields: [fk_pessoa], references: [id_pessoa_demeter], onDelete: Cascade, map: "fk_ger_pes_cat_ramo_relacao_1")
+  Produtor                        Produtor?        @relation(fields: [produtorId_pessoa_demeter], references: [id_pessoa_demeter])
+  produtorId_pessoa_demeter       BigInt?
+
+  @@unique([fk_pessoa, fk_cat_pessoa], map: "fk_pessoa_ger_cat_pessoa")
+}
+
+model ger_und_empresa {
+  id_und_empresa            String                      @id @db.Char(5)
+  nm_und_empresa            String?                     @db.VarChar(100)
+  fk_und_empresa            String?                     @db.Char(5)
+  nr_cgc                    String?                     @db.VarChar(14)
+  sn_esc_central            Int?                        @db.SmallInt
+  sg_und_empresa            String?                     @db.VarChar(10)
+  fk_municipio              Int?
+  fk_tipo_unidade           String?                     @db.Char(1)
+  fk_tpo_logradouro         Int?                        @db.SmallInt
+  ds_logradouro             String?                     @db.VarChar(100)
+  nr_logradouro             String?                     @db.VarChar(15)
+  ds_complemento            String?                     @db.VarChar(20)
+  nm_bairro                 String?                     @db.VarChar(80)
+  nr_telefone1              String?                     @db.VarChar(15)
+  nr_telefone2              String?                     @db.VarChar(15)
+  ds_email                  String?                     @db.VarChar(80)
+  nr_cep                    String?                     @db.VarChar(12)
+  sn_ativa                  Int                         @default(1) @db.SmallInt
+  fk_polo                   Int?
+  dt_update_record          DateTime                    @db.Timestamp(6)
+  sn_status_uregi           Int?                        @db.SmallInt
+  sn_visualizar             Int                         @default(1) @db.SmallInt
+  sn_atendimento            Boolean?
+  at_atendimento            at_atendimento[]
+  ger_pes_cat_ramo_relacao  ger_pes_cat_ramo_relacao[]
+  ger_pessoa                Produtor[]
+  ger_und_empresa           ger_und_empresa?            @relation("ger_und_empresaToger_und_empresa", fields: [fk_und_empresa], references: [id_und_empresa], onDelete: NoAction, map: "fk_ger_und_empresa_1")
+  other_ger_und_empresa     ger_und_empresa[]           @relation("ger_und_empresaToger_und_empresa")
+  sep_municipio             Municipio?                  @relation(fields: [fk_municipio], references: [id_municipio], onDelete: NoAction, map: "fk_ger_und_empresa_2")
+  pl_propriedade            Propriedade[]
+  pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
+  usuario                   Usuario[]
 }

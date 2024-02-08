@@ -49,7 +49,7 @@ type Perfil {
   usuario: Usuario
   dados_producao_agro_industria: DadosProducao
   dados_producao_in_natura: DadosProducao
-  at_prf_see_propriedade: Atividade
+  at_prf_see_propriedade: [Atividade]
 }
 
 type DadosProducao {

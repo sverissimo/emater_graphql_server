@@ -9,18 +9,18 @@ type Produtor {
   id_pessoa: String!
   nm_pessoa: String
   ds_apelido: String
-  sn_pronaf: String
-  sn_ativo: String
+  sn_pronaf: Int
+  sn_ativo: Int
   tp_sexo: String
   nr_cpf_cnpj: String!
   dt_nascimento: DateTime
   nr_identidade: String
   ds_orgao_expedidor: String
-  fk_uf_emissor: String
-  tp_desativacao: String
+  fk_uf_emissor: Int
+  tp_desativacao: Int
   dt_desativacao: String
   nm_nacionalidade: String
-  fk_est_civil: String
+  fk_est_civil: Int
   nm_mae: String
   nm_pai: String
   nm_profissao: String
@@ -32,8 +32,9 @@ type Produtor {
   ds_email: String
   dt_update_record: DateTime
   id_sincronismo: String
-  sn_ctd: String
+  sn_ctd: Int
   caf: String
+  sn_plantao_tecnico: Int
   propriedades: [Propriedade]
   perfis: [Perfil]
 }
