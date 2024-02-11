@@ -1,5 +1,4 @@
 import { Usuario } from "@prisma/client";
-
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "../Repository.js";
 
@@ -31,8 +30,8 @@ export class UsuarioRepository extends PrismaRepository implements Repository<Us
       });
 
       return usuarios;
-    } catch (error) {
-      console.log("🚀 ~ file: UsuarioRepository.ts:27 ~ UsuarioRepository ~ find ~ error:", error);
+    } catch (error: any) {
+      this.throwError(error);
     }
   }
 

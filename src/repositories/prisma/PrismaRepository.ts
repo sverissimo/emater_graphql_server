@@ -7,19 +7,15 @@ export class PrismaRepository {
   errorHandler: ErrorHandler = new ErrorHandlerImpl();
   constructor(protected prisma: PrismaClient = prismaClient) {}
 
-  throwError(error: DefaultError | CustomError): void {
+  throwError(error: DefaultError | CustomError | any): void {
     this.errorHandler.throwError(error);
   }
 
-  handleRecordNotFound(error: Error) {
+  handleRecordNotFound(error: Error | any) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      const { meta, code } = error;
-      console.log("🚀 ~ file: PerfilRepository.ts:82 ~ PerfilRepository ~ update ~ { meta, name, code  }:", {
-        meta,
-        code,
-      });
-      this.throwError("NOT_FOUND");
+      this.errorHandler.throwError("NOT_FOUND");
+    } else {
+      this.errorHandler.throwError(error);
     }
-    this.throwError({ ...error, code: "INTERNAL_SERVER_ERROR" });
   }
 }

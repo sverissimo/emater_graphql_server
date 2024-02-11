@@ -7,6 +7,10 @@ node_modules
 .env
 *.txt
 
+# Logging
+/logs
+*.log
+
 #schema generated types
 /src/generated
 /src/types

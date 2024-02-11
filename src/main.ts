@@ -7,6 +7,7 @@ import DateTime from "./shared/scalars/DateTime.js";
 import { typeDefs } from "./schema/typedefs.js";
 import { resolvers } from "./schema/resolvers.js";
 import { app } from "./app.js";
+import { logger } from "./shared/utils/logger.js";
 
 interface MyContext {
   token?: string;
@@ -27,4 +28,4 @@ app.use(
   })
 );
 
-httpServer.listen(PORT, () => console.log(`🚀 Server listening on port ${PORT}...`));
+httpServer.listen(PORT, () => logger.info(`🚀 Server listening on port ${PORT}...`));

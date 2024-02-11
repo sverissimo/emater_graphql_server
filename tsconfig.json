@@ -16,7 +16,8 @@
     "paths": {
       "@config/*": ["./src/config/*"],
       "@modules/*": ["./src/modules/*"],
-      "@repositories/*": ["src/repositories/*"]
+      "@repositories/*": ["src/repositories/*"],
+      "@utils/*": ["./src/shared/utils/*"]
     }
   },
   "include": ["/**/*.ts", ".env", "src/**/*.json", "src"],
