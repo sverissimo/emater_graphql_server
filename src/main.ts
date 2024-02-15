@@ -12,7 +12,10 @@ import { logger } from "./shared/utils/logger.js";
 interface MyContext {
   token?: string;
 }
-const PORT = process.env.PORT || 4000;
+
+const { NODE_ENV, DEV_PORT, PROD_PORT } = process.env;
+const PORT = NODE_ENV === "production" ? PROD_PORT : DEV_PORT;
+
 const scalars = { BigInt: BigIntScalar, DateTime: DateTime };
 const httpServer = http.createServer(app);
 export const server = new ApolloServer<MyContext>({

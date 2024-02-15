@@ -3,27 +3,37 @@ FROM node:20-slim AS build
 
 WORKDIR /home/node/app
 COPY package*.json ./
-RUN npm ci
+RUN npm i
 COPY . .
-
 RUN npx prisma generate
-
 RUN npm run build
 
 # ---- Run Stage ----
-FROM node:20-slim
+FROM node:20-slim AS production
 WORKDIR /home/node/app
 
-COPY package*.json ./
+RUN apt-get update -y && apt-get install -y openssl
 
 RUN chown -R node:node /home/node/app
 USER node
 
-# RUN npm ci --only=production
-RUN npm ci --omit=dev
 COPY --from=build /home/node/app/dist ./dist
 
-# COPY --from=build /home/node/app/node_modules/@prisma ./node_modules/@prisma
+COPY ./*.graphql ./dist/
+COPY ./src/modules/atendimento/*.graphql ./dist/modules/atendimento/
+COPY ./src/modules/perfil/*.graphql ./dist/modules/usuario/
+COPY ./src/modules/produtor/*.graphql ./dist/modules/empresa/
+COPY ./src/modules/propriedade/*.graphql ./dist/modules/funcionario/
+COPY ./src/modules/usuario/*.graphql ./dist/modules/funcionario/
+
+
+COPY --from=build /home/node/app/.env ./
+COPY --from=build /home/node/app/prisma ./prisma
+
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+RUN npx prisma generate
 
 ENV NODE_ENV production
 CMD ["npm", "run", "start:prod"]

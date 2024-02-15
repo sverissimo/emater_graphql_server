@@ -1,1 +1,29 @@
-/node_modules
+# Docker
+Dockerfile
+.dockerignore
+
+# Version control
+.git
+.gitignore
+
+# Build artifacts
+target/
+out/
+dist/
+node_modules/
+
+# Sensitive data
+*.key
+*.pem
+*.p12
+
+# Editor/IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+/logs
+
+# database
+/db

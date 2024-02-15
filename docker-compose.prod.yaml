@@ -1,22 +1,22 @@
 version: '3.9'
 services:
-  graphql_server:
-    container_name: graphql_server
+  graphql_server_hmg:
+    container_name: graphql_server_hmg
+    image: graphql_server_hmg
     build:
-      context: ${HOME_FOLDER}
+      context: .
       dockerfile: Dockerfile.prod
-    image: graphql_server
-    command: "sh -c 'npm run start:prod || sleep infinity'"
-    # volumes:
-    #   - ${HOME_FOLDER}:/home/node/app
+      args:
+        - HOST_UID=${HOST_UID}
+        - HOST_GID=${HOST_GID}
+    command: "npm run start:prod"
+    environment:
+      - NODE_ENV=production
     ports:
-      - 4000:4000
-  # entrypoint: "dockerize -wait tcp://postgres:5432 -timeout 20s /usr/local/bin/docker-entrypoint.sh"
-  #   depends_on:
-  #     - postgres
-  # postgres:
-  #   image: postgres:15
-  #   volumes:
-  #     - ${DB_FOLDER}:/var/lib/postgresql/data
-  #   ports:
-  #     - 5432:5432
+      - 4100:4100
+    networks:
+      - pnae_hmg_default
+
+networks:
+  pnae_hmg_default:
+    external: true
