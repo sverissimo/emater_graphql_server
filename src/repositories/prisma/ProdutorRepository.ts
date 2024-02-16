@@ -8,8 +8,7 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
       if (!id && !cpf) {
         throw "NO_ID_PROVIDED";
       }
-      console.log("start--------------");
-      console.time("prisma.produtor.findFirst");
+
       const produtor = await this.prisma.produtor.findFirst({
         where: { OR: [{ id_pessoa_demeter: id }, { nr_cpf_cnpj: cpf }] },
         include: {
@@ -61,7 +60,7 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
       if (!produtor) {
         throw "NOT_FOUND";
       }
-      console.timeEnd("prisma.produtor.findFirst");
+
       return produtor;
     } catch (error: unknown) {
       this.throwError(error);
@@ -75,6 +74,18 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
       },
     });
     return produtores;
+  }
+
+  async getUnidadeEmpresa(produtorId: bigint) {
+    const produtor = await this.prisma.produtor.findUnique({
+      where: { id_pessoa_demeter: produtorId },
+      select: {
+        nr_cpf_cnpj: true,
+        id_und_empresa: true,
+      },
+    });
+
+    return produtor;
   }
 
   async create(input: any) {

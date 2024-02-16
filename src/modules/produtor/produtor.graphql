@@ -2,6 +2,7 @@ type Query {
   produtor(id: Int, cpf: String): Produtor
   produtores: [Produtor]
   produtoresFull: [ProdutorPropriedades]
+  getUnidadeEmpresa(produtorId: Int): Produtor
 }
 
 type Produtor {

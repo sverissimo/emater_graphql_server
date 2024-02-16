@@ -4,6 +4,7 @@ export interface Repository<T> {
   findMany?: (args: any) => void;
   findAll: () => void;
   findByProdutorId?: (produtorId: bigint) => void;
+  getUnidadeEmpresa?: (produtorId: bigint) => void;
   create?: (input: any) => Promise<any>;
   createMany?: () => void;
   delete?: (id: number) => void;

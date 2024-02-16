@@ -11,6 +11,10 @@ export const produtorResolver = (produtorRepository: Repository<Produtor>) => ({
   Query: {
     produtor: (_root: any, { id, cpf }: { id: bigint; cpf: string }) => produtorRepository.findOne({ id, cpf }),
     produtores: () => produtorRepository.findAll(),
+    getUnidadeEmpresa: (_root: any, { produtorId }: { produtorId: bigint }) => {
+      const produtor = produtorRepository.getUnidadeEmpresa!(produtorId) as unknown as Partial<Produtor>;
+      return produtor;
+    },
   },
 
   Produtor: {

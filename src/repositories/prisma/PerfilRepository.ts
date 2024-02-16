@@ -9,9 +9,7 @@ export type findPerfilInput = { tipo_perfil: string; propriedade_id: number; id_
 export class PerfilRepository extends PrismaRepository implements Repository<Perfil> {
   async create(perfilInput: CreatePerfilInput) {
     try {
-      console.time("--- prisma.perfil.create");
       await this.createTransaction(perfilInput);
-      console.timeEnd("--- prisma.perfil.create");
       return true;
     } catch (error: any) {
       this.throwError(error);
