@@ -1,7 +1,8 @@
 version: '3.9'
 services:
-  graphql_server_prod:
-    image: graphql_server_prod
+  graphql_server_hmg:
+    container_name: graphql_server_hmg
+    image: graphql_server_hmg
     build:
       context: .
       dockerfile: Dockerfile.prod
@@ -9,19 +10,13 @@ services:
         - HOST_UID=${HOST_UID}
         - HOST_GID=${HOST_GID}
     command: "npm run start:prod"
-    env_file:
-      - production.env
     environment:
       - NODE_ENV=production
-    deploy:
-      replicas: 3
-      resources:
-        limits:
-          cpus: '1.9'
-          memory: 2048M
+    ports:
+      - 4100:4100
     networks:
-      - pnae_prod_default
+      - pnae_hmg_default
 
 networks:
-  pnae_prod_default:
+  pnae_hmg_default:
     external: true

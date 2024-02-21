@@ -5,7 +5,6 @@ WORKDIR /home/node/app
 COPY package*.json ./
 RUN npm i
 COPY . .
-RUN npx prisma generate
 RUN npm run build
 
 # ---- Run Stage ----
@@ -15,7 +14,6 @@ WORKDIR /home/node/app
 RUN apt-get update -y && apt-get install -y openssl
 
 RUN chown -R node:node /home/node/app
-USER node
 
 COPY --from=build /home/node/app/dist ./dist
 
@@ -27,13 +25,15 @@ COPY ./src/modules/propriedade/*.graphql ./dist/modules/funcionario/
 COPY ./src/modules/usuario/*.graphql ./dist/modules/funcionario/
 
 
-COPY --from=build /home/node/app/.env ./
+COPY --from=build /home/node/app/production.env ./.env
 COPY --from=build /home/node/app/prisma ./prisma
+
+RUN  mkdir -p /home/node/app && chown -R node:node /home/node/app
 
 COPY package*.json ./
 RUN npm ci --omit=dev
 
 RUN npx prisma generate
 
-ENV NODE_ENV production
-CMD ["npm", "run", "start:prod"]
+USER node
+CMD npm run start:prod
