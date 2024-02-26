@@ -1,8 +1,11 @@
 type Query {
+  atendimento(id: BigInt): Atendimento
   atendimentos: [Atendimento]
 }
+
 type Mutation {
   createAtendimento(input: CreateAtendimentoInput): BigInt
+  updateAtendimento(input: UpdateAtendimentoInput): Void
 }
 
 type at_atendimento_usuario {
@@ -76,6 +79,24 @@ input CreateAtendimentoInput {
   id_at_grupo_indicador: BigInt
   usuario_validacao: BigInt
   link_pdf: String!
+  atendimento_usuario: at_atendimento_usuario_input
+  atendimento_indicador: at_atendimento_indicador_input
+  at_cli_atend_prop: at_cli_atend_prop_input
+}
+
+input UpdateAtendimentoInput {
+  id_at_atendimento: BigInt!
+  data_inicio_atendimento: String
+  data_fim_atendimento: String
+  data_atualizacao: String
+  id_at_status: Int
+  ativo: Boolean
+  id_at_acao: BigInt
+  id_und_empresa: String
+  data_criacao: String
+  id_at_grupo_indicador: BigInt
+  usuario_validacao: BigInt
+  link_pdf: String
   atendimento_usuario: at_atendimento_usuario_input
   atendimento_indicador: at_atendimento_indicador_input
   at_cli_atend_prop: at_cli_atend_prop_input

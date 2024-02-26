@@ -2,11 +2,21 @@ import { Perfil, Prisma } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { EnumPropsRepository } from "./EnumPropsRepository.js";
 import { Repository } from "../Repository.js";
-import { CreatePerfilInput, CreateDadosProducaoDTO } from "@modules/perfil/dto/perfil.js";
+import {
+  CreatePerfilInput,
+  CreateDadosProducaoDTO,
+} from "@modules/perfil/dto/perfil.js";
 
-export type findPerfilInput = { tipo_perfil: string; propriedade_id: number; id_cliente: number };
+export type findPerfilInput = {
+  tipo_perfil: string;
+  propriedade_id: number;
+  id_cliente: number;
+};
 
-export class PerfilRepository extends PrismaRepository implements Repository<Perfil> {
+export class PerfilRepository
+  extends PrismaRepository
+  implements Repository<Perfil>
+{
   async create(perfilInput: CreatePerfilInput) {
     try {
       await this.createTransaction(perfilInput);
@@ -88,9 +98,10 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
     return parsedPerfis;
   }
 
-  async update(id: number, updatePerfilInput: Partial<Perfil>) {
+  async update(updatePerfilInput: Partial<Perfil>) {
     try {
-      //const { id_dados_producao_agro_industria, ...rest } = updatePerfilInput;
+      const { id } = updatePerfilInput;
+
       const updated = await this.prisma.perfil.update({
         where: { id },
         data: updatePerfilInput,
@@ -111,13 +122,24 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
   }
 
   private async createTransaction(perfil: CreatePerfilInput) {
-    const { dados_producao_agro_industria, dados_producao_in_natura, atividade, id_propriedade, ...perfilProps } =
-      perfil;
+    const {
+      dados_producao_agro_industria,
+      dados_producao_in_natura,
+      atividade,
+      id_propriedade,
+      ...perfilProps
+    } = perfil;
 
     await this.prisma.$transaction(
       async (tx) => {
-        const id_dados_producao_in_natura = await this.createDadosProducao(tx, dados_producao_in_natura);
-        const id_dados_producao_agro_industria = await this.createDadosProducao(tx, dados_producao_agro_industria);
+        const id_dados_producao_in_natura = await this.createDadosProducao(
+          tx,
+          dados_producao_in_natura
+        );
+        const id_dados_producao_agro_industria = await this.createDadosProducao(
+          tx,
+          dados_producao_agro_industria
+        );
 
         const perfilDTO = {
           ...perfilProps,
@@ -144,7 +166,10 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
     );
   }
 
-  private async createDadosProducao(tx: Prisma.TransactionClient, dadosProducao: CreateDadosProducaoDTO) {
+  private async createDadosProducao(
+    tx: Prisma.TransactionClient,
+    dadosProducao: CreateDadosProducaoDTO
+  ) {
     if (!dadosProducao) return null;
 
     const { at_prf_see_grupos_produtos, ...prodData } = dadosProducao;
@@ -152,13 +177,15 @@ export class PerfilRepository extends PrismaRepository implements Repository<Per
       data: {
         ...prodData,
         at_prf_see_grupos_produtos: {
-          create: at_prf_see_grupos_produtos.map(({ at_prf_see_produto, id_grupo, ...grupoProdutos }) => ({
-            ...grupoProdutos,
-            id_grupo_produtos: id_grupo,
-            at_prf_see_produto: {
-              create: at_prf_see_produto,
-            },
-          })),
+          create: at_prf_see_grupos_produtos.map(
+            ({ at_prf_see_produto, id_grupo, ...grupoProdutos }) => ({
+              ...grupoProdutos,
+              id_grupo_produtos: id_grupo,
+              at_prf_see_produto: {
+                create: at_prf_see_produto,
+              },
+            })
+          ),
         },
       },
     });

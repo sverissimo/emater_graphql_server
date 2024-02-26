@@ -1,9 +1,10 @@
 import { at_atendimento } from "@prisma/client";
-import { CreateAtendimentoDTO } from "./CreateAtendimentoDTO.js";
+import { CreateAtendimentoDTO, UpdateAtendimentoDTO } from "./CreateAtendimentoDTO.js";
 import { Repository } from "../../repositories/Repository.js";
 
 export const atendimentoResolver = (atendimentoRepository: Repository<at_atendimento>) => ({
   Query: {
+    atendimento: (_root: any, { id }: { id: bigint }) => atendimentoRepository.findOne(id),
     atendimentos: () => atendimentoRepository.findAll(),
   },
 
@@ -11,5 +12,7 @@ export const atendimentoResolver = (atendimentoRepository: Repository<at_atendim
     createAtendimento: (_root: any, { input }: { input: CreateAtendimentoDTO }) => {
       return atendimentoRepository.create!(input);
     },
+    updateAtendimento: async (_root: any, { input }: { input: UpdateAtendimentoDTO }) =>
+      atendimentoRepository.update!(input),
   },
 });

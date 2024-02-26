@@ -33,11 +33,27 @@ export class AtendimentoRepository extends PrismaRepository implements Repositor
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: bigint) {
     if (!id) {
       this.throwError("NO_ID_PROVIDED");
     }
-    return await this.prisma.at_atendimento.findUnique({ where: { id_at_atendimento: id } });
+    return await this.prisma.at_atendimento.findUnique({
+      where: { id_at_atendimento: id },
+    });
+  }
+
+  async update(input: at_atendimento) {
+    console.log("🚀 - update - input:", input);
+
+    try {
+      await this.prisma.at_atendimento.update({
+        where: { id_at_atendimento: input.id_at_atendimento },
+        data: input,
+      });
+      return `Logically deleted atendimento ${input.id_at_atendimento}.`;
+    } catch (error: any) {
+      this.throwError(error);
+    }
   }
 
   async getReadOnlyRelatorioIds(relatorioIds: string[]) {

@@ -10,7 +10,7 @@ services:
     networks:
       - pnae_dev_default
     volumes:
-      - ${HOME_FOLDER}:/home/node/app
+      - /home/pnae/emater_graphql_server:/home/node/app
     ports:
       - 4000:4000
 networks:

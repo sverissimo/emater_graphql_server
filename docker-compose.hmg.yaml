@@ -5,7 +5,7 @@ services:
     image: graphql_server_hmg
     build:
       context: .
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile.hmg
       args:
         - HOST_UID=${HOST_UID}
         - HOST_GID=${HOST_GID}

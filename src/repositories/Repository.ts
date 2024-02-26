@@ -8,7 +8,7 @@ export interface Repository<T> {
   create?: (input: any) => Promise<any>;
   createMany?: () => void;
   delete?: (id: number) => void;
-  update?: (id: number, input: T) => void;
+  update?: (input: Partial<T> & any) => void;
   deleteMany?: () => void;
   updateMany?: () => void;
   upsert?: () => void;

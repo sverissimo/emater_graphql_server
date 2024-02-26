@@ -31,8 +31,11 @@ export type CreateAtendimentoDTO = {
   data_inicio_atendimento: string;
   data_fim_atendimento: string;
   data_atualizacao: string;
-
   atendimento_usuario: at_atendimento_usuario;
   atendimento_indicador: at_atendimento_indicador;
   at_cli_atend_prop: at_cli_atend_prop;
+};
+
+export type UpdateAtendimentoDTO = Partial<CreateAtendimentoDTO> & {
+  id_at_atendimento: bigint;
 };

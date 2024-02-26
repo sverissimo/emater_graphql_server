@@ -26,7 +26,7 @@ COPY ./src/modules/propriedade/*.graphql ./dist/modules/funcionario/
 COPY ./src/modules/usuario/*.graphql ./dist/modules/funcionario/
 
 
-COPY --from=build /home/node/app/production.env ./.env
+COPY --from=build /home/node/app/homolog.env ./.env
 COPY --from=build /home/node/app/prisma ./prisma
 
 RUN  mkdir -p /home/node/app && chown -R node:node /home/node/app
