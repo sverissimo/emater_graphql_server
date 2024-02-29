@@ -19,6 +19,17 @@ type at_cli_atend_prop = {
   id_und_empresa: string;
 };
 
+type at_atendimento_indi_camp_acess = {
+  id_at_aten_indi_camp_acess?: bigint;
+  id_at_atendimento_indicador: bigint;
+  id_at_indicador_camp_acessorio: bigint;
+  valor_campo_acessorio?: string | null;
+  id_und_empresa?: string | null;
+  id_sincronismo?: string | null;
+  id_sincronismo_aten_indicador?: string | null;
+  dt_update_record?: Date | null;
+};
+
 export type CreateAtendimentoDTO = {
   id_at_atendimento?: bigint;
   id_at_acao: bigint;
@@ -31,9 +42,10 @@ export type CreateAtendimentoDTO = {
   data_inicio_atendimento: string;
   data_fim_atendimento: string;
   data_atualizacao: string;
-  atendimento_usuario: at_atendimento_usuario;
-  atendimento_indicador: at_atendimento_indicador;
+  at_atendimento_indicador: at_atendimento_indicador;
+  at_atendimento_usuario: at_atendimento_usuario;
   at_cli_atend_prop: at_cli_atend_prop;
+  at_atendimento_indi_camp_acess: at_atendimento_indi_camp_acess[];
 };
 
 export type UpdateAtendimentoDTO = Partial<CreateAtendimentoDTO> & {

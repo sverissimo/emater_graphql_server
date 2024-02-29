@@ -5,22 +5,50 @@ import { Repository } from "../Repository.js";
 
 export class AtendimentoRepository extends PrismaRepository implements Repository<at_atendimento> {
   async create(createAtendimentoDTO: CreateAtendimentoDTO) {
+    console.log("🚀 - create - createAtendimentoDTO:", createAtendimentoDTO);
+
     try {
-      const { at_cli_atend_prop, atendimento_indicador, atendimento_usuario, ...atendimento } =
-        createAtendimentoDTO;
+      const {
+        at_cli_atend_prop,
+        at_atendimento_indicador,
+        at_atendimento_usuario,
+        at_atendimento_indi_camp_acess,
+        ...atendimento
+      } = createAtendimentoDTO;
 
       const newAtendimento = await this.prisma.at_atendimento.create({
         data: {
           ...atendimento,
           at_cli_atend_prop: { create: { ...at_cli_atend_prop } },
-          at_atendimento_indicador: { create: { ...atendimento_indicador } },
-          at_atendimento_usuario: { create: { ...atendimento_usuario } },
+          at_atendimento_indicador: {
+            create: {
+              ...at_atendimento_indicador,
+            },
+          },
+          at_atendimento_usuario: { create: { ...at_atendimento_usuario } },
+        },
+        select: {
+          id_at_atendimento: true,
+          at_atendimento_indicador: {
+            select: {
+              id_at_atendimento_indicador: true,
+            },
+          },
         },
       });
 
-      const id_at_atendimento = newAtendimento.id_at_atendimento;
-      return id_at_atendimento;
+      const { id_at_atendimento_indicador } = newAtendimento.at_atendimento_indicador[0];
+
+      await this.prisma.at_atendimento_indi_camp_acess.createMany({
+        data: at_atendimento_indi_camp_acess.map((obj, i) => ({
+          ...obj,
+          id_at_atendimento_indicador,
+        })),
+      });
+
+      return newAtendimento.id_at_atendimento;
     } catch (error: any) {
+      console.log("🚀 - create - error:", error);
       this.throwError(error);
     }
   }
@@ -37,9 +65,16 @@ export class AtendimentoRepository extends PrismaRepository implements Repositor
     if (!id) {
       this.throwError("NO_ID_PROVIDED");
     }
-    return await this.prisma.at_atendimento.findUnique({
+    const atendimento = await this.prisma.at_atendimento.findUnique({
       where: { id_at_atendimento: id },
+      include: {
+        at_atendimento_usuario: true,
+        at_cli_atend_prop: true,
+      },
     });
+
+    // console.log("🚀 - AtendimentoRepository - findOne - atendimento:", atendimento);
+    return atendimento;
   }
 
   async update(input: at_atendimento) {

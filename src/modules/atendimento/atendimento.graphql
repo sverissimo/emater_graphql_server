@@ -41,9 +41,10 @@ type Atendimento {
   data_inicio_atendimento: DateTime
   data_fim_atendimento: DateTime
   data_atualizacao: DateTime
-  atendimento_usuario: at_atendimento_usuario
-  atendimento_indicador: at_atendimento_indicador
-  at_cli_atend_prop: at_cli_atend_prop
+  sn_pendencia: Int
+  at_atendimento_indicador: at_atendimento_indicador
+  at_atendimento_usuario: [at_atendimento_usuario]
+  at_cli_atend_prop: [at_cli_atend_prop]
 }
 
 input at_atendimento_usuario_input {
@@ -67,6 +68,17 @@ input at_cli_atend_prop_input {
   id_und_empresa: String
 }
 
+input at_atendimento_indi_camp_acess_input {
+  id_at_aten_indi_camp_acess: BigInt
+  id_at_atendimento_indicador: BigInt
+  id_at_indicador_camp_acessorio: BigInt
+  valor_campo_acessorio: String
+  id_und_empresa: String
+  id_sincronismo: String
+  id_sincronismo_aten_indicador: String
+  dt_update_record: DateTime
+}
+
 input CreateAtendimentoInput {
   data_inicio_atendimento: String!
   data_fim_atendimento: String!
@@ -79,9 +91,11 @@ input CreateAtendimentoInput {
   id_at_grupo_indicador: BigInt
   usuario_validacao: BigInt
   link_pdf: String!
-  atendimento_usuario: at_atendimento_usuario_input
-  atendimento_indicador: at_atendimento_indicador_input
+  sn_pendencia: Int
+  at_atendimento_usuario: at_atendimento_usuario_input
+  at_atendimento_indicador: at_atendimento_indicador_input
   at_cli_atend_prop: at_cli_atend_prop_input
+  at_atendimento_indi_camp_acess: [at_atendimento_indi_camp_acess_input]
 }
 
 input UpdateAtendimentoInput {
@@ -97,7 +111,8 @@ input UpdateAtendimentoInput {
   id_at_grupo_indicador: BigInt
   usuario_validacao: BigInt
   link_pdf: String
-  atendimento_usuario: at_atendimento_usuario_input
-  atendimento_indicador: at_atendimento_indicador_input
+  sn_pendencia: Int
+  at_atendimento_indicador: at_atendimento_indicador_input
+  at_atendimento_usuario: at_atendimento_usuario_input
   at_cli_atend_prop: at_cli_atend_prop_input
 }

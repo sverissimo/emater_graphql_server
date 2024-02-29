@@ -121,8 +121,8 @@ model Perfil {
   data_atualizacao                             DateTime                   @db.Date
   tipo_perfil                                  String                     @db.VarChar(8)
   id_cliente                                   BigInt
-  id_tecnico                                   BigInt?
   participa_organizacao                        Boolean?
+  id_dados_producao_in_natura                  BigInt?
   nivel_tecnologico_cultivo                    BigInt?
   sistema_producao                             BigInt?
   condicao_posse                               BigInt?
@@ -135,6 +135,7 @@ model Perfil {
   ciente_iniciativas_regularizacao_pra         Boolean?
   realiza_escalonamento_producao               Boolean?
   procedimento_pos_colheita                    BigInt?
+  id_dados_producao_agro_industria             BigInt?
   tipo_gestao_unidade                          String?                    @db.VarChar(8)
   pessoas_processamento_alimentos              Int?
   tipo_estabelecimento                         String?                    @db.VarChar(16)
@@ -142,12 +143,11 @@ model Perfil {
   agroindustria_precisa_adaptacao_reforma      Boolean?
   possui_registro_orgao_fiscalizacao_sanitaria Boolean?
   orgao_fiscalizacao_sanitaria                 String?                    @db.VarChar(64)
+  id_tecnico                                   BigInt?
   atividades_usam_recursos_hidricos            BigInt?
   atividades_com_regularizacao_ambiental       BigInt?
   possui_agroindustria_propria                 Boolean?
   grau_interesse_pnae                          String?                    @db.VarChar(64)
-  id_dados_producao_in_natura                  BigInt?
-  id_dados_producao_agro_industria             BigInt?
   ativo                                        Boolean                    @default(true)
   id_contrato                                  Int                        @db.SmallInt
   usuario                                      Usuario?                   @relation(fields: [id_tecnico], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "at_prf_see_fk")
@@ -292,6 +292,7 @@ model at_atendimento {
   auto_atendimento         Int?                         @db.SmallInt
   data_sei                 DateTime?                    @db.Date
   link_pdf                 String?
+  sn_pendencia             Int?                         @db.SmallInt
   at_arquivo               at_arquivo[]
   usuario                  Usuario?                     @relation(fields: [usuario_validacao], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk2wy9cxuwsh3cyhmip358l0l6c")
   at_acao                  at_acao                      @relation(fields: [id_at_acao], references: [id_at_acao], onDelete: NoAction, onUpdate: NoAction, map: "fk8q4s39wy7we2slstaxkbxd737")
@@ -302,17 +303,32 @@ model at_atendimento {
 }
 
 model at_atendimento_indicador {
-  id_at_atendimento_indicador BigInt         @id(map: "pk_at_atendimento_indicador") @default(autoincrement())
-  id_at_atendimento           BigInt
-  id_at_indicador             BigInt
-  id_und_empresa              String?        @db.VarChar(5)
-  id_sincronismo              String?        @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
-  id_sincronismo_atendimento  String?        @db.VarChar(36)
-  dt_update_record            DateTime?      @default(now()) @db.Timestamp(6)
-  at_indicador                at_indicador   @relation(fields: [id_at_indicador], references: [id_at_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk1xax2r08665xreflnwtecl0t4")
-  at_atendimento              at_atendimento @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_atendimento_indicador")
+  id_at_atendimento_indicador    BigInt                           @id(map: "pk_at_atendimento_indicador") @default(autoincrement())
+  id_at_atendimento              BigInt
+  id_at_indicador                BigInt
+  id_und_empresa                 String?                          @db.VarChar(5)
+  id_sincronismo                 String?                          @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_atendimento     String?                          @db.VarChar(36)
+  dt_update_record               DateTime?                        @default(now()) @db.Timestamp(6)
+  at_atendimento_indi_camp_acess at_atendimento_indi_camp_acess[]
+  at_indicador                   at_indicador                     @relation(fields: [id_at_indicador], references: [id_at_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk1xax2r08665xreflnwtecl0t4")
+  at_atendimento                 at_atendimento                   @relation(fields: [id_at_atendimento], references: [id_at_atendimento], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_atendimento_indicador")
 
   @@unique([id_at_atendimento, id_at_indicador], map: "ix_at_atendimento_indicador")
+}
+
+model at_atendimento_indi_camp_acess {
+  id_at_aten_indi_camp_acess     BigInt                   @id(map: "pk_at_aten_indi_camp_acess") @default(autoincrement())
+  id_at_atendimento_indicador    BigInt
+  id_at_indicador_camp_acessorio BigInt
+  valor_campo_acessorio          String?                  @db.VarChar(100)
+  id_und_empresa                 String?                  @db.VarChar(5)
+  id_sincronismo                 String?                  @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_aten_indicador  String?                  @db.VarChar(36)
+  dt_update_record               DateTime?                @default(now()) @db.Timestamp(6)
+  at_atendimento_indicador       at_atendimento_indicador @relation(fields: [id_at_atendimento_indicador], references: [id_at_atendimento_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_aten_indi_camp_acess")
+
+  @@unique([id_at_atendimento_indicador, id_at_indicador_camp_acessorio], map: "ix_at_aten_indi_camp_acess")
 }
 
 model at_atendimento_usuario {
@@ -485,16 +501,14 @@ model ger_enum_descricao {
 model ger_pes_cat_ramo_relacao {
   id_pes_cat_ramo_relacao_demeter Int              @id @default(autoincrement())
   id_pes_cat_ramo_relacao         String?          @db.Char(36)
-  fk_pessoa                       Int
+  fk_pessoa                       BigInt
   fk_cat_pessoa                   Int              @db.SmallInt
   id_und_empresa                  String?          @db.Char(5)
   dt_update_record                DateTime         @db.Timestamp(6)
   id_sincronismo                  String?          @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
   id_sincronismo_cliente          String?          @db.VarChar(36)
   ger_und_empresa                 ger_und_empresa? @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk_ger_cat_ger_und_empresa")
-  // ger_pessoa                      Produtor         @relation(fields: [fk_pessoa], references: [id_pessoa_demeter], onDelete: Cascade, map: "fk_ger_pes_cat_ramo_relacao_1")
-  Produtor                        Produtor?        @relation(fields: [produtorId_pessoa_demeter], references: [id_pessoa_demeter])
-  produtorId_pessoa_demeter       BigInt?
+  ger_pessoa                      Produtor         @relation(fields: [fk_pessoa], references: [id_pessoa_demeter], onDelete: Cascade, map: "fk_ger_pes_cat_ramo_relacao_1")
 
   @@unique([fk_pessoa, fk_cat_pessoa], map: "fk_pessoa_ger_cat_pessoa")
 }
