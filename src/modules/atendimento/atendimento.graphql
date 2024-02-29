@@ -92,6 +92,7 @@ input CreateAtendimentoInput {
   usuario_validacao: BigInt
   link_pdf: String!
   sn_pendencia: Int
+  id_at_anterior: BigInt
   at_atendimento_usuario: at_atendimento_usuario_input
   at_atendimento_indicador: at_atendimento_indicador_input
   at_cli_atend_prop: at_cli_atend_prop_input
@@ -112,6 +113,7 @@ input UpdateAtendimentoInput {
   usuario_validacao: BigInt
   link_pdf: String
   sn_pendencia: Int
+  id_at_anterior: BigInt
   at_atendimento_indicador: at_atendimento_indicador_input
   at_atendimento_usuario: at_atendimento_usuario_input
   at_cli_atend_prop: at_cli_atend_prop_input

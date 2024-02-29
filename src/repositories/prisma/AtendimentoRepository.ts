@@ -5,8 +5,6 @@ import { Repository } from "../Repository.js";
 
 export class AtendimentoRepository extends PrismaRepository implements Repository<at_atendimento> {
   async create(createAtendimentoDTO: CreateAtendimentoDTO) {
-    console.log("🚀 - create - createAtendimentoDTO:", createAtendimentoDTO);
-
     try {
       const {
         at_cli_atend_prop,
