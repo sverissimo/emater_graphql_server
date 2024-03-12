@@ -1,11 +1,9 @@
 import { Produtor } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "../Repository.js";
+import { GraphQLResolveInfo } from "graphql";
 
-export class ProdutorRepository
-  extends PrismaRepository
-  implements Repository<Produtor>
-{
+export class ProdutorRepository extends PrismaRepository implements Repository<Produtor> {
   async findOne({ id, cpf }: { id: bigint; cpf: string }) {
     try {
       if (!id && !cpf) {
@@ -77,6 +75,62 @@ export class ProdutorRepository
         pl_propriedade_ger_pessoa: true,
       },
     });
+    return produtores;
+  }
+
+  async findMany(ids: string[], info: GraphQLResolveInfo) {
+    const includePerfil = this.isFieldRequested("perfis", info);
+    const produtoresIds = ids.map((id) => BigInt(id));
+
+    const produtores = await this.prisma.produtor.findMany({
+      where: { id_pessoa_demeter: { in: produtoresIds } },
+      include:
+        // includePerfil        ?
+        {
+          at_prf_see: {
+            where: { ativo: true },
+            include: {
+              at_prf_see_propriedade: {
+                include: {
+                  pl_propriedade: {
+                    select: {
+                      nome_propriedade: true,
+                      id_und_empresa: true,
+                      municipio: {
+                        select: {
+                          id_municipio: true,
+                          nm_municipio: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      // : undefined,
+    });
+
+    const municipioIds = produtores.map(
+      (p) => p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio?.id_municipio
+    );
+
+    const SREs: any[] = await this.prisma.$queryRaw`
+            SELECT re.nm_regional_ensino, me.fk_municipio from ger_regional_ensino as re
+            JOIN ger_municipio_ensino as me
+            ON re.id_regional_ensino = me.fk_regional_ensino
+            WHERE me.fk_municipio = ANY(ARRAY[${municipioIds}]);
+            `;
+
+    produtores.forEach((p: any) => {
+      const sreName = SREs.find(
+        (sre) =>
+          sre.fk_municipio === p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.id_municipio
+      ).nm_regional_ensino;
+      p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.nm_municipio = sreName;
+    });
+
     return produtores;
   }
 
