@@ -6,6 +6,7 @@ type Query {
 type Mutation {
   createAtendimento(input: CreateAtendimentoInput): BigInt
   updateAtendimento(input: UpdateAtendimentoInput): Void
+  checkDataSEI(atendimentosIds: [String]): Void
 }
 
 type at_atendimento_usuario {
@@ -117,4 +118,8 @@ input UpdateAtendimentoInput {
   at_atendimento_indicador: at_atendimento_indicador_input
   at_atendimento_usuario: at_atendimento_usuario_input
   at_cli_atend_prop: at_cli_atend_prop_input
+}
+
+input CheckDataSEIInput {
+  atendimentosIds: [String]
 }

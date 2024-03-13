@@ -48,4 +48,17 @@ router.get("/getContractInfo", async (_, res) => {
   }
 });
 
+router.get("/getAtendimentosWithoutDataSEI", async (_, res) => {
+  try {
+    const atendimentosWithoutDataSEI = await atendimentoRepository.getAtendimentosWithoutDataSEI();
+    if (!atendimentosWithoutDataSEI) {
+      return res.send([]);
+    }
+
+    return res.send(atendimentosWithoutDataSEI);
+  } catch (error) {
+    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+  }
+});
+
 export const RESTAPIRoutes = router;

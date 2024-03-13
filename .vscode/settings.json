@@ -19,5 +19,5 @@
     "titleBar.inactiveForeground": "#e7e7e799"
   },
   "peacock.remoteColor": "#ff3d00",
-  "prettier.printWidth": 115
+  "prettier.printWidth": 90
 }

@@ -10,7 +10,7 @@ export interface Repository<T> {
   delete?: (id: number) => void;
   update?: (input: Partial<T> & any) => void;
   deleteMany?: () => void;
-  updateMany?: () => void;
+  updateMany?: (input: Partial<T>[]) => void;
   upsert?: () => void;
   count?: () => void;
 }

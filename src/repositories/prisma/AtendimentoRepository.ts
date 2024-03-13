@@ -2,8 +2,12 @@ import { PrismaRepository } from "./PrismaRepository.js";
 import { CreateAtendimentoDTO } from "../../modules/atendimento/CreateAtendimentoDTO.js";
 import { at_atendimento } from "@prisma/client";
 import { Repository } from "../Repository.js";
+import { getTodayDateWithTimeZone } from "../../shared/utils/formatDate.js";
 
-export class AtendimentoRepository extends PrismaRepository implements Repository<at_atendimento> {
+export class AtendimentoRepository
+  extends PrismaRepository
+  implements Repository<at_atendimento>
+{
   async create(createAtendimentoDTO: CreateAtendimentoDTO) {
     try {
       const {
@@ -76,14 +80,27 @@ export class AtendimentoRepository extends PrismaRepository implements Repositor
   }
 
   async update(input: at_atendimento) {
-    console.log("🚀 - update - input:", input);
-
     try {
       await this.prisma.at_atendimento.update({
         where: { id_at_atendimento: input.id_at_atendimento },
         data: input,
       });
       return `Logically deleted atendimento ${input.id_at_atendimento}.`;
+    } catch (error: any) {
+      this.throwError(error);
+    }
+  }
+
+  async checkDataSEI(input: string[]) {
+    try {
+      const ids = input.map((id) => BigInt(id));
+
+      await this.prisma.at_atendimento.updateMany({
+        where: { id_at_atendimento: { in: ids } },
+        data: { data_sei: getTodayDateWithTimeZone() },
+      });
+
+      return `Checked data SEI atendimentos ${input.join(", ")}.`;
     } catch (error: any) {
       this.throwError(error);
     }
@@ -99,6 +116,28 @@ export class AtendimentoRepository extends PrismaRepository implements Repositor
           `) as any[];
       const readOnlyIds = readOnlyURLs.map((url) => url.link_pdf.match(/[^/]+$/)[0]);
       return readOnlyIds;
+    } catch (error) {
+      this.throwError(error);
+    }
+  }
+
+  async getAtendimentosWithoutDataSEI() {
+    try {
+      const atendimentosWithoutDataSEI: Partial<at_atendimento>[] = await this.prisma
+        .$queryRaw`
+      SELECT id_at_atendimento, data_inicio_atendimento, ativo, id_und_empresa,  data_sei, link_pdf, sn_pendencia  from at_atendimento
+      WHERE link_pdf IS NOT NULL
+      AND data_validacao IS NOT NULL
+      AND data_sei IS NULL
+      AND ativo = true
+      `;
+
+      const atendimentos = atendimentosWithoutDataSEI.map((atendimento) => ({
+        ...atendimento,
+        id_at_atendimento: String(atendimento.id_at_atendimento),
+      }));
+
+      return atendimentos;
     } catch (error) {
       this.throwError(error);
     }
