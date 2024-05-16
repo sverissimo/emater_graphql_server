@@ -1,3 +1,4 @@
+import { GraphQLResolveInfo } from "graphql";
 import { at_atendimento } from "@prisma/client";
 import { CreateAtendimentoDTO, UpdateAtendimentoDTO } from "./CreateAtendimentoDTO.js";
 import { Repository } from "../../repositories/Repository.js";
@@ -10,7 +11,13 @@ export const atendimentoResolver = (
   Query: {
     atendimento: (_root: any, { id }: { id: bigint }) =>
       atendimentoRepository.findOne(id),
-    atendimentos: () => atendimentoRepository.findAll(),
+    atendimentos: (
+      _root: any,
+      { ids }: { ids: bigint[] },
+      _context: any,
+      info: GraphQLResolveInfo
+    ) => atendimentoRepository.findMany!(ids, info),
+    // atendimentos: () => atendimentoRepository.findAll(),
   },
 
   Mutation: {

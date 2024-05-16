@@ -3,7 +3,10 @@ import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "../Repository.js";
 import { GraphQLResolveInfo } from "graphql";
 
-export class ProdutorRepository extends PrismaRepository implements Repository<Produtor> {
+export class ProdutorRepository
+  extends PrismaRepository
+  implements Repository<Produtor>
+{
   async findOne({ id, cpf }: { id: bigint; cpf: string }) {
     try {
       if (!id && !cpf) {
@@ -112,9 +115,17 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
       // : undefined,
     });
 
-    const municipioIds = produtores.map(
-      (p) => p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio?.id_municipio
-    );
+    const municipioIds = produtores
+      .filter(
+        (p) =>
+          !!p.at_prf_see[0]?.at_prf_see_propriedade[0]?.pl_propriedade
+            ?.municipio?.id_municipio
+      )
+      .map(
+        (p) =>
+          p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio
+            ?.id_municipio
+      );
 
     const SREs: any[] = await this.prisma.$queryRaw`
             SELECT re.nm_regional_ensino, me.fk_municipio from ger_regional_ensino as re
@@ -124,11 +135,20 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
             `;
 
     produtores.forEach((p: any) => {
+      if (
+        !p.at_prf_see[0]?.at_prf_see_propriedade[0]?.pl_propriedade?.municipio
+          ?.id_municipio
+      ) {
+        return;
+      }
       const sreName = SREs.find(
         (sre) =>
-          sre.fk_municipio === p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.id_municipio
+          sre.fk_municipio ===
+          p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio
+            .id_municipio
       ).nm_regional_ensino;
-      p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.nm_municipio = sreName;
+      p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.nm_municipio =
+        sreName;
     });
 
     return produtores;

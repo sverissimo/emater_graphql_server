@@ -1,6 +1,6 @@
 type Query {
   atendimento(id: BigInt): Atendimento
-  atendimentos: [Atendimento]
+  atendimentos(ids: [BigInt]): [Atendimento]
 }
 
 type Mutation {
@@ -13,6 +13,7 @@ type at_atendimento_usuario {
   id_at_atendimento: BigInt
   id_usuario: BigInt
   id_und_empresa: String
+  usuario: Usuario
 }
 
 type at_atendimento_indicador {
@@ -28,24 +29,6 @@ type at_cli_atend_prop {
   id_pessoa_demeter: BigInt
   id_pl_propriedade: BigInt
   id_und_empresa: String
-}
-
-type Atendimento {
-  id_at_atendimento: BigInt
-  id_at_acao: BigInt
-  id_at_status: Int
-  ativo: Boolean
-  usuario_validacao: BigInt
-  id_und_empresa: String
-  link_pdf: String
-  data_criacao: DateTime
-  data_inicio_atendimento: DateTime
-  data_fim_atendimento: DateTime
-  data_atualizacao: DateTime
-  sn_pendencia: Int
-  at_atendimento_indicador: at_atendimento_indicador
-  at_atendimento_usuario: [at_atendimento_usuario]
-  at_cli_atend_prop: [at_cli_atend_prop]
 }
 
 input at_atendimento_usuario_input {
@@ -67,6 +50,26 @@ input at_cli_atend_prop_input {
   id_pessoa_demeter: BigInt
   id_pl_propriedade: BigInt
   id_und_empresa: String
+}
+
+type Atendimento {
+  id_at_atendimento: BigInt
+  id_at_acao: BigInt
+  id_at_status: Int
+  usuario_validacao: BigInt
+  id_und_empresa: String
+  data_criacao: DateTime
+  data_validacao: DateTime
+  data_sei: DateTime
+  ativo: Boolean
+  link_pdf: String
+  data_inicio_atendimento: DateTime
+  data_fim_atendimento: DateTime
+  data_atualizacao: DateTime
+  sn_pendencia: Int
+  at_atendimento_indicador: at_atendimento_indicador
+  at_atendimento_usuario: [at_atendimento_usuario]
+  at_cli_atend_prop: [at_cli_atend_prop]
 }
 
 input at_atendimento_indi_camp_acess_input {

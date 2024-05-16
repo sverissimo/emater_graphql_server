@@ -1,3 +1,4 @@
+import { GraphQLResolveInfo } from "graphql";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { CreateAtendimentoDTO } from "../../modules/atendimento/CreateAtendimentoDTO.js";
 import { at_atendimento } from "@prisma/client";
@@ -74,9 +75,33 @@ export class AtendimentoRepository
         at_cli_atend_prop: true,
       },
     });
-
-    // console.log("🚀 - AtendimentoRepository - findOne - atendimento:", atendimento);
     return atendimento;
+  }
+
+  async findMany(ids: bigint[], info: GraphQLResolveInfo) {
+    if (!ids || ids.length === 0) {
+      this.throwError("NO_ID_PROVIDED");
+    }
+
+    const usuarioRequested = this.isFieldRequested("at_atendimento_usuario", info);
+    const includeUsuario = usuarioRequested
+      ? {
+          at_atendimento_usuario: {
+            include: {
+              usuario: {
+                select: { nome_usuario: true },
+              },
+            },
+          },
+        }
+      : { at_atendimento_usuario: false };
+
+    const atendimentos = await this.prisma.at_atendimento.findMany({
+      where: { id_at_atendimento: { in: ids } },
+      include: includeUsuario,
+    });
+
+    return atendimentos;
   }
 
   async update(input: at_atendimento) {
