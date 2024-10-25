@@ -8,13 +8,16 @@ import { typeDefs } from "./schema/typedefs.js";
 import { resolvers } from "./schema/resolvers.js";
 import { app } from "./app.js";
 import { logger } from "./shared/utils/logger.js";
+import { configDotenv } from "dotenv";
 
 interface MyContext {
   token?: string;
 }
 
+configDotenv();
+
 const { NODE_ENV, DEV_PORT, PROD_PORT } = process.env;
-const PORT = NODE_ENV === "production" ? PROD_PORT : DEV_PORT;
+const PORT = NODE_ENV === "production" ? Number(PROD_PORT) : Number(DEV_PORT);
 
 const scalars = { BigInt: BigIntScalar, DateTime: DateTime };
 const httpServer = http.createServer(app);

@@ -10,7 +10,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node --watch --loader ts-node/esm main.ts",
-    "start:dev": "concurrently \"npx tsc --watch\" \"nodemon --max-old-space-size=2048 -q dist/main.js\"",
+    "start:dev": "concurrently \"npx tsc --watch\" \"nodemon dist/main.js\"",
     "build": "tsc",
     "codegen": "graphql-codegen --config codegen.yaml",
     "start:prod": "NODE_ENV=production node dist/main.js"
@@ -46,7 +46,7 @@
     "@types/node": "^20.4.0",
     "concurrently": "^8.2.0",
     "esm": "^3.2.25",
-    "nodemon": "^2.0.22",
+    "nodemon": "^3.1.7",
     "prisma": "^4.16.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"

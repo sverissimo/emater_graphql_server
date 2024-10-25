@@ -2,7 +2,10 @@ import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "../Repository.js";
 import { Propriedade } from "@prisma/client";
 
-export class PropriedadeRepository extends PrismaRepository implements Repository<Propriedade> {
+export class PropriedadeRepository
+  extends PrismaRepository
+  implements Repository<Propriedade>
+{
   async findOne(id: number) {
     if (!id) {
       this.throwError("NOT_FOUND");
@@ -24,11 +27,17 @@ export class PropriedadeRepository extends PrismaRepository implements Repositor
         pl_propriedade: {
           include: {
             at_prf_see_propriedade: true,
+            ger_und_empresa: {
+              include: {
+                ger_und_empresa: true,
+              },
+            },
             municipio: true,
           },
         },
       },
     });
+
     const result = propriedades.map((p) => p.pl_propriedade);
     return result;
   }

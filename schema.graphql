@@ -31,4 +31,6 @@ type ProdutorPropriedades {
 type ger_und_empresa {
   id_und_empresa: String
   nm_und_empresa: String
+  fk_und_empresa: String
+  ger_und_empresa: ger_und_empresa # This is the self-relation for the parent unit
 }

@@ -3,10 +3,7 @@ import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "../Repository.js";
 import { GraphQLResolveInfo } from "graphql";
 
-export class ProdutorRepository
-  extends PrismaRepository
-  implements Repository<Produtor>
-{
+export class ProdutorRepository extends PrismaRepository implements Repository<Produtor> {
   async findOne({ id, cpf }: { id: bigint; cpf: string }) {
     try {
       if (!id && !cpf) {
@@ -81,6 +78,18 @@ export class ProdutorRepository
     return produtores;
   }
 
+  async findManyMinimal(ids: string[]): Promise<Produtor[]> {
+    const produtoresIds = ids.map((id) => BigInt(id));
+
+    const produtores = await this.prisma.produtor.findMany({
+      where: {
+        id_pessoa_demeter: { in: produtoresIds },
+      },
+    });
+
+    return produtores;
+  }
+
   async findMany(ids: string[], info: GraphQLResolveInfo) {
     const includePerfil = this.isFieldRequested("perfis", info);
     const produtoresIds = ids.map((id) => BigInt(id));
@@ -118,13 +127,12 @@ export class ProdutorRepository
     const municipioIds = produtores
       .filter(
         (p) =>
-          !!p.at_prf_see[0]?.at_prf_see_propriedade[0]?.pl_propriedade
-            ?.municipio?.id_municipio
+          !!p.at_prf_see[0]?.at_prf_see_propriedade[0]?.pl_propriedade?.municipio
+            ?.id_municipio
       )
       .map(
         (p) =>
-          p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio
-            ?.id_municipio
+          p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio?.id_municipio
       );
 
     const SREs: any[] = await this.prisma.$queryRaw`
@@ -144,8 +152,7 @@ export class ProdutorRepository
       const sreName = SREs.find(
         (sre) =>
           sre.fk_municipio ===
-          p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio
-            .id_municipio
+          p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.id_municipio
       ).nm_regional_ensino;
       p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.nm_municipio =
         sreName;

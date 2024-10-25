@@ -38,4 +38,5 @@ type Propriedade {
   produtor_propriedade: ProdutorPropriedades
   produtor: Produtor
   at_prf_see_propriedade: Atividade
+  ger_und_empresa: ger_und_empresa
 }

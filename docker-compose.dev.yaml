@@ -2,6 +2,8 @@ version: '3.9'
 services:
   graphql_server_dev:
     container_name: graphql_server_dev
+    env_file:
+      - development.env
     build:
       context: ${HOME_FOLDER}
       dockerfile: Dockerfile.dev
@@ -10,7 +12,7 @@ services:
     networks:
       - pnae_dev_default
     volumes:
-      - /home/pnae/emater_graphql_server:/home/node/app
+      - /home/apps/emater_graphql_server:/home/node/app
     ports:
       - 4000:4000
 networks:
