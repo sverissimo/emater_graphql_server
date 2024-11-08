@@ -1,5 +1,11 @@
+input PropriedadeFilterInput {
+  propriedadesIds: [String!]
+  produtoresIds: [String!]
+  cpfs: [String!]
+}
+
 type Query {
-  propriedades: [Propriedade]
+  propriedades(filter: PropriedadeFilterInput): [Propriedade]
 }
 
 type Propriedade {

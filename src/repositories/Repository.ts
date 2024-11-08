@@ -1,7 +1,7 @@
 export interface Repository<T> {
   findOne: (...args: any[]) => void;
   findFirst?: (args: any) => void;
-  findMany?: (...args: any) => void;
+  findMany?: (...args: any) => Promise<any>;
   findManyMinimal?: (...args: any) => void;
   findAll: () => void;
   findByProdutorId?: (produtorId: bigint, ...args: any[]) => void;
