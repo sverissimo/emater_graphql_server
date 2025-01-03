@@ -26,6 +26,11 @@ export class UsuarioRepository extends PrismaRepository implements Repository<Us
               perfil: true,
             },
           },
+          ger_und_empresa: {
+            include: {
+              ger_und_empresa: true,
+            },
+          },
         },
       });
 

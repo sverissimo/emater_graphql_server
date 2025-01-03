@@ -24,6 +24,7 @@ type Usuario {
   dt_update_record: DateTime
   at_prf_see: [Perfil!]!
   perfil_demeter: [PerfilUsuario]
+  ger_und_empresa: ger_und_empresa
   #at_atendimento: [Atendimento!]!
   #at_atendimento_usuario: [AtendimentoUsuario!]!
   #ger_cargo: GerCargo

@@ -18,6 +18,7 @@ export class PropriedadeRepository
         pl_propriedade_ger_pessoa: true,
       },
     });
+
     return propriedade;
   }
 
@@ -43,7 +44,11 @@ export class PropriedadeRepository
     return result;
   }
 
-  async findMany({ cpfs, produtoresIds, propriedadesIds }: PropriedadeFindManyParams) {
+  async findMany({
+    cpfs,
+    produtoresIds,
+    propriedadesIds,
+  }: PropriedadeFindManyParams) {
     const propriedades = await this.prisma.pl_propriedade_ger_pessoa.findMany({
       where: {
         ...(produtoresIds && {
@@ -78,6 +83,7 @@ export class PropriedadeRepository
         ger_pessoa: true,
       },
     });
+
     return propriedades.map((p) => ({
       ...p.pl_propriedade,
       produtor: p.ger_pessoa,
