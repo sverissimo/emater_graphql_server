@@ -2,6 +2,7 @@ input PropriedadeFilterInput {
   propriedadesIds: [String!]
   produtoresIds: [String!]
   cpfs: [String!]
+  regionalId: String
 }
 
 type Query {

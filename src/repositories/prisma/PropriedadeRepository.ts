@@ -48,6 +48,7 @@ export class PropriedadeRepository
     cpfs,
     produtoresIds,
     propriedadesIds,
+    regionalId,
   }: PropriedadeFindManyParams) {
     const propriedades = await this.prisma.pl_propriedade_ger_pessoa.findMany({
       where: {
@@ -68,6 +69,15 @@ export class PropriedadeRepository
             },
           },
         }),
+        ...(regionalId && {
+          pl_propriedade: {
+            ger_und_empresa: {
+              ger_und_empresa: {
+                id_und_empresa: regionalId,
+              },
+            },
+          },
+        }),
       },
       include: {
         pl_propriedade: {
@@ -83,7 +93,6 @@ export class PropriedadeRepository
         ger_pessoa: true,
       },
     });
-
     return propriedades.map((p) => ({
       ...p.pl_propriedade,
       produtor: p.ger_pessoa,
