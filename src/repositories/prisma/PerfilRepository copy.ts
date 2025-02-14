@@ -2,10 +2,7 @@ import { Perfil, Prisma } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { EnumPropsRepository } from "./EnumPropsRepository.js";
 import { Repository } from "../Repository.js";
-import {
-  CreatePerfilInput,
-  CreateDadosProducaoDTO,
-} from "@modules/perfil/dto/perfil.js";
+import { CreatePerfilInput, CreateDadosProducaoDTO } from "@modules/perfil/dto/perfil.js";
 
 export type findPerfilInput = {
   tipo_perfil: string;
@@ -13,108 +10,16 @@ export type findPerfilInput = {
   id_cliente: number;
 };
 
-export class PerfilRepository
-  extends PrismaRepository
-  implements Repository<Perfil>
-{
+export class PerfilRepository extends PrismaRepository implements Repository<Perfil> {
   async create(perfilInput: CreatePerfilInput) {
-    const {
-      id_cliente,
-      id_contrato,
-      id_propriedade,
-      id_tecnico,
-      atividade,
-      dados_producao_in_natura,
-      dados_producao_agro_industria,
-      ...perfil
-    } = perfilInput;
-
-    const {
-      dadosProducao: dadosProducaoNatura,
-      gruposProdutosData: gruposNatura,
-    } = this.extractProducaoData(dados_producao_in_natura);
-    const {
-      dadosProducao: dadosProducaoAgroIndustria,
-      gruposProdutosData: gruposAgro,
-    } = this.extractProducaoData(dados_producao_agro_industria);
+    console.log("🚀 - PerfilRepository - create - perfilInput:", perfilInput);
 
     try {
-      const perfilData = {
-        data: {
-          ...perfil,
-
-          ger_pessoa: {
-            connect: { id_pessoa_demeter: BigInt(id_cliente) },
-          },
-          at_prf_config: {
-            connect: { id_contrato },
-          },
-          usuario: {
-            connect: { id_usuario: BigInt(id_tecnico) },
-          },
-
-          at_prf_see_propriedade: {
-            create: {
-              id_propriedade: id_propriedade,
-              atividade,
-            },
-          },
-
-          dados_producao_in_natura: dadosProducaoNatura
-            ? {
-                create: {
-                  ...dadosProducaoNatura,
-                  at_prf_see_grupos_produtos:
-                    gruposNatura?.length > 0
-                      ? { create: gruposNatura }
-                      : undefined,
-                },
-              }
-            : undefined,
-
-          dados_producao_agro_industria: dadosProducaoAgroIndustria
-            ? {
-                create: {
-                  ...dadosProducaoAgroIndustria,
-                  at_prf_see_grupos_produtos:
-                    gruposAgro?.length > 0 ? { create: gruposAgro } : undefined,
-                },
-              }
-            : undefined,
-        },
-      };
-
-      await this.prisma.perfil.create(perfilData);
-
+      await this.createTransaction(perfilInput);
       return true;
     } catch (error: any) {
       this.throwError(error);
     }
-  }
-
-  private extractProducaoData(dadosProducaoInput?: CreateDadosProducaoDTO) {
-    if (!dadosProducaoInput) {
-      return { gruposProdutosData: [], producaoData: null, hasData: false };
-    }
-
-    const { at_prf_see_grupos_produtos, ...dadosProducao } = dadosProducaoInput;
-    const gruposProdutosData = (at_prf_see_grupos_produtos ?? []).map(
-      ({ at_prf_see_produto, id_grupo, ...grupoProdutos }) => ({
-        ...grupoProdutos,
-        id_grupo_produtos: id_grupo,
-        at_prf_see_produto: {
-          create: at_prf_see_produto,
-        },
-      })
-    );
-
-    return {
-      gruposProdutosData,
-      dadosProducao:
-        Object.keys(dadosProducao).length > 0
-          ? (dadosProducao as CreateDadosProducaoDTO)
-          : null,
-    };
   }
 
   async findOne(id: number) {
@@ -211,5 +116,77 @@ export class PerfilRepository
     } catch (error) {
       this.handleRecordNotFound(error as Error);
     }
+  }
+
+  private async createTransaction(perfil: CreatePerfilInput) {
+    const {
+      dados_producao_agro_industria,
+      dados_producao_in_natura,
+      atividade,
+      id_propriedade,
+      ...perfilProps
+    } = perfil;
+
+    await this.prisma.$transaction(
+      async (tx) => {
+        const id_dados_producao_in_natura = await this.createDadosProducao(
+          tx,
+          dados_producao_in_natura
+        );
+        const id_dados_producao_agro_industria = await this.createDadosProducao(
+          tx,
+          dados_producao_agro_industria
+        );
+
+        const perfilDTO = {
+          ...perfilProps,
+          id_dados_producao_in_natura,
+          id_dados_producao_agro_industria,
+        } as unknown as Perfil;
+
+        await tx.perfil.create({
+          data: {
+            ...perfilDTO,
+            at_prf_see_propriedade: {
+              create: {
+                id_propriedade: BigInt(id_propriedade),
+                atividade,
+              },
+            },
+          },
+        });
+      },
+      {
+        timeout: 12000,
+        maxWait: 18000,
+      }
+    );
+  }
+
+  private async createDadosProducao(
+    tx: Prisma.TransactionClient,
+    dadosProducao: CreateDadosProducaoDTO
+  ) {
+    if (!dadosProducao) return null;
+
+    const { at_prf_see_grupos_produtos, ...prodData } = dadosProducao;
+    const createdData = await tx.at_prf_see_dados_producao.create({
+      data: {
+        ...prodData,
+        at_prf_see_grupos_produtos: {
+          create: at_prf_see_grupos_produtos.map(
+            ({ at_prf_see_produto, id_grupo, ...grupoProdutos }) => ({
+              ...grupoProdutos,
+              id_grupo_produtos: id_grupo,
+              at_prf_see_produto: {
+                create: at_prf_see_produto,
+              },
+            })
+          ),
+        },
+      },
+    });
+
+    return createdData?.id;
   }
 }

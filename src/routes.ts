@@ -20,6 +20,11 @@ router.get("/getPerfilOptions", async (req, res) => {
   }
 });
 
+router.get("/getPerfilOptionsRaw", async (req, res) => {
+  const perfilOptions = await enumPropsRepository.getPerfilOptionsRaw();
+  return res.send(perfilOptions);
+});
+
 router.get("/getGruposProdutos", async (req, res) => {
   try {
     const perfilOptions = await enumPropsRepository.getGruposProdutos();
@@ -32,7 +37,9 @@ router.get("/getGruposProdutos", async (req, res) => {
 router.get("/getReadOnlyRelatorios/:ids", async (req, res) => {
   try {
     const { ids } = req.params;
-    const readOnlyIds = await atendimentoRepository.getReadOnlyRelatorioIds(ids.split(","));
+    const readOnlyIds = await atendimentoRepository.getReadOnlyRelatorioIds(
+      ids.split(",")
+    );
     return res.send(readOnlyIds);
   } catch (error) {
     console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
@@ -50,7 +57,8 @@ router.get("/getContractInfo", async (_, res) => {
 
 router.get("/getAtendimentosWithoutDataSEI", async (_, res) => {
   try {
-    const atendimentosWithoutDataSEI = await atendimentoRepository.getAtendimentosWithoutDataSEI();
+    const atendimentosWithoutDataSEI =
+      await atendimentoRepository.getAtendimentosWithoutDataSEI();
     if (!atendimentosWithoutDataSEI) {
       return res.send([]);
     }

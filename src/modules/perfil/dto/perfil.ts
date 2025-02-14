@@ -1,19 +1,19 @@
 export type CreatePerfilInput = {
   id_tecnico: string;
   id_cliente: string;
-  id_propriedade: string;
+  id_propriedade: bigint;
   atividade: string;
   tipo_perfil: string;
   data_preenchimento: string;
   data_atualizacao: string;
-  atividades_usam_recursos_hidricos: string;
-  atividades_com_regularizacao_ambiental: string;
+  atividades_usam_recursos_hidricos: bigint;
+  atividades_com_regularizacao_ambiental: bigint;
   possui_cadastro_car: boolean;
   aderiu_pra: boolean;
   ciente_iniciativas_regularizacao_pra: boolean;
-  condicao_posse: string;
+  condicao_posse: bigint;
   realiza_escalonamento_producao: boolean;
-  procedimento_pos_colheita: string;
+  procedimento_pos_colheita: bigint;
   agroindustria_precisa_adaptacao_reforma: boolean;
   possui_registro_orgao_fiscalizacao_sanitaria: boolean;
   orgao_fiscalizacao_sanitaria: string;
@@ -22,7 +22,7 @@ export type CreatePerfilInput = {
   pessoas_processamento_alimentos: number;
   dap_caf_vigente: boolean;
   credito_rural: boolean;
-  fonte_captacao_agua: string;
+  fonte_captacao_agua: bigint;
   dados_producao_in_natura: CreateDadosProducaoDTO;
   dados_producao_agro_industria: CreateDadosProducaoDTO;
   ativo?: boolean;

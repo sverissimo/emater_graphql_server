@@ -1,11 +1,9 @@
-import { Produtor } from "@prisma/client";
+import { perfil, Produtor } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "../Repository.js";
+import { EnumPropsRepository } from "./EnumPropsRepository.js";
 
-export class ProdutorRepository
-  extends PrismaRepository
-  implements Repository<Produtor>
-{
+export class ProdutorRepository extends PrismaRepository implements Repository<Produtor> {
   async findOne({ id, cpf }: { id: bigint; cpf: string }) {
     try {
       if (!id && !cpf) {
@@ -64,6 +62,12 @@ export class ProdutorRepository
       if (!produtor) {
         throw "NOT_FOUND";
       }
+      const enumPropsRepository = new EnumPropsRepository(this.prisma);
+      const perfis = produtor.at_prf_see.map(
+        async (perfil: any) => await enumPropsRepository.getPerfilProps(perfil)
+      ) as any[];
+
+      produtor.at_prf_see = perfis;
 
       return produtor;
     } catch (error: unknown) {
@@ -128,13 +132,12 @@ export class ProdutorRepository
     const municipioIds = produtores
       .filter(
         (p) =>
-          !!p.at_prf_see[0]?.at_prf_see_propriedade[0]?.pl_propriedade
-            ?.municipio?.id_municipio
+          !!p.at_prf_see[0]?.at_prf_see_propriedade[0]?.pl_propriedade?.municipio
+            ?.id_municipio
       )
       .map(
         (p) =>
-          p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio
-            ?.id_municipio
+          p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio?.id_municipio
       );
 
     const SREs: any[] = await this.prisma.$queryRaw`
@@ -154,8 +157,7 @@ export class ProdutorRepository
       const sreName = SREs.find(
         (sre) =>
           sre.fk_municipio ===
-          p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio
-            .id_municipio
+          p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.id_municipio
       ).nm_regional_ensino;
       p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.nm_municipio =
         sreName;

@@ -39,9 +39,6 @@ export const produtorResolver = (produtorRepository: Repository<Produtor>) => ({
   Produtor: {
     propriedades: (p: Produtor) =>
       propriedadeRepository.findByProdutorId(p.id_pessoa_demeter),
-    perfis: (p: any) =>
-      p.at_prf_see.map(
-        async (perfil: any) => await enumPropsRepository.getPerfilProps(perfil)
-      ),
+    perfis: (p: any) => p.at_prf_see,
   },
 });
