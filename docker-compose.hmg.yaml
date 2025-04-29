@@ -16,7 +16,10 @@ services:
       - 4100:4100
     networks:
       - pnae_hmg_default
+      - cmc_hmg
 
 networks:
   pnae_hmg_default:
+    external: true
+  cmc_hmg:
     external: true

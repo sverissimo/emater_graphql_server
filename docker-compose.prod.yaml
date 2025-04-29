@@ -21,7 +21,10 @@ services:
           memory: 2048M
     networks:
       - pnae_prod_default
+      - cmc_prod
 
 networks:
   pnae_prod_default:
+    external: true
+  cmc_prod:
     external: true

@@ -121,6 +121,7 @@ input UpdateAtendimentoInput {
   at_atendimento_indicador: at_atendimento_indicador_input
   at_atendimento_usuario: at_atendimento_usuario_input
   at_cli_atend_prop: at_cli_atend_prop_input
+  # at_atendimento_indi_camp_acess: [at_atendimento_indi_camp_acess_input] ******** ADD THIS???
 }
 
 input CheckDataSEIInput {

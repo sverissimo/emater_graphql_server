@@ -40,7 +40,8 @@ export class AtendimentoRepository
         },
       });
 
-      const { id_at_atendimento_indicador } = newAtendimento.at_atendimento_indicador[0];
+      const { id_at_atendimento_indicador } =
+        newAtendimento.at_atendimento_indicador[0];
 
       await this.prisma.at_atendimento_indi_camp_acess.createMany({
         data: at_atendimento_indi_camp_acess.map((obj, i) => ({
@@ -83,7 +84,10 @@ export class AtendimentoRepository
       this.throwError("NO_ID_PROVIDED");
     }
 
-    const usuarioRequested = this.isFieldRequested("at_atendimento_usuario", info);
+    const usuarioRequested = this.isFieldRequested(
+      "at_atendimento_usuario",
+      info
+    );
     const includeUsuario = usuarioRequested
       ? {
           at_atendimento_usuario: {
@@ -116,6 +120,20 @@ export class AtendimentoRepository
     }
   }
 
+  async updateTemasAtendimento(
+    idAtendimento: bigint,
+    temasAtendimento: string
+  ) {
+    await this.prisma.$queryRaw`
+      UPDATE at_atendimento_indi_camp_acess a
+      SET valor_campo_acessorio = ${temasAtendimento}
+        WHERE a.id_at_indicador_camp_acessorio = 14033
+        AND a.id_at_atendimento_indicador =
+          (SELECT atind.id_at_atendimento_indicador FROM at_atendimento_indicador atind
+          WHERE atind.id_at_atendimento = ${idAtendimento})
+    `;
+  }
+
   async checkDataSEI(input: string[]) {
     try {
       const ids = input.map((id) => BigInt(id));
@@ -139,7 +157,9 @@ export class AtendimentoRepository
             AND data_validacao IS NOT NULL
             AND SPLIT_PART(link_pdf, '/', ARRAY_LENGTH(STRING_TO_ARRAY(link_pdf, '/'), 1)) = ANY(ARRAY[${relatorioIds}]);
           `) as any[];
-      const readOnlyIds = readOnlyURLs.map((url) => url.link_pdf.match(/[^/]+$/)[0]);
+      const readOnlyIds = readOnlyURLs.map(
+        (url) => url.link_pdf.match(/[^/]+$/)[0]
+      );
       return readOnlyIds;
     } catch (error) {
       this.throwError(error);
@@ -148,8 +168,8 @@ export class AtendimentoRepository
 
   async getAtendimentosWithoutDataSEI() {
     try {
-      const atendimentosWithoutDataSEI: Partial<at_atendimento>[] = await this.prisma
-        .$queryRaw`
+      const atendimentosWithoutDataSEI: Partial<at_atendimento>[] = await this
+        .prisma.$queryRaw`
       SELECT id_at_atendimento, data_inicio_atendimento, ativo, id_und_empresa,  data_sei, link_pdf, sn_pendencia  from at_atendimento
       WHERE link_pdf IS NOT NULL
       AND data_validacao IS NOT NULL

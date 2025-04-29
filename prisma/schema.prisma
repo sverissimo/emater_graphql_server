@@ -318,17 +318,30 @@ model at_atendimento_indicador {
 }
 
 model at_atendimento_indi_camp_acess {
-  id_at_aten_indi_camp_acess     BigInt                   @id(map: "pk_at_aten_indi_camp_acess") @default(autoincrement())
+  id_at_aten_indi_camp_acess     BigInt                       @id(map: "pk_at_aten_indi_camp_acess") @default(autoincrement())
   id_at_atendimento_indicador    BigInt
   id_at_indicador_camp_acessorio BigInt
-  valor_campo_acessorio          String?                  @db.VarChar(100)
-  id_und_empresa                 String?                  @db.VarChar(5)
-  id_sincronismo                 String?                  @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
-  id_sincronismo_aten_indicador  String?                  @db.VarChar(36)
-  dt_update_record               DateTime?                @default(now()) @db.Timestamp(6)
-  at_atendimento_indicador       at_atendimento_indicador @relation(fields: [id_at_atendimento_indicador], references: [id_at_atendimento_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_aten_indi_camp_acess")
+  valor_campo_acessorio          String?                      @db.VarChar(100)
+  id_und_empresa                 String?                      @db.VarChar(5)
+  id_sincronismo                 String?                      @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_aten_indicador  String?                      @db.VarChar(36)
+  dt_update_record               DateTime?                    @default(now()) @db.Timestamp(6)
+  possui_lista_valores           Boolean                      @default(false)
+  at_atendimento_indicador       at_atendimento_indicador     @relation(fields: [id_at_atendimento_indicador], references: [id_at_atendimento_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_aten_indi_camp_acess")
+  // at_indicador_campo_acessorio   at_indicador_campo_acessorio @relation(fields: [id_at_indicador_camp_acessorio], references: [id_at_indicador_camp_acessorio], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_camp_acess_aten_indi")
 
   @@unique([id_at_atendimento_indicador, id_at_indicador_camp_acessorio], map: "ix_at_aten_indi_camp_acess")
+}
+
+model at_indicador_campo_acessorio_lista {
+  id_lista                       BigInt                       @id(map: "at_indicador_campo_acessorio_lista_pk") @default(autoincrement())
+  fk_at_indicador_camp_acessorio BigInt
+  chave                          String                       @db.VarChar(100)
+  valor                          String                       @db.VarChar(10)
+  // at_indicador_campo_acessorio   at_indicador_campo_acessorio @relation(fields: [fk_at_indicador_camp_acessorio], references: [id_at_indicador_camp_acessorio], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_indicador_camp_acessorio")
+
+  // @@unique([fk_at_indicador_camp_acessorio, valor], map: "at_indicador_campo_acessorio_lista_indicador_valor")
+  // @@index([fk_at_indicador_camp_acessorio, chave], map: "at_indicador_campo_acessorio_lista_indicador_chave")
 }
 
 model at_atendimento_usuario {

@@ -107,4 +107,14 @@ export class EnumPropsRepository extends PrismaRepository {
     const queryResult = await this.prisma.$queryRaw`SELECT * FROM at_prf_config`;
     return queryResult;
   }
+
+  async getTemasAtendimento() {
+    const queryResult = await this.prisma.$queryRaw`
+    SELECT * FROM at_indicador_campo_acessorio_lista
+    WHERE fk_at_indicador_camp_acessorio = 14033
+    ORDER BY valor;
+    `;
+    const temas = serializeBigInts(queryResult);
+    return temas;
+  }
 }

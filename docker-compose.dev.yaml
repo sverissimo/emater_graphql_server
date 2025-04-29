@@ -11,10 +11,14 @@ services:
     command: "npm run start:dev"
     networks:
       - pnae_dev_default
+      - cmc_dev
     volumes:
       - /home/apps/emater_graphql_server:/home/node/app
     ports:
       - 4000:4000
+
 networks:
   pnae_dev_default:
+    external: true
+  cmc_dev:
     external: true

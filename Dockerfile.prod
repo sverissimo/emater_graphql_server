@@ -15,6 +15,10 @@ WORKDIR /home/node/app
 RUN apt-get update -y && apt-get install -y openssl
 
 RUN chown -R node:node /home/node/app
+RUN usermod -u 1000 node \
+    && groupmod -g 1000 node \
+    && groupadd -g 1003 apps \
+    && usermod -aG 1003 node
 
 COPY --from=build /home/node/app/dist ./dist
 
@@ -32,7 +36,9 @@ COPY --from=build /home/node/app/prisma ./prisma
 RUN  mkdir -p /home/node/app && chown -R node:node /home/node/app
 
 COPY package*.json ./
+RUN chown node:node package*.json
 RUN npm ci --omit=dev
+RUN chown -R node:node /home/node/app/node_modules
 
 RUN npx prisma generate
 

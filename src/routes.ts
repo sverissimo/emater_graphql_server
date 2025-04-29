@@ -69,4 +69,27 @@ router.get("/getAtendimentosWithoutDataSEI", async (_, res) => {
   }
 });
 
+router.get("/getTemasAtendimento", async (_, res) => {
+  try {
+    const temasAtendimento = await enumPropsRepository.getTemasAtendimento();
+    return res.send(temasAtendimento);
+  } catch (error) {
+    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+  }
+});
+
+router.patch("/updateTemasAtendimento/:atendimentoId", async (req, res) => {
+  const { atendimentoId } = req.params;
+  const { temasAtendimento } = req.body;
+  try {
+    await atendimentoRepository.updateTemasAtendimento(
+      BigInt(atendimentoId),
+      temasAtendimento
+    );
+    return res.status(204).send();
+  } catch (error) {
+    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+  }
+});
+
 export const RESTAPIRoutes = router;

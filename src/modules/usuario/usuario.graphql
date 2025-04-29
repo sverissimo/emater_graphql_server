@@ -1,5 +1,4 @@
 type Query {
-  # usuario(id: String, matricula_usuario: String): Usuario
   usuarios(ids: String, matriculas: String): [Usuario]
 }
 

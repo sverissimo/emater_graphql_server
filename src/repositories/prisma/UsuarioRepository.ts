@@ -18,7 +18,12 @@ export class UsuarioRepository
     matricula_usuario?: string;
   }) {
     try {
-      const ids = id ? id.split(",").map((id) => BigInt(id)) : undefined;
+      const ids = id
+        ? id
+            .split(",")
+            .filter((id) => !!id && id !== "null" && id !== "undefined")
+            .map((id) => BigInt(id))
+        : undefined;
       const matriculas = matricula_usuario
         ? matricula_usuario.split(",")
         : undefined;
