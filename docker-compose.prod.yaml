@@ -1,4 +1,3 @@
-version: '3.9'
 services:
   graphql_server_prod:
     image: graphql_server_prod

@@ -1,15 +1,19 @@
 import { Router } from "express";
-
 import { PrismaClient } from "@prisma/client";
 
 import { AtendimentoRepository } from "./repositories/prisma/AtendimentoRepository.js";
 import { EnumPropsRepository } from "./repositories/prisma/EnumPropsRepository.js";
+import { UsuarioRepository } from "./repositories/prisma/UsuarioRepository.js";
+import { serializeBigInts } from "./shared/utils/serializeBigInt.js";
+import { LoginService } from "./auth/LoginService.js";
 
 const router = Router();
 
 const prismaClient = new PrismaClient({ log: ["info", "warn", "error"] });
 const atendimentoRepository = new AtendimentoRepository(prismaClient);
 const enumPropsRepository = new EnumPropsRepository(prismaClient);
+const usuarioRepository = new UsuarioRepository(prismaClient);
+const loginService = new LoginService(usuarioRepository);
 
 router.get("/getPerfilOptions", async (req, res) => {
   try {
@@ -89,6 +93,33 @@ router.patch("/updateTemasAtendimento/:atendimentoId", async (req, res) => {
     return res.status(204).send();
   } catch (error) {
     console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+  }
+});
+
+router.post("/login", async (req, res) => {
+  const { matricula_usuario, password } = req.body;
+  try {
+    const usuarioLoginOutput = await loginService.login({
+      matricula_usuario,
+      password,
+    });
+
+    if (!usuarioLoginOutput) {
+      throw new Error("Usuário não encontrado");
+    }
+
+    const serializedUsuario = serializeBigInts(usuarioLoginOutput);
+    return res.send(serializedUsuario);
+  } catch (error) {
+    console.log("🚀 - RestAPIRoutes - login - error:", error);
+    if (error instanceof Error) {
+      return res.status(403).send({
+        error: error.message,
+      });
+    }
+    return res.status(403).send({
+      error: "Usuário ou senha inválidos.",
+    });
   }
 });
 

@@ -1,4 +1,3 @@
-version: '3.9'
 services:
   graphql_server_dev:
     container_name: graphql_server_dev

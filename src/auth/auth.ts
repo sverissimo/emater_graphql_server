@@ -6,6 +6,9 @@ export const auth: RequestHandler = async (req, res, next) => {
   if (process.env.NODE_ENV === "development") {
     return next();
   }
+  if (req.method === "POST" && req.path.match("/login")) {
+    return next();
+  }
 
   let authHeader = req.headers.authorization;
 
@@ -16,7 +19,9 @@ export const auth: RequestHandler = async (req, res, next) => {
   const token = authHeader.slice(7);
 
   try {
-    const decoded = jwt.verify(token, process.env.SERVICE_TOKEN!) as JwtPayload & { service?: string };
+    const decoded = jwt.verify(token, process.env.SERVICE_TOKEN!) as JwtPayload & {
+      service?: string;
+    };
     res.locals.service = decoded?.service;
     next();
   } catch (error) {
