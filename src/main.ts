@@ -34,4 +34,6 @@ app.use(
   })
 );
 
-httpServer.listen(PORT, () => logger.info(`🚀 Server listening on port ${PORT}...`));
+httpServer.listen(PORT, () =>
+  logger.info(`🚀 Server listening on port ${PORT}...`)
+);

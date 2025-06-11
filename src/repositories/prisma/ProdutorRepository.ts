@@ -1,4 +1,4 @@
-import { perfil, Produtor } from "@prisma/client";
+import { Produtor } from "@prisma/client";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "../Repository.js";
 import { EnumPropsRepository } from "./EnumPropsRepository.js";
@@ -63,9 +63,11 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
         throw "NOT_FOUND";
       }
       const enumPropsRepository = new EnumPropsRepository(this.prisma);
-      const perfis = produtor.at_prf_see.map(
-        async (perfil: any) => await enumPropsRepository.getPerfilProps(perfil)
-      ) as any[];
+      const perfis = (await Promise.all(
+        produtor.at_prf_see.map((perfil: any) =>
+          enumPropsRepository.getPerfilProps(perfil)
+        )
+      )) as any[];
 
       produtor.at_prf_see = perfis;
 

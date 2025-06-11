@@ -182,6 +182,8 @@ model at_prf_see_dados_producao {
   tipo_regularizacao_uso_recursos_hidricos String?                      @db.VarChar(32)
   tipo_regularizacao_ambiental             String?                      @db.VarChar(64)
   valor_total_obtido_outros                BigInt?
+  total_obtido_pnae                        String?
+  total_obtido_outros                      String?
   perfis_com_agro_industria                Perfil[]                     @relation("agro_industria")
   perfis_com_in_natura                     Perfil[]                     @relation("in_natura")
   at_prf_see_grupos_produtos               at_prf_see_grupos_produtos[]

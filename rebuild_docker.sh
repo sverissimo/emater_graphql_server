@@ -15,4 +15,9 @@ docker compose -f "${COMPOSE_FILE}" down
 echo "Starting containers with ${COMPOSE_FILE}..."
 COMPOSE_BAKE=true docker compose -f "${COMPOSE_FILE}" up -d --build
 
-echo "Done."
+echo
+echo "### Restarting Nginx for environment ------ $ENV"
+docker exec nginx_$ENV nginx -s reload
+
+echo
+echo "@@@ Rebuild and restart process completed for environment ------ $ENV @@@"

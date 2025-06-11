@@ -63,6 +63,8 @@ type DadosProducao {
   tipo_regularizacao_uso_recursos_hidricos: String
   tipo_regularizacao_ambiental: String
   valor_total_obtido_outros: BigInt
+  total_obtido_pnae: String
+  total_obtido_outros: String
   perfil: Perfil
   at_prf_see_grupos_produtos: [GrupoProdutosPerfil]
 }

@@ -15,7 +15,10 @@ export class LoginService {
       throw new Error("Usuário não encontrado");
     }
 
-    const authenticated = await AuthLdapService.authenticate(matricula_usuario, password);
+    const authenticated = await AuthLdapService.authenticate(
+      matricula_usuario,
+      password
+    );
     if (!authenticated) throw new Error("Usuário não encontrado");
 
     const user = (await this.usuarioRepository.findMany({
