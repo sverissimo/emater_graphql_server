@@ -121,6 +121,11 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
                           nm_municipio: true,
                         },
                       },
+                      ger_und_empresa: {
+                        include: {
+                          ger_und_empresa: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -161,8 +166,9 @@ export class ProdutorRepository extends PrismaRepository implements Repository<P
           sre.fk_municipio ===
           p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.id_municipio
       ).nm_regional_ensino;
-      p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.nm_municipio =
-        sreName;
+      // p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.nm_municipio =
+      //   sreName;
+      p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.regional_sre = sreName;
     });
 
     return produtores;

@@ -40,6 +40,7 @@ type Propriedade {
   ativo: Boolean
   ds_roteiro_acesso: String
   sn_ctd: String
+  regional_sre: String
   municipio: Municipio
   atividade: Atividade
   produtor_propriedade: ProdutorPropriedades

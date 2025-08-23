@@ -3,7 +3,7 @@ set -e
 
 ENV="$1"
 if [ -z "$ENV" ]; then
-  echo "Usage: $0 <environment>  (e.g. ./restart_docker.sh hmg)"
+  echo "Usage: $0 <environment>  (e.g. ./rebuild_docker.sh hmg)"
   exit 1
 fi
 
