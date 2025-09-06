@@ -82,6 +82,15 @@ router.get("/getTemasAtendimento", async (_, res) => {
   }
 });
 
+router.get("/getRegionaisEmater", async (_, res) => {
+  try {
+    const regionais = await enumPropsRepository.getRegionaisEmater();
+    return res.send(regionais);
+  } catch (error) {
+    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+  }
+});
+
 router.patch("/updateTemasAtendimento/:atendimentoId", async (req, res) => {
   const { atendimentoId } = req.params;
   const { temasAtendimento } = req.body;

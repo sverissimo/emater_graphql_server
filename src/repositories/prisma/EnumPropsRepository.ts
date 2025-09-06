@@ -117,4 +117,13 @@ export class EnumPropsRepository extends PrismaRepository {
     const temas = serializeBigInts(queryResult);
     return temas;
   }
+
+  async getRegionaisEmater() {
+    const regionais: any[] = await this.prisma.$queryRaw`
+           SELECT * from ger_und_empresa
+          where id_und_empresa like '%G%'
+          `;
+
+    return regionais;
+  }
 }
