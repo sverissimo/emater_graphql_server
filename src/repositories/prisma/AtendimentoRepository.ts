@@ -120,18 +120,36 @@ export class AtendimentoRepository
     }
   }
 
-  async updateTemasAtendimento(
-    idAtendimento: bigint,
-    temasAtendimento: string
-  ) {
-    await this.prisma.$queryRaw`
-      UPDATE at_atendimento_indi_camp_acess a
-      SET valor_campo_acessorio = ${temasAtendimento}
-        WHERE a.id_at_indicador_camp_acessorio = 14033
-        AND a.id_at_atendimento_indicador =
-          (SELECT atind.id_at_atendimento_indicador FROM at_atendimento_indicador atind
-          WHERE atind.id_at_atendimento = ${idAtendimento})
-    `;
+  async updateTemasAndNumeroVisita(atendimentoUpdate: {
+    idAtendimento: bigint;
+    temasAtendimento?: string;
+    numeroVisita?: string;
+  }) {
+    const { idAtendimento, temasAtendimento, numeroVisita } = atendimentoUpdate;
+
+    if (!!temasAtendimento) {
+      await this.prisma.$queryRaw`
+          UPDATE at_atendimento_indi_camp_acess a
+          SET valor_campo_acessorio = ${temasAtendimento}
+          WHERE a.id_at_indicador_camp_acessorio = 14033
+            AND a.id_at_atendimento_indicador = (
+              SELECT atind.id_at_atendimento_indicador FROM at_atendimento_indicador atind
+              WHERE atind.id_at_atendimento = ${idAtendimento}
+            )
+        `;
+    }
+
+    if (!!numeroVisita) {
+      await this.prisma.$queryRaw`
+          UPDATE at_atendimento_indi_camp_acess a
+          SET valor_campo_acessorio = ${numeroVisita}
+          WHERE a.id_at_indicador_camp_acessorio = 14032
+            AND a.id_at_atendimento_indicador = (
+              SELECT atind.id_at_atendimento_indicador FROM at_atendimento_indicador atind
+              WHERE atind.id_at_atendimento = ${idAtendimento}
+            )
+        `;
+    }
   }
 
   async checkDataSEI(input: string[]) {

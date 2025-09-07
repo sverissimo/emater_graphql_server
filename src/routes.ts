@@ -91,14 +91,15 @@ router.get("/getRegionaisEmater", async (_, res) => {
   }
 });
 
-router.patch("/updateTemasAtendimento/:atendimentoId", async (req, res) => {
+router.patch("/updateTemasAndVisitaAtendimento/:atendimentoId", async (req, res) => {
   const { atendimentoId } = req.params;
-  const { temasAtendimento } = req.body;
+  const { temasAtendimento, numeroVisita } = req.body;
   try {
-    await atendimentoRepository.updateTemasAtendimento(
-      BigInt(atendimentoId),
-      temasAtendimento
-    );
+    await atendimentoRepository.updateTemasAndNumeroVisita({
+      idAtendimento: BigInt(atendimentoId),
+      temasAtendimento,
+      numeroVisita,
+    });
     return res.status(204).send();
   } catch (error) {
     console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
