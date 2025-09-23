@@ -4,6 +4,7 @@ import { CreateAtendimentoDTO } from "../../modules/atendimento/CreateAtendiment
 import { at_atendimento } from "@prisma/client";
 import { Repository } from "../Repository.js";
 import { getTodayDateWithTimeZone } from "../../shared/utils/formatDate.js";
+import { ReplacedAtendimentoDTO } from "@modules/atendimento/types/ReplacedAtendimentoDTO.js";
 
 export class AtendimentoRepository
   extends PrismaRepository
@@ -204,5 +205,20 @@ export class AtendimentoRepository
     } catch (error) {
       this.throwError(error);
     }
+  }
+
+  async getReplacedAtendimentos() {
+    const query = (await this.prisma.$queryRaw`
+      SELECT at.id_at_atendimento, at.id_at_anterior
+        FROM at_atendimento at
+        WHERE at.link_pdf is not null
+        AND at.id_at_anterior is not null
+        ORDER BY at.id_at_atendimento ASC
+    `) as ReplacedAtendimentoDTO[];
+
+    return query.map((item) => ({
+      atendimentoId: String(item.id_at_atendimento),
+      atendimentoAnteriorId: String(item.id_at_anterior),
+    }));
   }
 }

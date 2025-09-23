@@ -91,20 +91,23 @@ router.get("/getRegionaisEmater", async (_, res) => {
   }
 });
 
-router.patch("/updateTemasAndVisitaAtendimento/:atendimentoId", async (req, res) => {
-  const { atendimentoId } = req.params;
-  const { temasAtendimento, numeroVisita } = req.body;
-  try {
-    await atendimentoRepository.updateTemasAndNumeroVisita({
-      idAtendimento: BigInt(atendimentoId),
-      temasAtendimento,
-      numeroVisita,
-    });
-    return res.status(204).send();
-  } catch (error) {
-    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+router.patch(
+  "/updateTemasAndVisitaAtendimento/:atendimentoId",
+  async (req, res) => {
+    const { atendimentoId } = req.params;
+    const { temasAtendimento, numeroVisita } = req.body;
+    try {
+      await atendimentoRepository.updateTemasAndNumeroVisita({
+        idAtendimento: BigInt(atendimentoId),
+        temasAtendimento,
+        numeroVisita,
+      });
+      return res.status(204).send();
+    } catch (error) {
+      console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+    }
   }
-});
+);
 
 router.post("/login", async (req, res) => {
   const { matricula_usuario, password } = req.body;
@@ -130,6 +133,17 @@ router.post("/login", async (req, res) => {
     return res.status(403).send({
       error: "Usuário ou senha inválidos.",
     });
+  }
+});
+
+router.get("/getReplacedAtendimentos", async (_, res) => {
+  try {
+    const replacedAtendimentos =
+      await atendimentoRepository.getReplacedAtendimentos();
+
+    return res.send(replacedAtendimentos);
+  } catch (error) {
+    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
   }
 });
 
