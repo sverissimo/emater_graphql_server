@@ -6,6 +6,7 @@ import { EnumPropsRepository } from "./repositories/prisma/EnumPropsRepository.j
 import { UsuarioRepository } from "./repositories/prisma/UsuarioRepository.js";
 import { serializeBigInts } from "./shared/utils/serializeBigInt.js";
 import { LoginService } from "./auth/LoginService.js";
+import { logger } from "./shared/utils/logger.js";
 
 const router = Router();
 
@@ -46,7 +47,8 @@ router.get("/getReadOnlyRelatorios/:ids", async (req, res) => {
     );
     return res.send(readOnlyIds);
   } catch (error) {
-    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+    console.log("🚀 ~ file: routes.ts:49 ~ router.get ~ error:", error);
+    logger.error(`Error fetching read-only relatorios: ${error}`);
   }
 });
 
@@ -55,7 +57,7 @@ router.get("/getContractInfo", async (_, res) => {
     const contractInfo = await enumPropsRepository.getContractInfo();
     return res.send(contractInfo);
   } catch (error) {
-    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+    console.log("🚀 ~ file: routes.ts:58 ~ router.get ~ error:", error);
   }
 });
 
@@ -69,7 +71,8 @@ router.get("/getAtendimentosWithoutDataSEI", async (_, res) => {
 
     return res.send(atendimentosWithoutDataSEI);
   } catch (error) {
-    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+    console.log("🚀 ~ file: routes.ts:72 ~ router.get ~ error:", error);
+    logger.error(`Error fetching atendimentos without data SEI: ${error}`);
   }
 });
 
@@ -78,7 +81,8 @@ router.get("/getTemasAtendimento", async (_, res) => {
     const temasAtendimento = await enumPropsRepository.getTemasAtendimento();
     return res.send(temasAtendimento);
   } catch (error) {
-    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+    console.log("🚀 ~ file: routes.ts:81 ~ router.get ~ error:", error);
+    logger.error(`Error fetching temas atendimento: ${error}`);
   }
 });
 
@@ -87,7 +91,7 @@ router.get("/getRegionaisEmater", async (_, res) => {
     const regionais = await enumPropsRepository.getRegionaisEmater();
     return res.send(regionais);
   } catch (error) {
-    console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+    console.log("🚀 ~ file: routes.ts:90 ~ router.get ~ error:", error);
   }
 });
 
@@ -104,7 +108,10 @@ router.patch(
       });
       return res.status(204).send();
     } catch (error) {
-      console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+      console.log("🚀 ~ file: routes.ts:107 ~ router.patch ~ error:", error);
+      logger.error(
+        `Error updating temas and numero visita for atendimento ${atendimentoId}: ${error}`
+      );
     }
   }
 );
@@ -144,6 +151,7 @@ router.get("/getReplacedAtendimentos", async (_, res) => {
     return res.send(replacedAtendimentos);
   } catch (error) {
     console.log("🚀 ~ file: routes.ts:16 ~ router.get ~ error:", error);
+    logger.error(`Error fetching replaced atendimentos: ${error}`);
   }
 });
 

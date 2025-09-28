@@ -39,6 +39,10 @@ model Produtor {
   sn_ctd                    Int?
   caf                       String?                     @db.VarChar(24)
   sn_plantao_tecnico        Int?                        @db.SmallInt
+  ds_nome_rio               String?                     @db.VarChar(80)
+  loja_e_do_campo           String?                     @db.VarChar(100)
+  senha                     String                      @default("senha") @db.VarChar(255)
+  auth_token                String?                     @db.VarChar(255)
   at_cli_atend_prop         at_cli_atend_prop[]
   at_prf_see                Perfil[]
   ger_pes_cat_ramo_relacao  ger_pes_cat_ramo_relacao[]
@@ -52,42 +56,42 @@ model Produtor {
 }
 
 model Propriedade {
-  id_pl_propriedade         BigInt                       @id(map: "pk_pl_propiedade") @default(autoincrement())
-  nome_propriedade          String                       @db.VarChar(100)
-  logradouro                String?                      @db.VarChar(80)
-  bairro                    String?                      @db.VarChar(80)
-  complemento               String?                      @db.VarChar(80)
-  cep                       String?                      @db.VarChar(8)
-  numero                    String?                      @db.VarChar(15)
-  area_total                Decimal?                     @db.Decimal(13, 4)
-  geo_ponto                 Unsupported("USER-DEFINED")?
-  // geo_ponto                 Unsupported("geometry")?
-  geo_ponto_texto           String?                      @db.VarChar(255)
-  area_condominio           Boolean?                     @default(false)
-  origem_ocupacao           String?                      @db.VarChar(100)
-  atividade_principal       String?                      @db.VarChar(100)
-  numero_registro_imovel    String?                      @db.VarChar(50)
-  nirf                      String?                      @db.VarChar(100)
-  car                       String?                      @db.VarChar(100)
-  ccir                      String?                      @db.VarChar(100)
-  numero_instalacao_cemig   String?                      @db.VarChar(15)
-  distancia_sede            Decimal?                     @db.Decimal(15, 2)
+  id_pl_propriedade         BigInt                      @id(map: "pk_pl_propiedade") @default(autoincrement())
+  nome_propriedade          String                      @db.VarChar(100)
+  logradouro                String?                     @db.VarChar(80)
+  bairro                    String?                     @db.VarChar(80)
+  complemento               String?                     @db.VarChar(80)
+  cep                       String?                     @db.VarChar(8)
+  numero                    String?                     @db.VarChar(15)
+  area_total                Decimal?                    @db.Decimal(13, 4)
+  geo_ponto                 Unsupported("geometry")?
+  geo_ponto_texto           String?                     @db.VarChar(255)
+  area_condominio           Boolean?                    @default(false)
+  origem_ocupacao           String?                     @db.VarChar(100)
+  atividade_principal       String?                     @db.VarChar(100)
+  numero_registro_imovel    String?                     @db.VarChar(50)
+  nirf                      String?                     @db.VarChar(100)
+  car                       String?                     @db.VarChar(100)
+  ccir                      String?                     @db.VarChar(100)
+  numero_instalacao_cemig   String?                     @db.VarChar(15)
+  distancia_sede            Decimal?                    @db.Decimal(15, 2)
   tempo_ocupacao_imovel     Float?
-  id_emater                 String?                      @db.VarChar(36)
+  id_emater                 String?                     @db.VarChar(36)
   id_distrito               Int?
   id_municipio              Int?
-  id_und_empresa            String?                      @db.Char(5)
-  id_sincronismo            String?                      @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_und_empresa            String?                     @db.Char(5)
+  id_sincronismo            String?                     @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
   id_tipo_logradouro        Int?
-  dt_update_record          DateTime?                    @default(now()) @db.Timestamp(6)
+  dt_update_record          DateTime?                   @default(now()) @db.Timestamp(6)
   ativo                     Boolean?
-  ds_roteiro_acesso         String?                      @db.VarChar(500)
+  ds_roteiro_acesso         String?                     @db.VarChar(500)
   sn_ctd                    Int?
-  id_car                    Int?                         @db.SmallInt
+  id_car                    Int?                        @db.SmallInt
+  area_cafe                 Decimal?                    @db.Decimal(13, 4)
   at_cli_atend_prop         at_cli_atend_prop[]
   at_prf_see_propriedade    at_prf_see_propriedade[]
-  municipio                 Municipio?                   @relation(fields: [id_municipio], references: [id_municipio], onDelete: NoAction, onUpdate: NoAction, map: "fk_pl_propriedade_municipio")
-  ger_und_empresa           ger_und_empresa?             @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk_pl_propriedade_uregi")
+  municipio                 Municipio?                  @relation(fields: [id_municipio], references: [id_municipio], onDelete: NoAction, onUpdate: NoAction, map: "fk_pl_propriedade_municipio")
+  ger_und_empresa           ger_und_empresa?            @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk_pl_propriedade_uregi")
   pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
 
   @@index([nome_propriedade, logradouro])
@@ -150,6 +154,11 @@ model Perfil {
   grau_interesse_pnae                          String?                    @db.VarChar(64)
   ativo                                        Boolean                    @default(true)
   id_contrato                                  Int                        @db.SmallInt
+  data_validacao_saida                         DateTime?                  @db.Date
+  data_sei_saida                               DateTime?                  @db.Date
+  exibir                                       Boolean                    @default(true)
+  origem_perfil                                String?                    @db.Char(1)
+  destravado_ate                               DateTime?                  @db.Date
   usuario                                      Usuario?                   @relation(fields: [id_tecnico], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "at_prf_see_fk")
   ger_pessoa                                   Produtor                   @relation(fields: [id_cliente], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk_cliente")
   at_prf_config                                at_prf_config              @relation(fields: [id_contrato], references: [id_contrato], onDelete: NoAction, onUpdate: NoAction, map: "fk_contrato")
@@ -182,8 +191,8 @@ model at_prf_see_dados_producao {
   tipo_regularizacao_uso_recursos_hidricos String?                      @db.VarChar(32)
   tipo_regularizacao_ambiental             String?                      @db.VarChar(64)
   valor_total_obtido_outros                BigInt?
-  total_obtido_pnae                        String?
-  total_obtido_outros                      String?
+  total_obtido_pnae                        String?                      @db.VarChar(64)
+  total_obtido_outros                      String?                      @db.VarChar(64)
   perfis_com_agro_industria                Perfil[]                     @relation("agro_industria")
   perfis_com_in_natura                     Perfil[]                     @relation("in_natura")
   at_prf_see_grupos_produtos               at_prf_see_grupos_produtos[]
@@ -267,41 +276,45 @@ model at_arquivo {
 }
 
 model at_atendimento {
-  id_at_atendimento        BigInt                       @id(map: "pk_at_atendimento") @default(autoincrement())
-  descricao                String?                      @db.VarChar(60)
-  data_inicio_atendimento  DateTime                     @db.Date
-  data_fim_atendimento     DateTime?                    @db.Date
-  data_validacao           DateTime?                    @db.Date
+  id_at_atendimento        BigInt                     @id(map: "pk_at_atendimento") @default(autoincrement())
+  descricao                String?                    @db.VarChar(60)
+  data_inicio_atendimento  DateTime                   @db.Date
+  data_fim_atendimento     DateTime?                  @db.Date
+  data_validacao           DateTime?                  @db.Date
   usuario_validacao        BigInt?
-  data_atualizacao         DateTime                     @db.Date
-  id_at_status             Int                          @db.SmallInt
+  data_atualizacao         DateTime                   @db.Date
+  id_at_status             Int                        @db.SmallInt
   ativo                    Boolean
   id_at_acao               BigInt
-  id_und_empresa           String                       @db.Char(5)
+  id_und_empresa           String                     @db.Char(5)
   qtd_alunos               Int?
-  data_criacao             DateTime                     @db.Date
-  id_sincronismo           String?                      @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  data_criacao             DateTime                   @db.Date
+  id_sincronismo           String?                    @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
   orientacao_tecnica       String?
-  dt_update_record         DateTime?                    @db.Timestamp(6)
-  geo_ponto                Unsupported("USER-DEFINED")?
-  // geo_ponto                Unsupported("geometry")?
-  geo_ponto_texto          String?                      @db.VarChar(255)
-  sincroniza               Int?                         @default(0) @db.SmallInt
-  processamento            Int?                         @default(0) @db.SmallInt
+  dt_update_record         DateTime?                  @db.Timestamp(6)
+  geo_ponto                Unsupported("geometry")?
+  geo_ponto_texto          String?                    @db.VarChar(255)
+  sincroniza               Int?                       @default(0) @db.SmallInt
+  processamento            Int?                       @default(0) @db.SmallInt
   login_usuario            String?
   id_at_anterior           BigInt?
-  fk_und_empresa           String?                      @db.Char(5)
-  auto_atendimento         Int?                         @db.SmallInt
-  data_sei                 DateTime?                    @db.Date
+  fk_und_empresa           String?                    @db.Char(5)
+  auto_atendimento         Int?                       @db.SmallInt
+  data_sei                 DateTime?                  @db.Date
   link_pdf                 String?
-  sn_pendencia             Int?                         @db.SmallInt
+  sn_pendencia             Int?                       @db.SmallInt
+  sn_validado              Int?                       @db.SmallInt
+  data_see                 DateTime?                  @db.Timestamp(6)
+  dt_export_ok             DateTime?                  @db.Date
   at_arquivo               at_arquivo[]
-  usuario                  Usuario?                     @relation(fields: [usuario_validacao], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk2wy9cxuwsh3cyhmip358l0l6c")
-  at_acao                  at_acao                      @relation(fields: [id_at_acao], references: [id_at_acao], onDelete: NoAction, onUpdate: NoAction, map: "fk8q4s39wy7we2slstaxkbxd737")
-  ger_und_empresa          ger_und_empresa              @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk93s2tv2b5mc4n607j88ipaxhm")
+  usuario                  Usuario?                   @relation(fields: [usuario_validacao], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk2wy9cxuwsh3cyhmip358l0l6c")
+  at_acao                  at_acao                    @relation(fields: [id_at_acao], references: [id_at_acao], onDelete: NoAction, onUpdate: NoAction, map: "fk8q4s39wy7we2slstaxkbxd737")
+  ger_und_empresa          ger_und_empresa            @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk93s2tv2b5mc4n607j88ipaxhm")
   at_atendimento_indicador at_atendimento_indicador[]
   at_atendimento_usuario   at_atendimento_usuario[]
   at_cli_atend_prop        at_cli_atend_prop[]
+
+  @@index([id_at_anterior])
 }
 
 model at_atendimento_indicador {
@@ -320,30 +333,28 @@ model at_atendimento_indicador {
 }
 
 model at_atendimento_indi_camp_acess {
-  id_at_aten_indi_camp_acess     BigInt                       @id(map: "pk_at_aten_indi_camp_acess") @default(autoincrement())
+  id_at_aten_indi_camp_acess     BigInt                   @id(map: "pk_at_aten_indi_camp_acess") @default(autoincrement())
   id_at_atendimento_indicador    BigInt
   id_at_indicador_camp_acessorio BigInt
-  valor_campo_acessorio          String?                      @db.VarChar(100)
-  id_und_empresa                 String?                      @db.VarChar(5)
-  id_sincronismo                 String?                      @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
-  id_sincronismo_aten_indicador  String?                      @db.VarChar(36)
-  dt_update_record               DateTime?                    @default(now()) @db.Timestamp(6)
-  possui_lista_valores           Boolean                      @default(false)
-  at_atendimento_indicador       at_atendimento_indicador     @relation(fields: [id_at_atendimento_indicador], references: [id_at_atendimento_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_aten_indi_camp_acess")
-  // at_indicador_campo_acessorio   at_indicador_campo_acessorio @relation(fields: [id_at_indicador_camp_acessorio], references: [id_at_indicador_camp_acessorio], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_camp_acess_aten_indi")
+  valor_campo_acessorio          String?                  @db.VarChar(100)
+  id_und_empresa                 String?                  @db.VarChar(5)
+  id_sincronismo                 String?                  @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_aten_indicador  String?                  @db.VarChar(36)
+  dt_update_record               DateTime?                @default(now()) @db.Timestamp(6)
+  possui_lista_valores           Boolean                  @default(false)
+  at_atendimento_indicador       at_atendimento_indicador @relation(fields: [id_at_atendimento_indicador], references: [id_at_atendimento_indicador], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_aten_indi_camp_acess")
 
   @@unique([id_at_atendimento_indicador, id_at_indicador_camp_acessorio], map: "ix_at_aten_indi_camp_acess")
 }
 
 model at_indicador_campo_acessorio_lista {
-  id_lista                       BigInt                       @id(map: "at_indicador_campo_acessorio_lista_pk") @default(autoincrement())
+  id_lista                       BigInt @id(map: "at_indicador_campo_acessorio_lista_pk") @default(autoincrement())
   fk_at_indicador_camp_acessorio BigInt
-  chave                          String                       @db.VarChar(100)
-  valor                          String                       @db.VarChar(10)
-  // at_indicador_campo_acessorio   at_indicador_campo_acessorio @relation(fields: [fk_at_indicador_camp_acessorio], references: [id_at_indicador_camp_acessorio], onDelete: NoAction, onUpdate: NoAction, map: "fk_at_indicador_camp_acessorio")
+  chave                          String @db.VarChar(100)
+  valor                          String @db.VarChar(10)
 
-  // @@unique([fk_at_indicador_camp_acessorio, valor], map: "at_indicador_campo_acessorio_lista_indicador_valor")
-  // @@index([fk_at_indicador_camp_acessorio, chave], map: "at_indicador_campo_acessorio_lista_indicador_chave")
+  @@unique([fk_at_indicador_camp_acessorio, valor], map: "at_indicador_campo_acessorio_lista_indicador_valor")
+  @@index([fk_at_indicador_camp_acessorio, chave], map: "at_indicador_campo_acessorio_lista_indicador_chave")
 }
 
 model at_atendimento_usuario {
@@ -487,11 +498,14 @@ model perfil_usuario {
 }
 
 model at_produto {
-  id_at_produto    BigInt         @id(map: "pk_at_produto") @default(autoincrement())
-  nome             String         @db.VarChar(100)
-  dt_update_record DateTime?      @db.Timestamp(6)
-  sn_spa           Int?           @db.SmallInt
-  at_indicador     at_indicador[]
+  id_at_produto          BigInt         @id(map: "pk_at_produto") @default(autoincrement())
+  nome                   String         @db.VarChar(100)
+  dt_update_record       DateTime?      @db.Timestamp(6)
+  sn_spa                 Int?           @db.SmallInt
+  sn_campo_acessorio     Int?           @db.SmallInt
+  esg                    Int?           @db.SmallInt
+  atendimento_individual Int?           @db.SmallInt
+  at_indicador           at_indicador[]
 }
 
 model at_prf_config {
@@ -502,14 +516,18 @@ model at_prf_config {
   inclusao_saida    Boolean
   alteracao_entrada Boolean
   alteracao_saida   Boolean
+  exclusao_entrada  Boolean
+  exclusao_saida    Boolean
   at_prf_see        Perfil[]
 }
 
 model ger_enum_descricao {
-  tipo      String? @db.VarChar(64)
-  id        Int?
-  descricao String? @db.VarChar(256)
+  tipo        String  @db.VarChar(64)
+  id          Int
+  descricao   String? @db.VarChar(256)
+  id_contrato Int     @db.SmallInt
 
+  @@id([id_contrato, tipo, id], map: "ger_enum_descricao_pk")
   @@ignore
 }
 
@@ -552,6 +570,8 @@ model ger_und_empresa {
   sn_status_uregi           Int?                        @db.SmallInt
   sn_visualizar             Int                         @default(1) @db.SmallInt
   sn_atendimento            Boolean?
+  sn_convenio               Int?                        @db.SmallInt
+  sn_mp                     Int?                        @db.SmallInt
   at_atendimento            at_atendimento[]
   ger_pes_cat_ramo_relacao  ger_pes_cat_ramo_relacao[]
   ger_pessoa                Produtor[]
@@ -562,3 +582,31 @@ model ger_und_empresa {
   pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
   usuario                   Usuario[]
 }
+
+// /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+// model ger_enum_descricao_salva {
+//   tipo      String? @db.VarChar(64)
+//   id        Int?
+//   descricao String? @db.VarChar(256)
+
+//   @@ignore
+// }
+
+// model ger_municipio_ensino {
+//   id_municipio_ensino Int?
+//   fk_municipio        Int?
+//   fk_regional_ensino  Int?
+
+//   @@index([id_municipio_ensino], map: "idx_ger_municipio_ensino_lookup")
+//   @@ignore
+// }
+
+
+// /// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+// model ger_regional_ensino {
+//   id_regional_ensino Int?
+//   nm_regional_ensino String? @db.VarChar(100)
+
+//   @@index([id_regional_ensino], map: "idx_ger_regional_ensino_lookup")
+//   @@ignore
+// }

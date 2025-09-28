@@ -17,9 +17,11 @@ export const formatDate = (date: string | Date | undefined) => {
   return date;
 };
 
-export function getTodayDateWithTimeZone() {
-  const today = new Date();
-  today.setHours(today.getHours() - 3);
+export function getTodayBrTimezone() {
+  const tz = "America/Sao_Paulo";
+  const str = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(
+    new Date()
+  );
 
-  return today;
+  return new Date(str + "T00:00:00-03:00"); // Force midnight in São Paulo (UTC-3) → valid ISO string
 }

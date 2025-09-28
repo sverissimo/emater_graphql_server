@@ -6,7 +6,8 @@ type Query {
 type Mutation {
   createAtendimento(input: CreateAtendimentoInput): BigInt
   updateAtendimento(input: UpdateAtendimentoInput): Void
-  checkDataSEI(atendimentosIds: [String]): Void
+  # checkDataSEI(atendimentosIds: [String]): Void
+  setAtendimentosExportDate(atendimentosIds: [String]): Void
 }
 
 type at_atendimento_usuario {
@@ -56,17 +57,21 @@ type Atendimento {
   id_at_atendimento: BigInt
   id_at_acao: BigInt
   id_at_status: Int
-  usuario_validacao: BigInt
-  id_und_empresa: String
-  data_criacao: DateTime
+  data_inicio_atendimento: DateTime
   data_validacao: DateTime
   data_sei: DateTime
+  data_see: DateTime
+  dt_export_ok: DateTime
   ativo: Boolean
   link_pdf: String
-  data_inicio_atendimento: DateTime
-  data_fim_atendimento: DateTime
-  data_atualizacao: DateTime
   sn_pendencia: Int
+  sn_validacao: Int
+  id_und_empresa: String
+  fk_und_empresa: String
+  usuario_validacao: BigInt
+  data_fim_atendimento: DateTime
+  data_criacao: DateTime
+  data_atualizacao: DateTime
   at_atendimento_indicador: at_atendimento_indicador
   at_atendimento_usuario: [at_atendimento_usuario]
   at_cli_atend_prop: [at_cli_atend_prop]
@@ -122,8 +127,4 @@ input UpdateAtendimentoInput {
   at_atendimento_usuario: at_atendimento_usuario_input
   at_cli_atend_prop: at_cli_atend_prop_input
   # at_atendimento_indi_camp_acess: [at_atendimento_indi_camp_acess_input] ******** ADD THIS???
-}
-
-input CheckDataSEIInput {
-  atendimentosIds: [String]
 }

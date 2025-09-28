@@ -1,40 +1,47 @@
 import { GraphQLResolveInfo } from "graphql";
-import { at_atendimento } from "@prisma/client";
-import { CreateAtendimentoDTO, UpdateAtendimentoDTO } from "./CreateAtendimentoDTO.js";
-import { Repository } from "../../repositories/Repository.js";
+import { AtendimentoRepository } from "@repositories/prisma/AtendimentoRepository.js";
+import { CreateAtendimentoDTO } from "./CreateAtendimentoDTO.js";
+import { UpdateAtendimentoDTO } from "./UpdateAtendimentoDTO.js";
 
 export const atendimentoResolver = (
-  atendimentoRepository: Repository<at_atendimento> & {
-    checkDataSEI: (ids: string[]) => Promise<any>;
-  }
+  atendimentoRepository: AtendimentoRepository
 ) => ({
   Query: {
-    atendimento: (_root: any, { id }: { id: bigint }) =>
-      atendimentoRepository.findOne(id),
+    atendimento: (_root: any, { id }: { id: bigint }) => {
+      return atendimentoRepository.findOne(id);
+    },
+
     atendimentos: (
       _root: any,
       { ids }: { ids: bigint[] },
       _context: any,
       info: GraphQLResolveInfo
-    ) => atendimentoRepository.findMany!(ids, info),
-    // atendimentos: () => atendimentoRepository.findAll(),
+    ) => {
+      return atendimentoRepository.findMany(ids, info);
+    },
   },
 
   Mutation: {
-    createAtendimento: (_root: any, { input }: { input: CreateAtendimentoDTO }) => {
-      return atendimentoRepository.create!(input);
+    createAtendimento: (
+      _root: any,
+      { input }: { input: CreateAtendimentoDTO }
+    ) => {
+      return atendimentoRepository.create(input);
     },
 
-    updateAtendimento: async (_root: any, { input }: { input: UpdateAtendimentoDTO }) =>
-      atendimentoRepository.update!(input),
+    updateAtendimento: async (
+      _root: any,
+      { input }: { input: UpdateAtendimentoDTO }
+    ) => {
+      return atendimentoRepository.update(input);
+    },
 
-    checkDataSEI: async (
+    setAtendimentosExportDate: async (
       _root: any,
       { atendimentosIds }: { atendimentosIds: string[] }
     ) => {
-      const atendimentosWithoutDataSEI = await atendimentoRepository.checkDataSEI(
-        atendimentosIds
-      );
+      const atendimentosWithoutDataSEI =
+        await atendimentoRepository.setAtendimentosExportDate(atendimentosIds);
 
       if (!atendimentosWithoutDataSEI) {
         return [];
@@ -43,11 +50,4 @@ export const atendimentoResolver = (
       return atendimentosWithoutDataSEI;
     },
   },
-  // Atendimento: {
-  //   at_cli_atend_prop: (p: any) => {
-  //     console.log("🚀 - atendimentoResolver - p:", p.at_cli_atend_prop);
-  //     return p.at_cli_atend_prop;
-  //   },
-  //   at_atendimento_usuario: (p: any) => p.at_atendimento_usuario,
-  // },
 });

@@ -47,7 +47,3 @@ export type CreateAtendimentoDTO = {
   at_cli_atend_prop: at_cli_atend_prop;
   at_atendimento_indi_camp_acess: at_atendimento_indi_camp_acess[];
 };
-
-export type UpdateAtendimentoDTO = Partial<CreateAtendimentoDTO> & {
-  id_at_atendimento: bigint;
-};

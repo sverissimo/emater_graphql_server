@@ -16,7 +16,8 @@
     "start:prod": "NODE_ENV=production node dist/main.js"
   },
   "prisma": {
-    "seed": "node --loader ts-node/esm prisma/seed.ts"
+    "seed": "node --loader ts-node/esm prisma/seed.ts",
+    "schema": "prisma/schema.prisma"
   },
   "dependencies": {
     "@apollo/server": "^4.7.5",

@@ -3,8 +3,8 @@ import { PrismaRepository } from "./PrismaRepository.js";
 import { CreateAtendimentoDTO } from "../../modules/atendimento/CreateAtendimentoDTO.js";
 import { at_atendimento } from "@prisma/client";
 import { Repository } from "../Repository.js";
-import { getTodayDateWithTimeZone } from "../../shared/utils/formatDate.js";
 import { ReplacedAtendimentoDTO } from "@modules/atendimento/types/ReplacedAtendimentoDTO.js";
+import { getTodayBrTimezone } from "../../shared/utils/formatDate.js";
 
 export class AtendimentoRepository
   extends PrismaRepository
@@ -109,7 +109,11 @@ export class AtendimentoRepository
     return atendimentos;
   }
 
-  async update(input: at_atendimento) {
+  async update(
+    input: Partial<at_atendimento> & {
+      data_inicio_atendimento: Date | undefined;
+    }
+  ) {
     try {
       await this.prisma.at_atendimento.update({
         where: { id_at_atendimento: input.id_at_atendimento },
@@ -153,16 +157,18 @@ export class AtendimentoRepository
     }
   }
 
-  async checkDataSEI(input: string[]) {
+  async setAtendimentosExportDate(input: string[]) {
     try {
       const ids = input.map((id) => BigInt(id));
+      const todayDate = getTodayBrTimezone();
 
       await this.prisma.at_atendimento.updateMany({
         where: { id_at_atendimento: { in: ids } },
-        data: { data_sei: getTodayDateWithTimeZone() },
+        data: { dt_export_ok: todayDate },
+        // data: { dt_export_ok: null },
       });
 
-      return `Checked data SEI atendimentos ${input.join(", ")}.`;
+      return `Registered data dt_export atendimentos ${input.join(", ")}.`;
     } catch (error: any) {
       this.throwError(error);
     }
@@ -174,11 +180,14 @@ export class AtendimentoRepository
             SELECT link_pdf FROM at_atendimento
             WHERE link_pdf IS NOT NULL
             AND data_validacao IS NOT NULL
+            AND ativo = TRUE
+            AND (sn_pendencia = 0 OR data_sei IS NOT NULL)
             AND SPLIT_PART(link_pdf, '/', ARRAY_LENGTH(STRING_TO_ARRAY(link_pdf, '/'), 1)) = ANY(ARRAY[${relatorioIds}]);
-          `) as any[];
-      const readOnlyIds = readOnlyURLs.map(
-        (url) => url.link_pdf.match(/[^/]+$/)[0]
-      );
+          `) as { link_pdf: string }[];
+
+      const readOnlyIds = readOnlyURLs
+        .map((url) => url.link_pdf.match(/[^/]+$/)?.[0] ?? null)
+        .filter((id): id is string => id !== null);
       return readOnlyIds;
     } catch (error) {
       this.throwError(error);
