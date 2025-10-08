@@ -6,7 +6,11 @@ const logFormat = format.combine(
     format: () => {
       const date = new Date();
       date.setHours(date.getUTCHours() - 3);
-      return date.toISOString().split(".")[0].replace("T", " ").replace("Z", "");
+      return date
+        .toISOString()
+        .split(".")[0]
+        .replace("T", " ")
+        .replace("Z", "");
     },
   }),
   format.errors({ stack: true }),
@@ -32,7 +36,7 @@ const logger = createLogger({
   format: logFormat,
   transports: [
     new transports.DailyRotateFile({
-      filename: "logs/errors-%DATE%.log",
+      filename: `${process.env.LOGS_FOLDER}/errors-%DATE%.log`,
       maxSize: "20m",
       maxFiles: "14d",
       level: "error",

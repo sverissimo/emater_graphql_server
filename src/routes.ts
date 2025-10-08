@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 
 import { AtendimentoRepository } from "./repositories/prisma/AtendimentoRepository.js";
@@ -16,7 +16,7 @@ const enumPropsRepository = new EnumPropsRepository(prismaClient);
 const usuarioRepository = new UsuarioRepository(prismaClient);
 const loginService = new LoginService(usuarioRepository);
 
-router.get("/getPerfilOptions", async (req, res) => {
+router.get("/getPerfilOptions", async (_req: Request, res: Response) => {
   try {
     const perfilOptions = await enumPropsRepository.getPerfilOptions();
     return res.send(perfilOptions);
@@ -25,12 +25,12 @@ router.get("/getPerfilOptions", async (req, res) => {
   }
 });
 
-router.get("/getPerfilOptionsRaw", async (req, res) => {
+router.get("/getPerfilOptionsRaw", async (_req: Request, res: Response) => {
   const perfilOptions = await enumPropsRepository.getPerfilOptionsRaw();
   return res.send(perfilOptions);
 });
 
-router.get("/getGruposProdutos", async (req, res) => {
+router.get("/getGruposProdutos", async (_req: Request, res: Response) => {
   try {
     const perfilOptions = await enumPropsRepository.getGruposProdutos();
     return res.send(perfilOptions);
@@ -39,20 +39,23 @@ router.get("/getGruposProdutos", async (req, res) => {
   }
 });
 
-router.get("/getReadOnlyRelatorios/:ids", async (req, res) => {
-  try {
-    const { ids } = req.params;
-    const readOnlyIds = await atendimentoRepository.getReadOnlyRelatorioIds(
-      ids.split(",")
-    );
-    return res.send(readOnlyIds);
-  } catch (error) {
-    console.log("🚀 ~ file: routes.ts:49 ~ router.get ~ error:", error);
-    logger.error(`Error fetching read-only relatorios: ${error}`);
+router.get(
+  "/getReadOnlyRelatorios/:ids",
+  async (req: Request, res: Response) => {
+    try {
+      const { ids } = req.params;
+      const readOnlyIds = await atendimentoRepository.getReadOnlyRelatorioIds(
+        ids.split(",")
+      );
+      return res.send(readOnlyIds);
+    } catch (error) {
+      console.log("🚀 ~ file: routes.ts:49 ~ router.get ~ error:", error);
+      logger.error(`Error fetching read-only relatorios: ${error}`);
+    }
   }
-});
+);
 
-router.get("/getContractInfo", async (_, res) => {
+router.get("/getContractInfo", async (_req: Request, res: Response) => {
   try {
     const contractInfo = await enumPropsRepository.getContractInfo();
     return res.send(contractInfo);
@@ -61,22 +64,25 @@ router.get("/getContractInfo", async (_, res) => {
   }
 });
 
-router.get("/getAtendimentosWithoutDataSEI", async (_, res) => {
-  try {
-    const atendimentosWithoutDataSEI =
-      await atendimentoRepository.getAtendimentosWithoutDataSEI();
-    if (!atendimentosWithoutDataSEI) {
-      return res.send([]);
+router.get(
+  "/getAtendimentosWithoutDataSEI",
+  async (_req: Request, res: Response) => {
+    try {
+      const atendimentosWithoutDataSEI =
+        await atendimentoRepository.getAtendimentosWithoutDataSEI();
+      if (!atendimentosWithoutDataSEI) {
+        return res.send([]);
+      }
+
+      return res.send(atendimentosWithoutDataSEI);
+    } catch (error) {
+      console.log("🚀 ~ file: routes.ts:72 ~ router.get ~ error:", error);
+      logger.error(`Error fetching atendimentos without data SEI: ${error}`);
     }
-
-    return res.send(atendimentosWithoutDataSEI);
-  } catch (error) {
-    console.log("🚀 ~ file: routes.ts:72 ~ router.get ~ error:", error);
-    logger.error(`Error fetching atendimentos without data SEI: ${error}`);
   }
-});
+);
 
-router.get("/getTemasAtendimento", async (_, res) => {
+router.get("/getTemasAtendimento", async (_req: Request, res: Response) => {
   try {
     const temasAtendimento = await enumPropsRepository.getTemasAtendimento();
     return res.send(temasAtendimento);
@@ -86,7 +92,7 @@ router.get("/getTemasAtendimento", async (_, res) => {
   }
 });
 
-router.get("/getRegionaisEmater", async (_, res) => {
+router.get("/getRegionaisEmater", async (_req: Request, res: Response) => {
   try {
     const regionais = await enumPropsRepository.getRegionaisEmater();
     return res.send(regionais);
@@ -97,7 +103,7 @@ router.get("/getRegionaisEmater", async (_, res) => {
 
 router.patch(
   "/updateTemasAndVisitaAtendimento/:atendimentoId",
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     const { atendimentoId } = req.params;
     const { temasAtendimento, numeroVisita } = req.body;
     try {
@@ -116,7 +122,7 @@ router.patch(
   }
 );
 
-router.post("/login", async (req, res) => {
+router.post("/login", async (req: Request, res: Response) => {
   const { matricula_usuario, password } = req.body;
   try {
     const usuarioLoginOutput = await loginService.login({
@@ -143,7 +149,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/getReplacedAtendimentos", async (_, res) => {
+router.get("/getReplacedAtendimentos", async (_req: Request, res: Response) => {
   try {
     const replacedAtendimentos =
       await atendimentoRepository.getReplacedAtendimentos();

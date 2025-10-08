@@ -10,6 +10,7 @@ services:
     command: "npm run start:dev"
     volumes:
       - /home/apps/emater_graphql_server:/home/node/app
+      - /home/apps/emater_graphql_server/logs/hmg:/home/node/logs
     ports:
       - 4100:4100
     networks:

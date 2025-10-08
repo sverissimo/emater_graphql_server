@@ -7,15 +7,17 @@ Dockerfile
 .gitignore
 
 # Build artifacts
+node_modules/
+dist/
 target/
 out/
-dist/
-node_modules/
 
 # Sensitive data
 *.key
 *.pem
 *.p12
+.env*
+*.env
 
 # Editor/IDE files
 .vscode/

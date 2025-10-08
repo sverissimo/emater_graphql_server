@@ -1,13 +1,15 @@
-import { PrismaClient } from "@prisma/client";
+import pkg from "@prisma/client";
+const { PrismaClient } = pkg;
+
 const prisma = new PrismaClient();
 async function main() {
-    console.log("## Seed skipped, using existing data from testDB...");
+  console.log("## Seed skipped, using existing data from testDB...");
 }
 main()
-    .catch((e) => {
+  .catch((e) => {
     console.error(e);
     process.exit(1);
-})
-    .finally(async () => {
+  })
+  .finally(async () => {
     await prisma.$disconnect();
-});
+  });

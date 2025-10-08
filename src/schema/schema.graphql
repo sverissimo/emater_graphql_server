@@ -1,0 +1,36 @@
+scalar DateTime
+scalar BigInt
+scalar Void
+
+type Municipio {
+  id_municipio: ID!
+  fk_estado: Int!
+  nm_municipio: String
+  cd_ibge: String
+  cd_cpi: String
+  fk_reg_planejamento: Int
+  fk_reg_administrativa: Int
+  dt_update_record: String!
+  fk_microterritorio: Int
+  data_atualizacao_rm: String
+  tamanho_modulo_fiscal: Float
+  nr_latitude: String
+  nr_longitude: String
+  ger_und_empresa: [ger_und_empresa]
+}
+
+type ProdutorPropriedades {
+  propriedade_id: BigInt
+  produtor_id: BigInt
+  id_und_empresa: String
+  id_pl_tipo_posse: Int
+  produtor: Produtor
+  Propriedade: [Propriedade]
+}
+
+type ger_und_empresa {
+  id_und_empresa: String
+  nm_und_empresa: String
+  fk_und_empresa: String
+  ger_und_empresa: ger_und_empresa # This is the self-relation for the parent unit
+}

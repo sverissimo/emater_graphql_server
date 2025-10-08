@@ -181,7 +181,7 @@ export class AtendimentoRepository
             WHERE link_pdf IS NOT NULL
             AND data_validacao IS NOT NULL
             AND ativo = TRUE
-            AND (sn_pendencia = 0 OR data_sei IS NOT NULL)
+            AND (sn_pendencia = 0 OR data_sei IS NOT NULL OR data_see IS NOT NULL)
             AND SPLIT_PART(link_pdf, '/', ARRAY_LENGTH(STRING_TO_ARRAY(link_pdf, '/'), 1)) = ANY(ARRAY[${relatorioIds}]);
           `) as { link_pdf: string }[];
 
