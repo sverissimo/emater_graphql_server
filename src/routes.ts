@@ -137,12 +137,15 @@ router.post("/login", async (req: Request, res: Response) => {
     const serializedUsuario = serializeBigInts(usuarioLoginOutput);
     return res.send(serializedUsuario);
   } catch (error) {
-    console.log("🚀 - RestAPIRoutes - login - error:", error);
     if (error instanceof Error) {
+      logger.error(
+        `Login error for user ${matricula_usuario}: ${error.message}`
+      );
       return res.status(403).send({
         error: error.message,
       });
     }
+
     return res.status(403).send({
       error: "Usuário ou senha inválidos.",
     });

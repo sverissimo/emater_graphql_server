@@ -7,7 +7,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.hmg
-    command: "npm run start:dev"
+    command: "pnpm start:dev"
     volumes:
       - /home/apps/emater_graphql_server:/home/node/app
       - /home/apps/emater_graphql_server/logs/hmg:/home/node/logs

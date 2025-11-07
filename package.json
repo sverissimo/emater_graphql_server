@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start:dev": "concurrently \"tsc -w\" \"nodemon dist/main.js\"",
+    "start:dev": "tsx watch src/main.ts",
     "build": "tsc",
     "codegen": "graphql-codegen --config codegen.yaml",
     "start:prod": "node dist/main.js"
@@ -46,10 +46,10 @@
     "@types/humps": "^2.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.5.2",
-    "concurrently": "^9.2.1",
-    "nodemon": "^3.1.10",
     "prisma": "^6.16.2",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.2"
-  }
+  },
+  "packageManager": "pnpm@10.19.0+sha512.c9fc7236e92adf5c8af42fd5bf1612df99c2ceb62f27047032f4720b33f8eacdde311865e91c411f2774f618d82f320808ecb51718bfa82c060c4ba7c76a32b8"
 }

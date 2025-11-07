@@ -16,9 +16,9 @@ export interface UsuarioRepositoryOutputDto extends Usuario {
 }
 
 export interface UsuarioLoginOutputDto {
-  id_usuario?: string;
+  id_usuario: string;
   login_usuario?: string;
-  nome_usuario?: string;
+  nome_usuario: string | null;
   email_usuario?: string | null;
   celular_usuario?: string | null;
   matricula_usuario?: string | null;
