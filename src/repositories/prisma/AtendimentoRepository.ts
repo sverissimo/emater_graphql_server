@@ -82,7 +82,7 @@ export class AtendimentoRepository
 
   async findMany(ids: bigint[], info: GraphQLResolveInfo) {
     if (!ids || ids.length === 0) {
-      this.throwError("NO_ID_PROVIDED");
+      return [];
     }
 
     const usuarioRequested = this.isFieldRequested(
