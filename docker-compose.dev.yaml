@@ -1,23 +1,24 @@
 services:
   graphql_server_dev:
     container_name: graphql_server_dev
-    image: graphql_server
+    image: graphql_server_dev
     env_file:
-      - development.env
+      - .env.development
     build:
-      context: ${HOME_FOLDER}
+      context: .
       dockerfile: Dockerfile.dev
     command: "npm run start:dev"
     volumes:
       - /home/apps/emater_graphql_server:/home/node/app
+      - /home/apps/emater_graphql_server/logs/dev:/home/node/logs
     ports:
       - 4000:4000
     networks:
-      - pnae_dev_default
-      - cmc_dev
+      - pnae_dev
+  # args:
+  #   - HOST_UID=${HOST_UID}
+  #   - HOST_GID=${HOST_GID}
 
 networks:
-  pnae_dev_default:
-    external: true
-  cmc_dev:
+  pnae_dev:
     external: true

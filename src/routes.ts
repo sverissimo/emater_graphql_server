@@ -1,5 +1,4 @@
 import { Router, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 
 import { AtendimentoRepository } from "./repositories/prisma/AtendimentoRepository.js";
 import { EnumPropsRepository } from "./repositories/prisma/EnumPropsRepository.js";
@@ -7,14 +6,19 @@ import { UsuarioRepository } from "./repositories/prisma/UsuarioRepository.js";
 import { serializeBigInts } from "./shared/utils/serializeBigInt.js";
 import { LoginService } from "./auth/LoginService.js";
 import { logger } from "./shared/utils/logger.js";
+import { createPrismaClient } from "./config/prismaClient.js";
 
 const router = Router();
 
-const prismaClient = new PrismaClient({ log: ["info", "warn", "error"] });
+const prismaClient = createPrismaClient();
 const atendimentoRepository = new AtendimentoRepository(prismaClient);
 const enumPropsRepository = new EnumPropsRepository(prismaClient);
 const usuarioRepository = new UsuarioRepository(prismaClient);
 const loginService = new LoginService(usuarioRepository);
+
+function routeParam(value: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 router.get("/getPerfilOptions", async (_req: Request, res: Response) => {
   try {
@@ -43,7 +47,7 @@ router.get(
   "/getReadOnlyRelatorios/:ids",
   async (req: Request, res: Response) => {
     try {
-      const { ids } = req.params;
+      const ids = routeParam(req.params.ids);
       const readOnlyIds = await atendimentoRepository.getReadOnlyRelatorioIds(
         ids.split(",")
       );
@@ -104,7 +108,7 @@ router.get("/getRegionaisEmater", async (_req: Request, res: Response) => {
 router.patch(
   "/updateTemasAndVisitaAtendimento/:atendimentoId",
   async (req: Request, res: Response) => {
-    const { atendimentoId } = req.params;
+    const atendimentoId = routeParam(req.params.atendimentoId);
     const { temasAtendimento, numeroVisita } = req.body;
     try {
       await atendimentoRepository.updateTemasAndNumeroVisita({

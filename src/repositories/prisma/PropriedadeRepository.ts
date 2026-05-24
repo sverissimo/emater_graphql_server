@@ -1,6 +1,6 @@
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "../Repository.js";
-import { Propriedade } from "@prisma/client";
+import { Propriedade } from "../../generated/prisma/client.js";
 import { PropriedadeFindManyParams } from "@modules/propriedade/propriedadeResolver.js";
 
 export class PropriedadeRepository

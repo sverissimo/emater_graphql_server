@@ -1,7 +1,7 @@
 import { GraphQLError } from "graphql/error/GraphQLError.js";
 import { CustomError, DefaultError, ErrorHandler } from "./ErrorHandler";
 import { logger } from "./logger.js";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../generated/prisma/client.js";
 
 export class ErrorHandlerImpl implements ErrorHandler {
   throwError(error: DefaultError | CustomError | any): void {

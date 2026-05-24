@@ -1,7 +1,6 @@
-import pkg from "@prisma/client";
-const { PrismaClient } = pkg;
+import { createPrismaClient } from "../src/config/prismaClient.js";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function main() {
   console.log("## Seed skipped, using existing data from testDB...");

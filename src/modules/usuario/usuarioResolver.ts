@@ -1,5 +1,5 @@
 import { Repository } from "@repositories/Repository.js";
-import { Usuario } from "@prisma/client";
+import { Usuario } from "../../generated/prisma/client.js";
 
 export const usuarioResolver = (usuarioRepository: Repository<Usuario>) => ({
   Query: {

@@ -1,4 +1,4 @@
-import { Perfil, Prisma } from "@prisma/client";
+import { Perfil, Prisma } from "../../generated/prisma/client.js";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { EnumPropsRepository } from "./EnumPropsRepository.js";
 import { Repository } from "../Repository.js";

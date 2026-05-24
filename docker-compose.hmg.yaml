@@ -1,27 +1,31 @@
 services:
   graphql_server_hmg:
-    container_name: graphql_server_hmg
     image: graphql_server_hmg
-    env_file:
-      - homolog.env
     build:
       context: .
       dockerfile: Dockerfile.hmg
-    command: "pnpm start:dev"
+      args:
+        - HOST_UID=${HOST_UID}
+        - HOST_GID=${HOST_GID}
+    command: "npm run start:prod"
+    env_file:
+      - .env.homolog
+    environment:
+      - NODE_ENV=staging
     volumes:
-      - /home/apps/emater_graphql_server:/home/node/app
       - /home/apps/emater_graphql_server/logs/hmg:/home/node/logs
-    ports:
-      - 4100:4100
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2048M
     networks:
-      - pnae_hmg_default
+      - pnae_hmg
       - cmc_hmg
-  # args:
-  #   - HOST_UID=${HOST_UID}
-  #   - HOST_GID=${HOST_GID}
 
 networks:
-  pnae_hmg_default:
+  pnae_hmg:
     external: true
   cmc_hmg:
     external: true

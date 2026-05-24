@@ -1,4 +1,4 @@
-import { Produtor } from "@prisma/client";
+import { Produtor } from "../../generated/prisma/client.js";
 import { prismaClient } from "../../config/prismaClient.js";
 import { EnumPropsRepository } from "../../repositories/prisma/EnumPropsRepository.js";
 import { PropriedadeRepository } from "../../repositories/prisma/PropriedadeRepository.js";

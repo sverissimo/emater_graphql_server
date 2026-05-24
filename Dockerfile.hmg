@@ -1,19 +1,56 @@
-FROM node:22-slim
+# ---------- Base ----------
+FROM node:24-slim AS base
 
-RUN apt-get update -y && apt-get install -y openssl procps \
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl
+
+# ---------- Deps (dev) ----------
+FROM base AS deps
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+
+RUN npm ci
+
+# ---------- Build ----------
+FROM base AS build
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+RUN npx prisma generate
+RUN npm run build
+
+# Copy .graphql assets into dist, preserving folders
+RUN bash -lc 'find src -name "*.graphql" -exec install -Dm644 "{}" "dist/{}" \;'
+
+# ---------- Prune to prod deps ----------
+FROM base AS prod-deps
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY prisma ./prisma
+
+RUN npm ci \
+    && npx prisma generate \
+    && npm prune --omit=dev
+
+# ---------- Runner ----------
+FROM node:24-slim AS runner
+WORKDIR /app
+
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY --from=build /app/dist ./dist
+COPY --from=prod-deps /app/node_modules ./node_modules
 
-# Match container "node" user/group IDs with host "apps" user (1003:1003)
-RUN usermod -u 1003 node \
-    && groupmod -g 1003 node
+COPY package.json package-lock.json ./
 
-WORKDIR /home/node/app
-
-RUN chown -R node:node /home/node/app
+RUN usermod -u 1003 node && groupmod -g 1003 node
+RUN chown -R node:node /app
 RUN mkdir -p /home/node/logs && chown -R node:node /home/node/logs
 
 USER node
 
-CMD ["tail", "-f", "/dev/null"]
+CMD ["node", "dist/main.js"]

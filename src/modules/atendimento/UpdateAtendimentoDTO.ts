@@ -1,4 +1,4 @@
-import { at_atendimento } from "@prisma/client";
+import { at_atendimento } from "../../generated/prisma/client.js";
 
 export type UpdateAtendimentoDTO = Partial<at_atendimento> & {
   id_at_atendimento: bigint;

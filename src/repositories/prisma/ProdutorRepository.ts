@@ -1,4 +1,4 @@
-import { Produtor } from "@prisma/client";
+import { Produtor } from "../../generated/prisma/client.js";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { Repository } from "../Repository.js";
 import { EnumPropsRepository } from "./EnumPropsRepository.js";
@@ -155,7 +155,7 @@ export class ProdutorRepository
             SELECT re.nm_regional_ensino, me.fk_municipio from ger_regional_ensino as re
             JOIN ger_municipio_ensino as me
             ON re.id_regional_ensino = me.fk_regional_ensino
-            WHERE me.fk_municipio = ANY(ARRAY[${municipioIds}]);
+            WHERE me.fk_municipio = ANY(${municipioIds}::int[]);
             `;
 
     produtores.forEach((p: any) => {

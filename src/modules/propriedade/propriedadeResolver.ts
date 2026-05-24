@@ -1,5 +1,5 @@
 import { Repository } from "@repositories/Repository.js";
-import { Propriedade } from "@prisma/client";
+import { Propriedade } from "../../generated/prisma/client.js";
 
 export interface PropriedadeFindManyParams {
   cpfs?: string[];

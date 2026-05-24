@@ -9,7 +9,7 @@ services:
         - HOST_GID=${HOST_GID}
     command: "npm run start:prod"
     env_file:
-      - production.env
+      - .env.production
     environment:
       - NODE_ENV=production
     volumes:
@@ -21,11 +21,14 @@ services:
           cpus: '2'
           memory: 2048M
     networks:
-      - pnae_prod_default
+      - pnae_prod
       - cmc_prod
+      - cmc_hmg
 
 networks:
-  pnae_prod_default:
+  pnae_prod:
     external: true
   cmc_prod:
+    external: true
+  cmc_hmg:
     external: true

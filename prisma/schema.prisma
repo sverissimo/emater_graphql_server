@@ -1,12 +1,13 @@
 generator client {
-  provider      = "prisma-client-js"
-  // binaryTargets = ["native", "debian-openssl-1.1.x"]
-  moduleFormat = "esm"
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model Produtor {
@@ -481,11 +482,13 @@ model Usuario {
   @@map("usuario")
 }
 
-model perfil {
+model PerfilDemeter {
   id_perfil        BigInt           @id(map: "pk_perfil") @default(autoincrement())
   descricao_perfil String           @db.VarChar(255)
   dt_update_record DateTime?        @db.Timestamp(6)
   perfil_usuario   perfil_usuario[]
+
+  @@map("perfil")
 }
 
 model perfil_usuario {
@@ -493,7 +496,7 @@ model perfil_usuario {
   id_usuario       BigInt
   dt_update_record DateTime? @db.Timestamp(6)
   usuario          Usuario   @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction, map: "fk4fufsx76e5t1sjsi7wd9bb76")
-  perfil           perfil    @relation(fields: [id_perfil], references: [id_perfil], onDelete: NoAction, onUpdate: NoAction, map: "fk9yj8yi3w6sgcnwlakjp6jppes")
+  perfil           PerfilDemeter @relation(fields: [id_perfil], references: [id_perfil], onDelete: NoAction, onUpdate: NoAction, map: "fk9yj8yi3w6sgcnwlakjp6jppes")
 
   @@id([id_perfil, id_usuario], map: "pk_perfil_usuario")
 }

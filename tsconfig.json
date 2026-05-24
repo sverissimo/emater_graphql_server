@@ -21,7 +21,7 @@
     }
   },
   "include": ["/**/*.ts", ".env", "src/**/*.json", "src"],
-  "exclude": ["node_modules", "data", "prisma"],
+  "exclude": ["node_modules", "data", "prisma", "prisma.config.ts"],
   "ts-node": {
     "esm": true,
     "experimentalSpecifierResolution": "node"

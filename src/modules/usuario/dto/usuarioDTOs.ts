@@ -1,4 +1,4 @@
-import { ger_und_empresa, Usuario } from "@prisma/client";
+import { ger_und_empresa, Usuario } from "../../../generated/prisma/client.js";
 
 interface PerfilDemeter {
   perfil: {

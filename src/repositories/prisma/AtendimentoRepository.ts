@@ -1,7 +1,7 @@
 import { GraphQLResolveInfo } from "graphql";
 import { PrismaRepository } from "./PrismaRepository.js";
 import { CreateAtendimentoDTO } from "../../modules/atendimento/CreateAtendimentoDTO.js";
-import { at_atendimento } from "@prisma/client";
+import { at_atendimento } from "../../generated/prisma/client.js";
 import { Repository } from "../Repository.js";
 import { ReplacedAtendimentoDTO } from "@modules/atendimento/types/ReplacedAtendimentoDTO.js";
 import { getTodayBrTimezone } from "../../shared/utils/formatDate.js";
