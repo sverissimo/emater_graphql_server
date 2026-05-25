@@ -68,8 +68,8 @@ export class ProdutorRepository
       const enumPropsRepository = new EnumPropsRepository(this.prisma);
       const perfis = (await Promise.all(
         produtor.at_prf_see.map((perfil: any) =>
-          enumPropsRepository.getPerfilProps(perfil)
-        )
+          enumPropsRepository.getPerfilProps(perfil),
+        ),
       )) as any[];
 
       produtor.at_prf_see = perfis;
@@ -118,6 +118,7 @@ export class ProdutorRepository
                     select: {
                       nome_propriedade: true,
                       id_und_empresa: true,
+                      geo_ponto_texto: true,
                       municipio: {
                         select: {
                           id_municipio: true,
@@ -143,12 +144,12 @@ export class ProdutorRepository
       .filter(
         (p) =>
           !!p.at_prf_see[0]?.at_prf_see_propriedade[0]?.pl_propriedade
-            ?.municipio?.id_municipio
+            ?.municipio?.id_municipio,
       )
       .map(
         (p) =>
           p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio
-            ?.id_municipio
+            ?.id_municipio,
       );
 
     const SREs: any[] = await this.prisma.$queryRaw`
@@ -169,7 +170,7 @@ export class ProdutorRepository
         (sre) =>
           sre.fk_municipio ===
           p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio
-            .id_municipio
+            .id_municipio,
       ).nm_regional_ensino;
       // p.at_prf_see[0].at_prf_see_propriedade[0].pl_propriedade.municipio.nm_municipio =
       //   sreName;
