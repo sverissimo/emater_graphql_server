@@ -1,10 +1,10 @@
 import { GraphQLResolveInfo } from "graphql";
-import { AtendimentoRepository } from "@repositories/prisma/AtendimentoRepository.js";
-import { CreateAtendimentoDTO } from "./CreateAtendimentoDTO.js";
-import { UpdateAtendimentoDTO } from "./UpdateAtendimentoDTO.js";
+import { AtendimentoRepository } from "@modules/atendimento/repository/AtendimentoRepository.js";
+import { CreateAtendimentoDTO } from "./dto/CreateAtendimentoDTO.js";
+import { UpdateAtendimentoDTO } from "./dto/UpdateAtendimentoDTO.js";
 
 export const atendimentoResolver = (
-  atendimentoRepository: AtendimentoRepository
+  atendimentoRepository: AtendimentoRepository,
 ) => ({
   Query: {
     atendimento: (_root: any, { id }: { id: bigint }) => {
@@ -15,7 +15,7 @@ export const atendimentoResolver = (
       _root: any,
       { ids }: { ids: bigint[] },
       _context: any,
-      info: GraphQLResolveInfo
+      info: GraphQLResolveInfo,
     ) => {
       return atendimentoRepository.findMany(ids, info);
     },
@@ -24,21 +24,21 @@ export const atendimentoResolver = (
   Mutation: {
     createAtendimento: (
       _root: any,
-      { input }: { input: CreateAtendimentoDTO }
+      { input }: { input: CreateAtendimentoDTO },
     ) => {
       return atendimentoRepository.create(input);
     },
 
     updateAtendimento: async (
       _root: any,
-      { input }: { input: UpdateAtendimentoDTO }
+      { input }: { input: UpdateAtendimentoDTO },
     ) => {
       return atendimentoRepository.update(input);
     },
 
     setAtendimentosExportDate: async (
       _root: any,
-      { atendimentosIds }: { atendimentosIds: string[] }
+      { atendimentosIds }: { atendimentosIds: string[] },
     ) => {
       const atendimentosWithoutDataSEI =
         await atendimentoRepository.setAtendimentosExportDate(atendimentosIds);

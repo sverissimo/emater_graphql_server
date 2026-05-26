@@ -1,7 +1,7 @@
 import { Produtor } from "../../generated/prisma/client.js";
 import { prismaClient } from "../../config/prismaClient.js";
-import { EnumPropsRepository } from "../../repositories/prisma/EnumPropsRepository.js";
-import { PropriedadeRepository } from "../../repositories/prisma/PropriedadeRepository.js";
+import { EnumPropsRepository } from "../../repositories/EnumPropsRepository.js";
+import { PropriedadeRepository } from "../propriedade/repository/PropriedadeRepository.js";
 import { Repository } from "@repositories/Repository.js";
 import { GraphQLResolveInfo } from "graphql";
 import { getRequestedFields } from "../../shared/utils/getRequestedFields.js";

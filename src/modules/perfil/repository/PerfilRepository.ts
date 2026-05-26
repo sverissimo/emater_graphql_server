@@ -1,7 +1,7 @@
-import { Perfil, Prisma } from "../../generated/prisma/client.js";
-import { PrismaRepository } from "./PrismaRepository.js";
-import { EnumPropsRepository } from "./EnumPropsRepository.js";
-import { Repository } from "../Repository.js";
+import { Perfil, Prisma } from "../../../generated/prisma/client.js";
+import { PrismaRepository } from "../../../repositories/PrismaRepository.js";
+import { EnumPropsRepository } from "../../../repositories/EnumPropsRepository.js";
+import { Repository } from "../../../repositories/Repository.js";
 import {
   CreatePerfilInput,
   CreateDadosProducaoDTO,

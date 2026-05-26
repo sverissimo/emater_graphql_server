@@ -1,10 +1,10 @@
 import { GraphQLResolveInfo } from "graphql";
-import { PrismaRepository } from "./PrismaRepository.js";
-import { CreateAtendimentoDTO } from "../../modules/atendimento/CreateAtendimentoDTO.js";
-import { at_atendimento } from "../../generated/prisma/client.js";
-import { Repository } from "../Repository.js";
-import { ReplacedAtendimentoDTO } from "@modules/atendimento/types/ReplacedAtendimentoDTO.js";
-import { getTodayBrTimezone } from "../../shared/utils/formatDate.js";
+import { PrismaRepository } from "../../../repositories/PrismaRepository.js";
+import { CreateAtendimentoDTO } from "../dto/CreateAtendimentoDTO.js";
+import { at_atendimento } from "../../../generated/prisma/client.js";
+import { Repository } from "../../../repositories/Repository.js";
+import { ReplacedAtendimentoDTO } from "@modules/atendimento/dto/ReplacedAtendimentoDTO.js";
+import { getTodayBrTimezone } from "../../../shared/utils/formatDate.js";
 
 export class AtendimentoRepository
   extends PrismaRepository
@@ -87,7 +87,7 @@ export class AtendimentoRepository
 
     const usuarioRequested = this.isFieldRequested(
       "at_atendimento_usuario",
-      info
+      info,
     );
     const includeUsuario = usuarioRequested
       ? {
@@ -112,7 +112,7 @@ export class AtendimentoRepository
   async update(
     input: Partial<at_atendimento> & {
       data_inicio_atendimento: Date | undefined;
-    }
+    },
   ) {
     try {
       await this.prisma.at_atendimento.update({

@@ -1,8 +1,8 @@
 import { Router, Request, Response } from "express";
 
-import { AtendimentoRepository } from "./repositories/prisma/AtendimentoRepository.js";
-import { EnumPropsRepository } from "./repositories/prisma/EnumPropsRepository.js";
-import { UsuarioRepository } from "./repositories/prisma/UsuarioRepository.js";
+import { AtendimentoRepository } from "./modules/atendimento/repository/AtendimentoRepository.js";
+import { EnumPropsRepository } from "./repositories/EnumPropsRepository.js";
+import { UsuarioRepository } from "./modules/usuario/repository/UsuarioRepository.js";
 import { serializeBigInts } from "./shared/utils/serializeBigInt.js";
 import { LoginService } from "./auth/LoginService.js";
 import { logger } from "./shared/utils/logger.js";
@@ -49,14 +49,14 @@ router.get(
     try {
       const ids = routeParam(req.params.ids);
       const readOnlyIds = await atendimentoRepository.getReadOnlyRelatorioIds(
-        ids.split(",")
+        ids.split(","),
       );
       return res.send(readOnlyIds);
     } catch (error) {
       console.log("🚀 ~ file: routes.ts:49 ~ router.get ~ error:", error);
       logger.error(`Error fetching read-only relatorios: ${error}`);
     }
-  }
+  },
 );
 
 router.get("/getContractInfo", async (_req: Request, res: Response) => {
@@ -83,7 +83,7 @@ router.get(
       console.log("🚀 ~ file: routes.ts:72 ~ router.get ~ error:", error);
       logger.error(`Error fetching atendimentos without data SEI: ${error}`);
     }
-  }
+  },
 );
 
 router.get("/getTemasAtendimento", async (_req: Request, res: Response) => {
@@ -120,10 +120,10 @@ router.patch(
     } catch (error) {
       console.log("🚀 ~ file: routes.ts:107 ~ router.patch ~ error:", error);
       logger.error(
-        `Error updating temas and numero visita for atendimento ${atendimentoId}: ${error}`
+        `Error updating temas and numero visita for atendimento ${atendimentoId}: ${error}`,
       );
     }
-  }
+  },
 );
 
 router.post("/login", async (req: Request, res: Response) => {
@@ -143,7 +143,7 @@ router.post("/login", async (req: Request, res: Response) => {
   } catch (error) {
     if (error instanceof Error) {
       logger.error(
-        `Login error for user ${matricula_usuario}: ${error.message}`
+        `Login error for user ${matricula_usuario}: ${error.message}`,
       );
       return res.status(403).send({
         error: error.message,

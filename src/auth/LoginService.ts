@@ -1,5 +1,5 @@
 import { AuthLdapService } from "./AuthLdapService.js";
-import { UsuarioRepository } from "../repositories/prisma";
+import { UsuarioRepository } from "../modules/usuario/repository/UsuarioRepository.js";
 import { UsuarioDataMapper } from "../modules/usuario/UsuarioDataMapper.js";
 import { UsuarioRepositoryOutputDto } from "@modules/usuario/dto/usuarioDTOs.js";
 

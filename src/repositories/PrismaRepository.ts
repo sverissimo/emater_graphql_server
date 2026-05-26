@@ -1,7 +1,7 @@
-import { Prisma, PrismaClient } from "../../generated/prisma/client.js";
-import { ErrorHandlerImpl } from "../../shared/utils/ErrorHandlerImpl.js";
-import { CustomError, DefaultError, ErrorHandler } from "../../shared/utils/ErrorHandler.js";
-import { prismaClient } from "../../config/prismaClient.js";
+import { Prisma, PrismaClient } from "../generated/prisma/client.js";
+import { ErrorHandlerImpl } from "../shared/utils/ErrorHandlerImpl.js";
+import { CustomError, DefaultError, ErrorHandler } from "../shared/utils/ErrorHandler.js";
+import { prismaClient } from "../config/prismaClient.js";
 import { GraphQLResolveInfo } from "graphql";
 
 export class PrismaRepository {

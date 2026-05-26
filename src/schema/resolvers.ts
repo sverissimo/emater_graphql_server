@@ -3,13 +3,11 @@ import { produtorResolver as getProdutorResolver } from "../modules/produtor/pro
 import { perfilResolver as getPerfilResolver } from "../modules/perfil/perfilResolver.js";
 import { propriedadeResolver as getPropriedadeResolver } from "../modules/propriedade/propriedadeResolver.js";
 import { usuarioResolver as getUsuarioResolver } from "../modules/usuario/usuarioResolver.js";
-import {
-  AtendimentoRepository,
-  PerfilRepository,
-  ProdutorRepository,
-  PropriedadeRepository,
-  UsuarioRepository,
-} from "../repositories/prisma/index.js";
+import { AtendimentoRepository } from "../modules/atendimento/repository/AtendimentoRepository.js";
+import { PerfilRepository } from "../modules/perfil/repository/PerfilRepository.js";
+import { ProdutorRepository } from "../modules/produtor/repository/ProdutorRepository.js";
+import { PropriedadeRepository } from "../modules/propriedade/repository/PropriedadeRepository.js";
+import { UsuarioRepository } from "../modules/usuario/repository/UsuarioRepository.js";
 
 const atendimentoRepository = new AtendimentoRepository();
 const produtorRepository = new ProdutorRepository();

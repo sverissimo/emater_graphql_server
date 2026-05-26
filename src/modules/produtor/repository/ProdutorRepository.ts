@@ -1,7 +1,7 @@
-import { Produtor } from "../../generated/prisma/client.js";
-import { PrismaRepository } from "./PrismaRepository.js";
-import { Repository } from "../Repository.js";
-import { EnumPropsRepository } from "./EnumPropsRepository.js";
+import { Produtor } from "../../../generated/prisma/client.js";
+import { PrismaRepository } from "../../../repositories/PrismaRepository.js";
+import { Repository } from "../../../repositories/Repository.js";
+import { EnumPropsRepository } from "../../../repositories/EnumPropsRepository.js";
 
 export class ProdutorRepository
   extends PrismaRepository

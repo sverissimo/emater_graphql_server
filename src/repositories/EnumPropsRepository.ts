@@ -1,4 +1,4 @@
-import { serializeBigInts } from "../../shared/utils/serializeBigInt.js";
+import { serializeBigInts } from "../shared/utils/serializeBigInt.js";
 import { PrismaRepository } from "./PrismaRepository.js";
 import humps from "humps";
 
