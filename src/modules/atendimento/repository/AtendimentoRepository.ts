@@ -174,6 +174,21 @@ export class AtendimentoRepository
     }
   }
 
+  async setValidacaoStatus(idAtendimento: bigint, aprovado: boolean) {
+    try {
+      const data = aprovado
+        ? { sn_validado: 1, sn_pendencia: 0, data_validacao: getTodayBrTimezone() }
+        : { sn_validado: 0, sn_pendencia: 1, data_validacao: null };
+
+      await this.prisma.at_atendimento.update({
+        where: { id_at_atendimento: idAtendimento },
+        data,
+      });
+    } catch (error: any) {
+      this.handleRecordNotFound(error);
+    }
+  }
+
   async getReadOnlyRelatorioIds(relatorioIds: string[]) {
     try {
       const readOnlyURLs = (await this.prisma.$queryRaw`
