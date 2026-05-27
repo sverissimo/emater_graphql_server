@@ -65,7 +65,7 @@ type Atendimento {
   ativo: Boolean
   link_pdf: String
   sn_pendencia: Int
-  sn_validacao: Int
+  sn_validado: Int
   id_und_empresa: String
   fk_und_empresa: String
   usuario_validacao: BigInt

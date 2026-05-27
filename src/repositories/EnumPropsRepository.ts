@@ -30,7 +30,10 @@ export class EnumPropsRepository extends PrismaRepository {
         (column === "dados_producao_agro_industria" && perfil[column]) ||
         (column === "dados_producao_in_natura" && perfil[column])
       ) {
-        perfil[column] = this.getPerfilProps(perfil[column], perfil.id_contrato);
+        perfil[column] = this.getPerfilProps(
+          perfil[column],
+          perfil.id_contrato,
+        );
         continue;
       }
 
@@ -96,7 +99,8 @@ export class EnumPropsRepository extends PrismaRepository {
   async getGruposProdutos() {
     const queryResultGrupos = await this.prisma
       .$queryRaw`SELECT * FROM at_prf_grupo_produto`;
-    const queryResultProdutos = await this.prisma.$queryRaw`SELECT * FROM at_prf_produto`;
+    const queryResultProdutos = await this.prisma
+      .$queryRaw`SELECT * FROM at_prf_produto`;
 
     const grupos = serializeBigInts(queryResultGrupos);
     const produtos = serializeBigInts(queryResultProdutos);
@@ -104,18 +108,9 @@ export class EnumPropsRepository extends PrismaRepository {
   }
 
   async getContractInfo() {
-    const queryResult = await this.prisma.$queryRaw`SELECT * FROM at_prf_config`;
+    const queryResult = await this.prisma
+      .$queryRaw`SELECT * FROM at_prf_config`;
     return queryResult;
-  }
-
-  async getTemasAtendimento() {
-    const queryResult = await this.prisma.$queryRaw`
-    SELECT * FROM at_indicador_campo_acessorio_lista
-    WHERE fk_at_indicador_camp_acessorio = 14033
-    ORDER BY valor;
-    `;
-    const temas = serializeBigInts(queryResult);
-    return temas;
   }
 
   async getRegionaisEmater() {

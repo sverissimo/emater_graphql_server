@@ -194,28 +194,6 @@ export class AtendimentoRepository
     }
   }
 
-  async getAtendimentosWithoutDataSEI() {
-    try {
-      const atendimentosWithoutDataSEI: Partial<at_atendimento>[] = await this
-        .prisma.$queryRaw`
-      SELECT id_at_atendimento, data_inicio_atendimento, ativo, id_und_empresa,  data_sei, link_pdf, sn_pendencia  from at_atendimento
-      WHERE link_pdf IS NOT NULL
-      AND data_validacao IS NOT NULL
-      AND data_sei IS NULL
-      AND ativo = true
-      `;
-
-      const atendimentos = atendimentosWithoutDataSEI.map((atendimento) => ({
-        ...atendimento,
-        id_at_atendimento: String(atendimento.id_at_atendimento),
-      }));
-
-      return atendimentos;
-    } catch (error) {
-      this.throwError(error);
-    }
-  }
-
   async getReplacedAtendimentos() {
     const query = (await this.prisma.$queryRaw`
       SELECT at.id_at_atendimento, at.id_at_anterior
