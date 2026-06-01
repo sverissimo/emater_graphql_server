@@ -5,7 +5,7 @@ import { GraphQLError } from "graphql";
 export const auth: RequestHandler = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   if (process.env.NODE_ENV === "development") {
     return next();
@@ -25,7 +25,7 @@ export const auth: RequestHandler = async (
   try {
     const decoded = jwt.verify(
       token,
-      process.env.SERVICE_TOKEN!
+      process.env.SERVICE_TOKEN!,
     ) as JwtPayload & {
       service?: string;
     };
@@ -33,7 +33,9 @@ export const auth: RequestHandler = async (
     next();
   } catch (error) {
     res.send(
-      new GraphQLError("Não autorizado.", { extensions: { code: "FORBIDDEN" } })
+      new GraphQLError("Não autorizado.", {
+        extensions: { code: "FORBIDDEN" },
+      }),
     );
   }
 };

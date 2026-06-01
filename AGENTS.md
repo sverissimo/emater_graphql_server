@@ -97,4 +97,9 @@ Two flows, both handled by [auth/auth.ts](src/auth/auth.ts):
 - Mirror the closest existing aggregate. `modules/atendimento/` + `repositories/prisma/AtendimentoRepository.ts` is the most complete reference; `modules/produtor/` is the smaller reference.
 - If a change would touch the GraphQL schema or `/api/*` shape, grep consumers under `/home/apps/*` and `/home/pnae/*` before committing.
 - If a "fix" would touch legacy code outside the task scope — leave it. Ask first.
+- **Unsure about a library's API** — especially versions newer than your training
+  cutoff (e.g. Prisma v7, which changed the client generator and output path):
+  check the **context7 MCP** for current docs before guessing. If context7 is
+  unreachable, **ask permission to fetch updated docs from the web** — don't rely
+  on possibly-stale recall.
 - After any structural change (new module, new route, new env var, schema change), update this AGENTS.md (a.k.a. `CLAUDE.md` — same file via symlink) in the same change so it doesn't drift.

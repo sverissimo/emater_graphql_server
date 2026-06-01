@@ -14,11 +14,9 @@ services:
     ports:
       - 4000:4000
     networks:
-      - pnae_dev
-  # args:
-  #   - HOST_UID=${HOST_UID}
-  #   - HOST_GID=${HOST_GID}
+      - emater_gql_dev
 
 networks:
-  pnae_dev:
-    external: true
+  emater_gql_dev:
+    name: emater_gql_dev
+
