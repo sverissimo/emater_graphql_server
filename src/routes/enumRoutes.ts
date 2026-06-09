@@ -28,4 +28,9 @@ router.get("/getRegionaisEmater", async (_req: Request, res: Response) => {
   return res.send(regionais);
 });
 
+router.get("/getMunicipiosEmater", async (_req: Request, res: Response) => {
+  const municipios = await enumPropsRepository.getMunicipiosEmater();
+  return res.send(municipios);
+});
+
 export const enumRoutes = router;

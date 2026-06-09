@@ -17,7 +17,7 @@ export class LoginService {
 
     const authenticated = await AuthLdapService.authenticate(
       matricula_usuario,
-      password
+      password,
     );
     if (!authenticated) throw new Error("Usuário não encontrado");
 

@@ -23,7 +23,9 @@ router.post("/login", async (req: Request, res: Response) => {
     return res.send(serializedUsuario);
   } catch (error) {
     if (error instanceof Error) {
-      logger.error(`Login error for user ${matricula_usuario}: ${error.message}`);
+      logger.error(
+        `Login error for user ${matricula_usuario}: ${error.message}`,
+      );
       return res.status(403).send({ error: error.message });
     }
 

@@ -23,9 +23,13 @@ services:
     networks:
       - pnae_hmg
       - cmc_hmg
+      - emater_gql_hmg
 
 networks:
   pnae_hmg:
     external: true
   cmc_hmg:
     external: true
+  emater_gql_hmg:
+    name: emater_gql_hmg
+

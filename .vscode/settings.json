@@ -20,5 +20,8 @@
   },
   "peacock.remoteColor": "#ff3d00",
   "editor.fontFamily": "JetBrains Mono, Consolas, 'Courier New', monospace",
-  "terminal.integrated.fontSize": 12.5
+  "terminal.integrated.fontSize": 12.5,
+  "editor.mouseWheelScrollSensitivity": 50,
+  "workbench.list.mouseWheelScrollSensitivity": 50,
+  "terminal.integrated.mouseWheelScrollSensitivity": 50
 }

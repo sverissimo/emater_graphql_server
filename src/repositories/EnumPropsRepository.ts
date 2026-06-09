@@ -1,5 +1,6 @@
 import { serializeBigInts } from "../shared/utils/serializeBigInt.js";
 import { PrismaRepository } from "./PrismaRepository.js";
+import type { MunicipioEmater } from "./types/MunicipioEmater.js";
 import humps from "humps";
 
 type enumKeys = {
@@ -120,5 +121,29 @@ export class EnumPropsRepository extends PrismaRepository {
           `;
 
     return regionais;
+  }
+
+  async getMunicipiosEmater(): Promise<MunicipioEmater[]> {
+    return this.prisma.$queryRaw<MunicipioEmater[]>`
+      SELECT
+        h.id_und_empresa,
+        m.nm_municipio AS nome_municipio,
+        h.fk_municipio AS municipio_id,
+        h.fk_und_empresa AS regional_id,
+        g.nm_und_empresa AS nome_regional
+      FROM ger_und_empresa h
+      JOIN sep_municipio m
+        ON m.id_municipio = h.fk_municipio
+      JOIN ger_und_empresa g
+        ON g.id_und_empresa = h.fk_und_empresa
+        AND g.id_und_empresa LIKE 'G%'
+      WHERE h.id_und_empresa LIKE 'H%'
+        AND h.fk_municipio IS NOT NULL
+        AND h.sn_ativa = 1
+        AND g.sn_ativa = 1
+        AND m.nm_municipio IS NOT NULL
+        AND g.nm_und_empresa IS NOT NULL
+      ORDER BY m.nm_municipio
+    `;
   }
 }
