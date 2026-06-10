@@ -11,7 +11,7 @@ import type { RequestHandler } from "express";
 import { expressMiddleware } from "@as-integrations/express5";
 
 interface MyContext {
-  token?: string;
+  service?: string;
 }
 
 const { PORT } = process.env;

@@ -5,6 +5,39 @@ type Query {
   getUnidadeEmpresa(produtorId: Int): Produtor
 }
 
+type Mutation {
+  """
+  Creates a produtor (ger_pessoa) plus its two fixed categoria rows and an optional
+  address/phone in one nested write. Returns the new id_pessoa_demeter on success, or
+  null on any execution failure (validation, duplicate CPF, DB errors — all logged
+  server-side with no detail surfaced). GraphQL input-coercion errors (wrong types,
+  missing required fields) still surface as standard GraphQL errors before execution.
+  NOT idempotent: a create with an already-stored CPF returns null.
+  """
+  createProdutor(input: CreateProdutorInput!): BigInt
+}
+
+input CreateProdutorInput {
+  nome: String!
+  cpf: String!
+  email: String
+  dataNascimento: DateTime
+  tpSexo: String
+  identidade: String
+  unidadeEmpresa: String!
+  municipioId: Int!
+  telefone: String
+  endereco: EnderecoInput
+}
+
+input EnderecoInput {
+  logradouro: String
+  numero: String
+  complemento: String
+  bairro: String
+  cep: String
+}
+
 type Produtor {
   id_pessoa_demeter: BigInt!
   id_pessoa: String!

@@ -48,6 +48,9 @@ model Produtor {
   at_cli_atend_prop         at_cli_atend_prop[]
   at_prf_see                Perfil[]
   ger_pes_cat_ramo_relacao  ger_pes_cat_ramo_relacao[]
+  ger_end_pessoa               ger_end_pessoa[]
+  sub_categoria_pessoa_relacao sub_categoria_pessoa_relacao[]
+  contato_pessoa               contato_pessoa[]
   ger_und_empresa           ger_und_empresa?            @relation(fields: [id_und_empresa], references: [id_und_empresa], onDelete: NoAction, onUpdate: NoAction, map: "fk_ger_pessoa_ger_und_empresa")
   pl_propriedade_ger_pessoa pl_propriedade_ger_pessoa[]
 
@@ -614,3 +617,72 @@ model ger_und_empresa {
 //   @@index([id_regional_ensino], map: "idx_ger_regional_ensino_lookup")
 //   @@ignore
 // }
+
+// ---- createProdutor insert targets ----
+// Hand-added and verified against `prisma db pull --print` on the live HMG DB (DEMETER_HMG): column
+// names, types, nullability and PKs match the introspection. Only the `Produtor` parent relation is
+// modeled here — every other FK (fk_municipio, fk_tpo_logradouro, fk_cat_pessoa/fk_sub_cat_pessoa,
+// id_tipo_contato_pessoa, fk_operadora, fk_distrito, id_und_empresa) is kept a raw scalar because the
+// create writes fixed/derived/validated ids, never Prisma `connect`, so the lookup tables are
+// intentionally NOT modeled. Run a full `prisma db pull` to also capture the lookup relation graph.
+//
+// FK-type caveat (forced, not a mistake): the real columns sub_categoria_pessoa_relacao.fk_pessoa and
+// contato_pessoa.id_pessoa are int4, but they FK to Produtor.id_pessoa_demeter (int8/BigInt). `db pull`
+// emits them as `Int`, which FAILS Prisma validation ("type ... not matching the referenced field"), so
+// they MUST be declared BigInt here for the relation to compile. At runtime Prisma writes the parent
+// bigint id into the int4 column (implicit downcast) — fine while id_pessoa_demeter fits int4 (< 2.1e9).
+// ger_end_pessoa.fk_pessoa is genuinely int8 (BigInt).
+
+model ger_end_pessoa {
+  id_end_pessoa          String?  @db.Char(36)
+  id_end_pessoa_demeter  Int      @id @default(autoincrement())
+  tp_endereco            Int      @db.SmallInt
+  fk_tpo_logradouro      Int?
+  ds_logradouro          String?  @db.VarChar(100)
+  nr_logradouro          String?  @db.VarChar(15)
+  ds_complemento         String?  @db.VarChar(80)
+  nm_bairro              String?  @db.VarChar(80)
+  nr_cep                 String?  @db.VarChar(8)
+  fk_municipio           Int
+  sn_end_principal       Int?     @db.SmallInt
+  sn_exclusao            Int?     @db.SmallInt
+  sn_end_correspondencia Int?     @db.SmallInt
+  id_und_empresa         String?  @db.Char(5)
+  fk_pessoa              BigInt
+  dt_update_record       DateTime @db.Timestamp(6)
+  id_sincronismo         String?  @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_cliente String?  @db.VarChar(36)
+  fk_distrito            Int?
+  ger_pessoa             Produtor @relation(fields: [fk_pessoa], references: [id_pessoa_demeter], onDelete: Cascade, map: "fk_ger_end_pessoa_1")
+
+  @@index([fk_pessoa])
+  @@index([id_und_empresa])
+}
+
+model sub_categoria_pessoa_relacao {
+  id                     Int      @id(map: "pk_sub_categoria_pessoa_relacao") @default(autoincrement())
+  fk_sub_cat_pessoa      Int      @db.SmallInt
+  fk_pessoa              BigInt
+  dt_update_record       DateTime @db.Timestamp(6)
+  id_und_empresa         String?  @db.Char(5)
+  id_sincronismo         String?  @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_cliente String?  @db.VarChar(36)
+  ger_pessoa             Produtor @relation(fields: [fk_pessoa], references: [id_pessoa_demeter], onDelete: Cascade, map: "fk_sub_categoria_pessoa_relacao_1")
+
+  @@unique([fk_pessoa, fk_sub_cat_pessoa], map: "fk_pessoa_sub_categoria_pessoa")
+  @@index([fk_pessoa], map: "idx_fk_pessoa")
+}
+
+model contato_pessoa {
+  id_contato_pessoa      Int       @id(map: "pk_contato_pessoa") @default(autoincrement())
+  telefone               String?   @db.Char(11)
+  principal              Boolean?
+  id_tipo_contato_pessoa Int?
+  id_pessoa              BigInt?
+  data_atualizacao       DateTime? @db.Timestamp(6)
+  id_und_empresa         String?   @db.Char(5)
+  fk_operadora           Int?
+  id_sincronismo         String?   @default(dbgenerated("(uuid_generate_v4())::character varying(36)")) @db.VarChar(36)
+  id_sincronismo_cliente String?   @db.VarChar(36)
+  ger_pessoa             Produtor? @relation(fields: [id_pessoa], references: [id_pessoa_demeter], onDelete: NoAction, onUpdate: NoAction, map: "fk5xiuy7qfcsk3oavfh2lmu0v0y")
+}
