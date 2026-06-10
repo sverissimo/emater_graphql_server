@@ -14,7 +14,7 @@ const createProdutorInput = {
   municipioId: 845, // -> ger_end_pessoa.fk_municipio; from getMunicipiosEmater pick
   endereco: {
     // ≤1, optional, street-level only
-    tpEndereco: 1, // -> ger_end_pessoa.tp_endereco (REQUIRED when endereco present)
+    // tpEndereco: 1, // -> CHANGED: ger_end_pessoa.tp_endereco is now FIXED (NEW requirement) -> always 1
     logradouro: "Rua das Hortas", // repo derives fk_tpo_logradouro from this
     numero: "100",
     complemento: null,
@@ -52,7 +52,7 @@ const ger_pessoa = {
 
 // 3) *** SAVE HERE *** ger_end_pessoa (≤1, only if `endereco` provided)
 const ger_end_pessoa = {
-  tp_endereco: 1, // REQUIRED (from client)
+  tp_endereco: 1, // FIXED (NEW user requirement)
   ds_logradouro: "Rua das Hortas",
   nr_logradouro: "100",
   ds_complemento: null,
@@ -68,14 +68,14 @@ const ger_end_pessoa = {
 // 4) *** SAVE HERE *** ger_pes_cat_ramo_relacao (ALWAYS, fixed constant)
 const ger_pes_cat_ramo_relacao = {
   fk_cat_pessoa: 39, // FIXED -> 39 = "Agricultor Familiar"
-  // fk_cat_pessoa: 35, // Might be this -> 35 = "Clientes"
   id_und_empresa: "H0349",
   // fk_pessoa -> Prisma nested create; dt_update_record -> repo-set
 };
 
 // 5) *** SAVE HERE *** sub_categoria_pessoa_relacao (ALWAYS, fixed constant)
 const sub_categoria_pessoa_relacao = {
-  fk_sub_cat_pessoa: 11, // FIXED -> 11 = "Agroindústria". Always this value.
+  fk_sub_cat_pessoa: 1, // FIXED -> 1 = "Típico(a)". Always this value.
+  // fk_sub_cat_pessoa: 11, // OLD -> 11 = "Agroindústria". Always this value.
   id_und_empresa: "H0349",
   // fk_pessoa -> Prisma nested create; dt_update_record -> repo-set
 };
@@ -90,46 +90,59 @@ const contato_pessoa = {
   // id_pessoa -> Prisma nested create; no dt_update_record (uses data_atualizacao, nullable -> omit)
 };
 
-//----- LOOKUP: ger_cat_pessoa (categoria dictionary)
+//----- DO NOT LOOKUP: FIXED ger_cat_pessoa (categoria dictionary)
 const ger_cat_pessoa = [
-  // { id_cat_pessoa: 35, ds_cat_pessoa: "Clientes" }, // <-- the fixed fk_cat_pessoa above
-  // { id_cat_pessoa: 38, ds_cat_pessoa: "Produtor Rural" }, // <-- Might be this one as well
-  // { id_cat_pessoa: 39, ds_cat_pessoa: "Agricultor Familiar" }, // <-- Might be this one as well
-  { id_cat_pessoa: 64, ds_cat_pessoa: "Organização" }, // <-- Might be this one as well
+  { id_cat_pessoa: 39, ds_cat_pessoa: "Agricultor Familiar" }, // <-- the fixed fk_cat_pessoa above
+  // { id_cat_pessoa: 35, ds_cat_pessoa: "Clientes" }, // <-- OLD. Keep codes here as reference, but this is not the one we use (see notes)
+  // { id_cat_pessoa: 38, ds_cat_pessoa: "Produtor Rural" }, // <-- OLD. Keep codes here as reference, but this is not the one we use (see notes)
+  // { id_cat_pessoa: 64, ds_cat_pessoa: "Organização" }, // <-- OLD. Keep codes here as reference, but this is not the one we use (see notes)
 ];
 
-//----- LOOKUP: sub_categoria_pessoa (subcategoria dictionary; FK -> ger_cat_pessoa)
+//----- DO NOT LOOKUP: FIXED VALUE for sub_categoria_pessoa (subcategoria dictionary; FK -> ger_cat_pessoa)
 const sub_categoria_pessoa = [
-  { id: 11, descricao: "Agroindústria", cat_pessoa: 64 }, // <-- the fixed fk_sub_cat_pessoa above
-  // { id: 8, descricao: "Associação de Produtores", cat_pessoa: 64 }, // <-- Might be this one as well
-  // { id: 10, descricao: "Cooperativa", cat_pessoa: 64 }, // <-- Might be this one as well
-  // { id: 1, descricao: "Típico(a)", cat_pessoa: 39 }, // <-- Might be this one as well
+  { id: 1, descricao: "Típico(a)", cat_pessoa: 39 }, // <-- the fixed fk_sub_cat_pessoa above
+  // { id: 8, descricao: "Associação de Produtores", cat_pessoa: 64 }, // <-- OLD. Keep codes here as reference, but this is not the one we use (see notes)
+  // { id: 10, descricao: "Cooperativa", cat_pessoa: 64 }, // <-- OLD. Keep codes here as reference, but this is not the one we use (see notes)
+  // { id: 11, descricao: "Agroindústria", cat_pessoa: 64 }, // <-- OLD. Keep codes here as reference, but this is not the one we use (see notes)
 ];
-// Pode ser 38 (Produtor Rural) ou 35 (Clientes). Nesse caso, sub_categoria_pessoa também mudaria, pois Típico(a) (id=1) corresponde a Agricultor Familiar, (id=39 na tabela ger_cat_pessoa).
-//----- LOOKUP: ger_und_empresa — source for getMunicipiosEmater. H% = municípios, G% = regionais (parents)
+
+//----- return type for '/getMunicipiosEmater' endpoint. H% = municípios, G% = regionais (parents)
+// Fetched by client before mutation, create-dto will have this. Gets data from ger_und_empresa
+const municipiosEmater = [
+  // type is MunicipioEmater[]
+  {
+    unidadeEmpresaId: "H0713",
+    nomeMunicipio: "Viçosa",
+    municipioId: 845,
+    regionalId: "G0040",
+    nomeRegional: "Regional de Viçosa",
+  },
+  {
+    unidadeEmpresaId: "H0714",
+    nomeMunicipio: "Vieiras",
+    municipioId: 846,
+    regionalId: "G0026",
+    nomeRegional: "Regional de Muriaé",
+  },
+];
+
+// This + sep_municipio table are the source of truth for the município and regional data
 const ger_und_empresa = [
   {
-    id_und_empresa: "H0349",
-    nm_und_empresa: "Viçosa",
+    id_und_empresa: "H0713",
     fk_municipio: 845,
+    nm_und_empresa: "Viçosa", // Get regional name. Only for "like 'G%'" id_und_empresa rows. nome_municipio is obtained from sep_municipio join.
     fk_und_empresa: "G0300",
-    sn_ativa: 1,
   },
-  {
-    id_und_empresa: "G0300",
-    nm_und_empresa: "SER Viçosa",
-    fk_municipio: null,
-    fk_und_empresa: null,
-    sn_ativa: 1,
-  },
+  // ...other rows not shown
 ];
 
-//----- LOOKUP: sep_municipio — FK target of ger_end_pessoa.fk_municipio (comes from input.municipioId)
+//----- FK target of ger_end_pessoa.fk_municipio (comes from input.municipioId). Fetched by client before mutation, create-dto will have this.
 const sep_municipio = [
-  { id_municipio: 845, nm_municipio: "Viçosa", fk_estado: 1 /* MG */ },
+  { id_municipio: 845, nm_municipio: "Viçosa", fk_estado: 1 /* MG */ }, // nome_municipio is obtained from this table
 ];
 
-//----- LOOKUP: sep_tpo_logradouro — fk_tpo_logradouro DERIVED from logradouro (rules in notes)
+//----- DO NOT LOOKUP: sep_tpo_logradouro — fk_tpo_logradouro will be DERIVED from logradouro normalize function (rules in notes)
 const sep_tpo_logradouro = [
   { id_tpo_logradouro: 1, ds_tpo_logradouro: "Rua" },
   { id_tpo_logradouro: 2, ds_tpo_logradouro: "Avenida" },
@@ -141,12 +154,12 @@ const sep_tpo_logradouro = [
   { id_tpo_logradouro: 8, ds_tpo_logradouro: "Sítio" },
 ];
 
-//----- LOOKUP: sep_distrito — near-empty in HMG (Jaíba, BH, Esmeraldas; ~10 rows) -> always null
+//----- IGNORE: sep_distrito — near-empty in HMG (Jaíba, BH, Esmeraldas; ~10 rows) -> always null
 const sep_distrito = [
   { id_distrito: 9, nm_distrito: "Venda Nova", fk_municipio: 66 },
 ];
 
-//----- LOOKUP: tipo_contato_pessoa
+//----- DONT LOOKUP: tipo_contato_pessoa — FK target of contato_pessoa.id_tipo_contato_pessoa, but we DERIVE this value from the input.telefone (rules in notes)
 const tipo_contato_pessoa = [
   { id_tipo_contato_pessoa: 1, descricao: "Comercial" },
   { id_tipo_contato_pessoa: 2, descricao: "Residencial" },
@@ -154,5 +167,5 @@ const tipo_contato_pessoa = [
   { id_tipo_contato_pessoa: 4, descricao: "Whatsapp" },
 ];
 
-//----- LOOKUP: operadora
+//----- IGNORE: operadora
 const operadora = [{ id_operadora: 1, nome: "Vivo" }];

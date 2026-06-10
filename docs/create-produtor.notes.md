@@ -17,12 +17,18 @@ Cheat-sheet tags:
 
 ## Fixed constants (authoritative)
 
-- `ger_pes_cat_ramo_relacao.fk_cat_pessoa = 35` ("Clientes").
-- `sub_categoria_pessoa_relacao.fk_sub_cat_pessoa = 11` ("Agroindústria").
+- `ger_pes_cat_ramo_relacao.fk_cat_pessoa = 39` ("Agricultor Familiar"). The
+  cheat sheet notes **35** ("Clientes") as a possible alternative — confirm
+  against the lookup table before first write.
+- `sub_categoria_pessoa_relacao.fk_sub_cat_pessoa = 1` ("Típico(a)").
+- `ger_end_pessoa.tp_endereco = 1`. Repo-supplied, never client input.
+- `ger_end_pessoa.fk_distrito = null` and `contato_pessoa.fk_operadora = null`
+  — `sep_distrito` and `operadora` are ignored lookups.
 
-All OTHER ids in the cheat sheet (municipio 845, tp_endereco 1, tipo_logradouro
-1, operadora 1, …) are ILLUSTRATIVE placeholders to show the row shape — confirm
-real ids against the lookup tables before using.
+All OTHER ids in the cheat sheet (municipio 845, tipo_logradouro 1, …) are
+ILLUSTRATIVE placeholders to show the row shape — `municipio_id` comes from
+the client's dropdown pick (`input.municipioId`); `tipo_logradouro` is derived
+from `logradouro`.
 
 ## Columns handled automatically (must NOT be sent)
 
@@ -52,17 +58,24 @@ real ids against the lookup tables before using.
 
 ## GET /api/getMunicipiosEmater
 
-One row per município (`ger_und_empresa` "H" rows), with its regional joined. The
-user picks one; `unidadeEmpresa` + `municipioId` go into the input, and the client
-keeps `regionalId`/`nomeRegional` for its own storage/filter. No server-side name
-matching, no nulls.
+One row per active município (`ger_und_empresa` "H" rows), inner-joined to
+`sep_municipio` (authoritative `nome_municipio`) and to its active "G" regional.
+The user picks one; `unidadeEmpresa` + `municipioId` go into the input, and the
+client keeps `regionalId`/`nomeRegional` for its own storage/filter. The INNER
+joins mean an H unit with no active G parent or no município name is omitted —
+no server-side name matching, no nulls in the result.
 
 ```sql
-SELECT h.id_und_empresa, h.nm_und_empresa AS nome_municipio, h.fk_municipio AS municipio_id,
+SELECT h.id_und_empresa, m.nm_municipio AS nome_municipio, h.fk_municipio AS municipio_id,
        h.fk_und_empresa AS regional_id, g.nm_und_empresa AS nome_regional
 FROM ger_und_empresa h
-LEFT JOIN ger_und_empresa g ON g.id_und_empresa = h.fk_und_empresa
-WHERE h.id_und_empresa LIKE 'H%' AND h.fk_municipio IS NOT NULL AND h.sn_ativa = 1;
+JOIN sep_municipio m ON m.id_municipio = h.fk_municipio
+JOIN ger_und_empresa g ON g.id_und_empresa = h.fk_und_empresa AND g.id_und_empresa LIKE 'G%'
+WHERE h.id_und_empresa LIKE 'H%'
+  AND h.fk_municipio IS NOT NULL
+  AND h.sn_ativa = 1 AND g.sn_ativa = 1
+  AND m.nm_municipio IS NOT NULL AND g.nm_und_empresa IS NOT NULL
+ORDER BY m.nm_municipio;
 ```
 
 `H%` rows = municípios (local units), `G%` rows = regionais. An H row's

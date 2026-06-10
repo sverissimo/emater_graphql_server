@@ -1,101 +1,85 @@
 # Produtor Create Mutation Plan
 
-Add a **create-only** `createProdutor` GraphQL mutation plus the additive `GET /api/getMunicipiosEmater` lookup route needed to populate its unit selector. There is no REST producer-create route, update, or delete. The mutation inserts a `ger_pessoa` (the `Produtor` model) row plus related rows in one nested write, mirroring the existing `AtendimentoRepository.create` pattern.
+Add a **create-only** `createProdutor` GraphQL mutation plus the additive `GET /api/getMunicipiosEmater` lookup route needed to populate its unit selector. There is no REST producer-create route, update, or delete. The mutation inserts a `ger_pessoa` (the `Produtor` model) row plus related rows in one nested write, mirroring `AtendimentoRepository.create`.
 
-**Decisions (from the requester):**
+## Decisions
 
-- **Surface:** GraphQL for producer creation plus one new read-only REST lookup route. There is no `/api/*` producer-create route. Creation matches the `atendimento` / `perfil` mutation precedent; `GET /api/getMunicipiosEmater` matches the existing enum lookup routes.
-- **Write scope:** **three to five rows** per create. `ger_pessoa` + the two fixed categoria rows (`ger_pes_cat_ramo_relacao`, `sub_categoria_pessoa_relacao`) are written on **every** call; only **`endereco` and `telefone` are optional** (a producer with no address/phone is valid).
-- **At most ONE address and ONE phone per producer through this gateway.** The DB tables (`ger_end_pessoa`, `contato_pessoa`) are 1:N, but this gateway deliberately accepts only a single address and a single phone. Anyone needing multiple goes through a different interface or writes the DB directly. So the input carries **single values, not arrays**: one optional `endereco: EnderecoInput` object, and `telefone` as a **plain optional scalar** on the root (see next point). No arrays anywhere.
-- **`telefone` is a flat scalar, not an object.** Every derivable sub-field collapses, so no `TelefoneInput` is justified: `principal` is always `true` (it's the only phone), `fk_operadora` is always `null` (not collected), and `id_tipo_contato_pessoa` is **derived by the repo from the number**, not entered by the client. So the SDL exposes just `telefone: String` on the root; the repo builds the `contato_pessoa` row from it.
-- **Município/unit is chosen client-side from an authoritative dropdown, then validated and resolved server-side by unit id.** `GET /api/getMunicipiosEmater` serves active EMATER local units — `ger_und_empresa` **H rows** — with their municipality and regional metadata. The client sends only `unidadeEmpresa` (`id_und_empresa`). The repository performs one deterministic lookup by that unique id, verifies it is an active H unit with a non-null municipality, and derives `municipioId` from the row. The client cannot submit mismatched unit/municipality ids. There is no fuzzy name matching.
-- **The `ger_und_empresa` H/G hierarchy** is confirmed in shipped code (`getRegionaisEmater` in `src/repositories/EnumPropsRepository.ts`; the `ger_und_empresa → ger_und_empresa` self-relation walk in `ProdutorRepository.findMany` and `PropriedadeRepository`): rows whose `id_und_empresa` starts with **`H`** are local units (one per município); rows starting **`G`** are regionais. An H row's `fk_und_empresa` points to its G regional; a G row's `fk_und_empresa` is null. The dropdown endpoint lists H rows and self-joins to G for the regional name (see "Município dropdown endpoint").
-- **`EnderecoInput` stays a nested object but holds only street-level fields.** ~6 independent user-filled fields (`tpEndereco`, `logradouro`, `numero`, `complemento`, `bairro`, `cep`); a named sub-object beats prefixing them onto the root. **Município is NOT inside it** — the repository derives it from the top-level `unidadeEmpresa`. `fk_tpo_logradouro` is **derived** (next point), not sent. `fk_distrito` is dropped (the `sep_distrito` table is near-empty — ~10 rows in hmg — not worth a client field; left null).
-- **`fk_tpo_logradouro` is derived from the `logradouro` string** by a pure normalize function (see "Tipo logradouro normalization"), not client input — same pattern as the derived contact type. Null when nothing matches (the column is nullable).
-- **`fk_cat_pessoa` and `fk_sub_cat_pessoa` are fixed constants, not client input.** Use categoria **64** (`Organização`) and subcategoria **11** (`Agroindústria`). The lookup data associates subcategoria 11 with categoria 64, so this is the internally consistent pair; the earlier `35/11` pair crossed category hierarchies. Define the constants once in the produtor module and write both rows on every create.
-- **The mutation returns just the new id (`BigInt!`).** The client already holds the municipality/regional metadata from the dropdown selection, so `createProdutor` need not echo it back — it returns the new `id_pessoa_demeter`. The downstream app persists the regional it already has; that storage is out of scope.
-- **Schema source:** `prisma db pull` (introspection), not hand-copied models. See "Schema work" — this is the load-bearing prerequisite.
-- **Client-facing contract is a clean, flat domain input — the DB-table mess stays hidden.** The client provides plain producer fields (`nome`, `cpf`, `email`, `dataNascimento`, `telefone`, one optional `endereco { … }`) plus the selected `unidadeEmpresa`. It never sees `ger_*` / `contato_pessoa` / `sep_*` table names, `fk_*` columns, `id_sincronismo`, or the nested layout. The repository validates the selected unit, derives its municipality, explicitly maps domain names to Prisma columns, injects the categoria/subcategoria constants, derives contact type and tipo-logradouro, sets `dt_update_record`, and lets Prisma wire `fk_pessoa`/`id_pessoa`.
+- **Surface:** GraphQL for producer creation + one new read-only REST lookup. No `/api/*` producer-create route.
+- **Write scope:** 3–5 rows per create. `ger_pessoa` + two fixed categoria rows (`ger_pes_cat_ramo_relacao` cat=39, `sub_categoria_pessoa_relacao` subcat=1) on every call; `ger_end_pessoa` and `contato_pessoa` optional (a producer with no address/phone is valid).
+- **At most one address and one phone per producer through this gateway.** Tables are 1:N at the DB; the SDL accepts a single optional `endereco` object and a single optional `telefone` scalar — no arrays.
+- **`telefone` is a flat scalar.** `principal = true` (only phone), `fk_operadora = null`, `id_tipo_contato_pessoa` derived from the number by the repo.
+- **Município chosen via `GET /api/getMunicipiosEmater`; client sends BOTH `unidadeEmpresa` (the H row's `id_und_empresa`) AND `municipioId` (the H row's `fk_municipio`).** The repo validates the unit, then **cross-checks `municipioId === unidade.fk_municipio`** — mismatch → logged + `null` (silent failure). The dropdown returns both ids paired; the client just passes them through.
+- **`EnderecoInput`** holds street-level fields only: `logradouro`, `numero`, `complemento`, `bairro`, `cep`. `tp_endereco` is a fixed constant (see below). `fk_tpo_logradouro` is derived from `logradouro`. `fk_distrito` is always null — see "Ignored lookup tables."
+- **`tp_endereco = 1`** is a fixed constant on every `ger_end_pessoa` insert. Not in the SDL, not client input.
+- **`fk_cat_pessoa = 39` (Agricultor Familiar)** and **`fk_sub_cat_pessoa = 1` (Típico(a))** are fixed constants written on every create. Per-env id verification: see "Lookup ID verification."
+- **Ignored lookup tables:** `operadora`, `sep_distrito`, `spa_meta_categoria_municipio` are not modeled, not queried, never referenced. FK columns on our INSERT targets that point to them (`contato_pessoa.fk_operadora`, `ger_end_pessoa.fk_distrito`) are always written as `NULL`. `spa_meta_categoria_municipio` has no FK from any INSERT target — purely irrelevant. This drops three models from the introspection / hand-add scope.
+- **Mutation returns nullable `BigInt`** — success → the new `id_pessoa_demeter`; any failure → `null`. See "Error handling and logging (silent failure)."
+- **Error handling: silent failure (business rule).** Every failure logs exactly once via Winston and returns `null` — no `GraphQLError`, no `extensions.code`, no leaked detail. Validation, unit/município mismatch, duplicate CPF, and Prisma errors all converge to log-and-`null`. Malformed input is guarded upstream (frontend + calling backend); the repo's checks are defensive.
+- **Schema source: `prisma db pull`** (introspection), not hand-copied models. See "Schema work."
+- **Client-facing contract is a flat domain input.** The repo maps domain fields to Prisma column names; the client never sees `ger_*` / `contato_pessoa` / `sep_*` table names, `fk_*` columns, `id_sincronismo`, or nested layout.
+- **Duplicate-CPF behavior:** non-idempotent; logs once and returns `null`. See "Idempotency / retry contract."
+- **Auth `service` claim handling:** see "Auth `service` claim."
+
+The `ger_und_empresa` H/G hierarchy (H = local unit per município, G = regional, `H.fk_und_empresa → G`) is already used by `getRegionaisEmater` and the self-relation walks in `ProdutorRepository.findMany` / `PropriedadeRepository`.
+
+## Contract-safety constraint
+
+Per AGENTS.md "Contract stability," this change must be **purely additive with zero side effects on existing routes/resolvers**:
+
+- `produtorResolver` is consumed by `src/schema/resolvers.ts`. Adding a `Mutation` key must not alter the existing `Query` / `Produtor` resolvers, their shapes, or behavior.
+- `ProdutorRepository` is shared by produtor queries. Replacing the unused `create` stub must not touch `findOne` / `findAll` / `findMany` / `findManyMinimal` / `getUnidadeEmpresa`.
+- SDL additions (new `Mutation` + `*Input` types) and Prisma schema growth (new models + generated back-relations on existing models) are additive — no existing field, type, query, route, status code, or scalar serialization changes.
+- Grep `/home/apps/*` + `/home/pnae/*` for the new names (`createProdutor`, `getMunicipiosEmater`) before committing — already confirmed empty.
 
 ## Insert targets vs. lookup tables
 
-Up to five tables receive inserts on a create:
+Up to five tables receive inserts:
 
-| Table | Prisma model | Relation to `ger_pessoa` | Notes |
-| --- | --- | --- | --- |
-| `ger_pessoa` | `Produtor` (`@@map("ger_pessoa")`) | — (root) | Already in `prisma/schema.prisma`. PK `id_pessoa_demeter` is `@default(autoincrement())`. |
-| `ger_end_pessoa` | `ger_end_pessoa` | `fk_pessoa → id_pessoa_demeter`, `onDelete: Cascade` | **Missing** from schema. Address. |
-| `ger_pes_cat_ramo_relacao` | `ger_pes_cat_ramo_relacao` | `fk_pessoa → id_pessoa_demeter`, `onDelete: Cascade` | Already in schema. Categoria/ramo. |
-| `sub_categoria_pessoa_relacao` | `sub_categoria_pessoa_relacao` | `fk_pessoa → id_pessoa_demeter`, `onDelete: Cascade` | **Missing** from schema. Subcategoria. |
-| `contato_pessoa` | `contato_pessoa` | `id_pessoa → id_pessoa_demeter`, `onDelete: NoAction` | **Missing** from schema. Phone/contact. |
+| Table                          | Prisma model                   | Relation to `ger_pessoa` | Notes                                                    |
+| ------------------------------ | ------------------------------ | ------------------------ | -------------------------------------------------------- |
+| `ger_pessoa`                   | `Produtor`                     | — (root)                 | Already in schema. PK `id_pessoa_demeter` autoincrement. |
+| `ger_end_pessoa`               | `ger_end_pessoa`               | `fk_pessoa`, Cascade     | **Missing**. Address.                                    |
+| `ger_pes_cat_ramo_relacao`     | `ger_pes_cat_ramo_relacao`     | `fk_pessoa`, Cascade     | Already in schema.                                       |
+| `sub_categoria_pessoa_relacao` | `sub_categoria_pessoa_relacao` | `fk_pessoa`, Cascade     | **Missing**.                                             |
+| `contato_pessoa`               | `contato_pessoa`               | `id_pessoa`, NoAction    | **Missing**. Phone.                                      |
 
-The remaining tables the missing models reference are **lookup / read-only** — the create never inserts into them, it only references their existing rows by FK id:
+Tables we don't insert into, by how this mutation actually treats them:
 
-- `ger_cat_pessoa`, `sub_categoria_pessoa` (categoria/subcategoria dictionaries)
-- `sep_tpo_logradouro`, `sep_distrito` (address dictionaries; `sep_municipio` → the existing `Municipio` model)
-- `operadora`, `tipo_contato_pessoa` (contact dictionaries)
-- `spa_meta_categoria_municipio` (referenced transitively by `ger_cat_pessoa`)
+- **Read at runtime** (the create path or the dropdown endpoint queries them): `sep_municipio`, `ger_und_empresa`.
+- **Referenced as fixed/derived constants, never queried here:** `ger_cat_pessoa`, `sub_categoria_pessoa`, `sep_tpo_logradouro`, `tipo_contato_pessoa`.
+- **Ignored entirely** (not read, not written; FK columns pointing to them are saved `NULL`): `operadora`, `sep_distrito`, `spa_meta_categoria_municipio`.
 
-This matches the requester's read of the tables. The plan treats them as lookups: present in the schema so relations validate, never written by `createProdutor`.
+## Schema work
 
-## Schema work — the real prerequisite
+1. **Schema-parity check across environments** — before running `db pull`, confirm dev/hmg/prod Demeter share the same shape for the insert targets and their lookups (`\d ger_pessoa`, `\d ger_end_pessoa`, etc., on each DB). Drift between envs would cause introspection to capture one env's reality and break the others at runtime.
+2. **`npx prisma db pull`** (only with explicit user instruction per AGENTS.md). Review the diff against the five insert targets + their lookups. Expect generated back-relation fields on `Produtor`, `Municipio`, `Propriedade`, and `ger_und_empresa` — additive, none GraphQL-visible.
+3. **Verify `fk_pessoa` / `id_pessoa` are `BigInt`** on the new child models (not `Int`, as the stale `db/custom-schema.prisma` snapshot shows). A scalar-type mismatch against `Produtor.id_pessoa_demeter` (BigInt) fails Prisma validation outright.
+4. **`npx prisma generate`**. Confirm the new delegates exist (`prisma.ger_end_pessoa`, `prisma.sub_categoria_pessoa_relacao`, `prisma.contato_pessoa`) and that `npx tsc --noEmit` passes.
 
-The three models the requester pasted (`ger_end_pessoa`, `sub_categoria_pessoa`, `contato_pessoa`) do **not** stand alone. Their relation fields reference tables that are themselves absent from `prisma/schema.prisma`, and adding them by hand cascades:
-
-- `ger_end_pessoa` → `sep_tpo_logradouro`, `sep_distrito` (both missing)
-- `sub_categoria_pessoa` → `ger_cat_pessoa` (missing) → `spa_meta_categoria_municipio` (missing, a 10th table)
-- `contato_pessoa` → `operadora`, `tipo_contato_pessoa` (both missing)
-- `sub_categoria_pessoa_relacao` (the 4th write target, **also missing**, body in `db/custom-schema.prisma`) → `sub_categoria_pessoa`
-
-Worse, three of the missing lookups carry **back-relation arrays into models already in the live schema**, so adding them by hand also means editing existing models:
-
-- `sep_tpo_logradouro` and `sep_distrito` both declare `pl_propriedade pl_propriedade[]` → the `Propriedade` model would need reciprocal relation fields. Today `Propriedade.id_distrito` / `id_tipo_logradouro` are **plain `Int?` scalars, not relations**.
-- `sep_distrito` declares `sep_municipio sep_municipio?` → the `Municipio` model (`@@map("sep_municipio")`) would need a `sep_distrito[]` back-relation it does not currently have.
-- `sep_tpo_logradouro` declares `ger_und_empresa ger_und_empresa[]` → `ger_und_empresa` would need a reciprocal field.
-
-Hand-copying ~10 models and patching reciprocal relations on three existing models is error-prone and drifts from the real DB. **The correct path is introspection**, which the requester already has tooling for (`db/custom-schema.prisma` is a prior full `db pull`, the source of truth for all these bodies):
-
-1. **Wait for the prod DB user's grants** (see prerequisites) so introspection sees the same tables in every environment, then run **`npx prisma db pull`**. This resolves the entire FK graph in one consistent pass — no dangling relations, reciprocal fields generated automatically. **Per AGENTS.md, `db pull` runs only with explicit user instruction and the diff needs human review** — the requester drives the actual command and reviews the diff; this plan does not run it.
-2. **Review the introspection diff** against the five insert targets + their lookups. Expect: the missing models added, plus generated back-relation fields on `Produtor` (`ger_end_pessoa[]`, `sub_categoria_pessoa_relacao[]`, `contato_pessoa[]`), `Municipio`, `Propriedade`, and `ger_und_empresa`. None of these are GraphQL-visible, so the published GraphQL contract is untouched.
-3. **Hard gate — re-verify FK scalar types against the freshly pulled `schema.prisma`, do not trust `db/custom-schema.prisma` for column types.** That file is a **stale snapshot** and is already known to disagree with the live schema on the parent FK type: it renders `ger_pes_cat_ramo_relacao.fk_pessoa`, `sub_categoria_pessoa_relacao.fk_pessoa`, and `contato_pessoa.id_pessoa` as **`Int` / `Int?`**, but `Produtor.id_pessoa_demeter` is **`BigInt`** and the *current* `prisma/schema.prisma` already carries `ger_pes_cat_ramo_relacao.fk_pessoa` as **`BigInt`**. A relation whose scalar FK type differs from the referenced PK type (`Int` → `BigInt`) **fails Prisma validation**, so the real introspection must render these FKs as `BigInt` to compile. After `db pull`, confirm every `fk_pessoa` / `id_pessoa` on the new child models matches `Produtor.id_pessoa_demeter` (`BigInt`). The nested `create` doesn't set these FKs directly (Prisma wires them), so this is a *schema-validity* check, not a write-payload concern — but a stale `Int` would break `prisma generate` outright.
-4. **`npx prisma generate`** to refresh the client in `src/generated/prisma` (allowed by AGENTS.md). Confirm the new delegates exist: `prisma.ger_end_pessoa`, `prisma.sub_categoria_pessoa_relacao`, `prisma.contato_pessoa`, and that the project type-checks (`npx tsc --noEmit`).
-
-> If introspection is not viable when this is built, the fallback is to hand-add every model from `db/custom-schema.prisma` (all ~10, including the reciprocal relation fields on existing models) — but introspection is strongly preferred and is the requester's stated approach. **If hand-adding, fix the `fk_pessoa`/`id_pessoa` types to `BigInt` to match `Produtor.id_pessoa_demeter`** (the snapshot's `Int` will not validate).
+If introspection isn't viable, hand-add only the models this mutation actually needs (**~7**, down from the original ~10 — the three ignored lookups `operadora` / `sep_distrito` / `spa_meta_categoria_municipio` are no longer added): the three missing insert targets (`ger_end_pessoa`, `sub_categoria_pessoa_relacao`, `contato_pessoa`) plus the kept lookups they relate to (`sep_tpo_logradouro`, `sub_categoria_pessoa`, `ger_cat_pessoa`, `tipo_contato_pessoa`). Patch reciprocal relation fields on `Propriedade` / `Municipio` / `ger_und_empresa`, and **fix `fk_pessoa` / `id_pessoa` to `BigInt`**. Introspection is strongly preferred. See Appendix A for the full dependency graph and FK-type gotcha.
 
 ## Column handling on insert
 
-`prisma db pull` faithfully renders Postgres `DEFAULT` clauses as `@default(...)`. The rule for what the write must supply (per the requester's #4: ignore nullables, care only about what breaks the INSERT): a column is **must-fill** when it is **required (Prisma type has no `?`) AND has no `@default`**. Everything nullable, defaulted, autoincrement, or set by Prisma's nested write is left alone.
+A column is **must-fill** when its Prisma type has no `?` AND no `@default`. Re-confirm against the post-`db pull` `schema.prisma` and a live hmg insert before enabling writes.
 
-**Must-fill columns per insert target** (required, no `@default`; derived from the introspected bodies — re-confirm post-`db pull`). Split into what the **write must supply internally** (repo-generated, never in the client SDL) vs. what is **derived from client input**:
+| Table                          | Repo supplies (not in SDL)                                                                                                              | Derived from client input                                  | Handled automatically                     |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------- |
+| `ger_pessoa`                   | `id_und_empresa`; `dt_update_record` (`new Date()`)                                                                                     | domain scalars (`nm_pessoa`, normalized `nr_cpf_cnpj`, …)  | PK; `id_sincronismo`; `sn_ativo`, `senha` |
+| `ger_end_pessoa` _(opt)_       | `id_und_empresa`; `dt_update_record`; `fk_pessoa`; **`tp_endereco = 1`**; `fk_tpo_logradouro` (derived); `fk_distrito = null`           | `logradouro`, `numero`, `complemento`, `bairro`, `cep`; `fk_municipio` (= `input.municipioId`) | PK; `id_sincronismo`                      |
+| `ger_pes_cat_ramo_relacao`     | `id_und_empresa`; `dt_update_record`; `fk_pessoa`; **`fk_cat_pessoa = 39`**                                                             | —                                                          | PK; `id_sincronismo`                      |
+| `sub_categoria_pessoa_relacao` | `id_und_empresa`; `dt_update_record`; `fk_pessoa`; **`fk_sub_cat_pessoa = 1`**                                                          | —                                                          | PK; `id_sincronismo`                      |
+| `contato_pessoa` _(opt)_       | `id_und_empresa`; `id_pessoa`; `principal = true`; `id_tipo_contato_pessoa` (derived); `fk_operadora = null`                            | normalized `telefone`                                      | PK; `id_sincronismo`                      |
 
-| Table | Repo supplies (not in SDL) | Derived from client input | Handled automatically (omitted) |
-| --- | --- | --- | --- |
-| `ger_pessoa` | `dt_update_record` (`new Date()`) | the producer's domain scalars (`nm_pessoa`, `nr_cpf_cnpj`, …) | PK `id_pessoa_demeter` (autoincr); `id_sincronismo` (DB default); `sn_ativo`, `senha` (`@default`) |
-| `ger_end_pessoa` *(≤1, optional)* | `dt_update_record`; `fk_pessoa` (nested write); `fk_municipio` (derived from selected unit); `fk_tpo_logradouro` (derived from `logradouro`); `id_und_empresa` | `tp_endereco`, `logradouro`, `numero`, `complemento`, `bairro`, `cep` | PK (autoincr); `id_sincronismo` (DB default); `fk_distrito` left null |
-| `ger_pes_cat_ramo_relacao` | `dt_update_record`; `fk_pessoa` (nested write); **`fk_cat_pessoa = 64`** (fixed) | — (no client input) | PK (autoincr); `id_sincronismo` (DB default) |
-| `sub_categoria_pessoa_relacao` | `dt_update_record`; `fk_pessoa` (nested write); **`fk_sub_cat_pessoa = 11`** (fixed) | — (no client input) | PK (autoincr); `id_sincronismo` (DB default) |
-| `contato_pessoa` *(≤1, optional)* | `id_pessoa` (nested write); `principal = true` (const); `id_tipo_contato_pessoa` (**derived from the number**) | `telefone` (flat scalar) | PK (autoincr); `id_sincronismo` (DB default); `fk_operadora` left null; all other columns nullable |
-
-The two categoria rows (`ger_pes_cat_ramo_relacao` = 64, `sub_categoria_pessoa_relacao` = 11) are written on **every** create with fixed constants — they are not optional and not client-supplied.
-
-`dt_update_record` is **never exposed in the SDL or DTO** — the repo sets it with `new Date()` on the root row and every child row that has the column. (This resolves the earlier ambiguity: the *write* must provide it; the *client* does not.)
-
-Notes on the recurring columns:
-
-- **`dt_update_record`** — required `DateTime @db.Timestamp(6)` with **no `@default`** on all four targets that have the column (`ger_pessoa`, `ger_end_pessoa`, `ger_pes_cat_ramo_relacao`, `sub_categoria_pessoa_relacao`). Postgres rejects an insert that omits it (confirmed: column is `timestamp(6)`, NOT NULL, default `(NULL)`). **The write sets it explicitly** (`new Date()`) on the root row and each such child row. This is the one column where the requester's "Postgres handles it" assumption does **not** hold.
-- **`id_sincronismo`** — `@default(dbgenerated("(uuid_generate_v4())::character varying(36)"))` everywhere it exists. **Postgres fills it; the write omits it.** (Confirmed against the live column.)
-- **`tp_endereco`** (`ger_end_pessoa`, SmallInt, required, no default) — must come from the caller when an address block is sent. It's an address-type discriminator; the caller supplies it (no lookup needed).
-- **`fk_pessoa` / `id_pessoa`** (parent FK on every child) — **set by Prisma's nested `create`**, never by the caller/DTO.
-- **`contato_pessoa` has no `dt_update_record`**; its timestamp is `data_atualizacao DateTime?` (nullable, no default), so the mutation leaves it unset. The client provides only `telefone`; the repo supplies `principal`, `id_tipo_contato_pessoa`, `fk_operadora`, and `id_und_empresa`.
-- **`id_und_empresa`** — from the required client `unidadeEmpresa` selection, written to every table's `id_und_empresa` column. The repository rejects an unknown, inactive, non-H, or municipality-less unit before the nested write.
-
-> When building, re-confirm this must-fill set against the **post-`db pull` `schema.prisma`** (not just `db/custom-schema.prisma`) in case the introspection differs, and against the live DB the first time a write is tested.
+- `dt_update_record` is **never in the SDL or DTO** — the repo sets it on the root and every child that has the column (not `contato_pessoa`, which has none).
+- `id_sincronismo` is `@default(dbgenerated(...))` everywhere — Postgres fills it.
+- **`id_und_empresa` is written to every inserted row** from `input.unidadeEmpresa` (after unit validation). Listed explicitly per row above to avoid the easy miss.
+- `fk_municipio` comes from `input.municipioId`, cross-checked against the validated unit's `fk_municipio` (see "Município dropdown endpoint"). The unit lookup is still required for the active-H / active-G / non-null-`fk_municipio` invariants; only the source of `fk_municipio` itself changed from "derived" to "client input + cross-check."
 
 ## Município dropdown endpoint (`GET /api/getMunicipiosEmater`)
 
-The client populates a **município select box** from this new endpoint, then sends the chosen `id_und_empresa` as `unidadeEmpresa` into `createProdutor`. The repository resolves `fk_municipio` from that exact unit row. This preserves the unit/municipality pairing even if a caller bypasses the intended UI.
+The client populates a município select box from this endpoint, then sends **both** the chosen `id_und_empresa` (as `unidadeEmpresa`) and the row's `fk_municipio` (as `municipioId`) into `createProdutor`. The repository validates the unit and cross-checks the município against it, preserving the unit/município pairing even if a caller bypasses the intended UI.
 
-It's a sibling of the existing `getRegionaisEmater` ([`src/repositories/EnumPropsRepository.ts`](../../src/repositories/EnumPropsRepository.ts)), mounted in [`src/routes/enumRoutes.ts`](../../src/routes/enumRoutes.ts) (REST `/api/*` lookup surface — symmetric with how regionais are already served). New method `getMunicipiosEmater()` on `EnumPropsRepository`:
+Sibling of `getRegionaisEmater` in `src/repositories/EnumPropsRepository.ts`, mounted in `src/routes/enumRoutes.ts`. New method `getMunicipiosEmater()`:
 
 ```sql
 SELECT h.id_und_empresa, m.nm_municipio AS nome_municipio,
@@ -106,104 +90,176 @@ JOIN sep_municipio m ON m.id_municipio = h.fk_municipio
 JOIN ger_und_empresa g
   ON g.id_und_empresa = h.fk_und_empresa
  AND g.id_und_empresa LIKE 'G%'
-WHERE h.id_und_empresa LIKE 'H%'        -- local units = municípios
-  AND h.fk_municipio IS NOT NULL        -- exclude units that can't anchor an address
-  AND h.sn_ativa = 1                    -- active only
-  AND g.sn_ativa = 1                    -- complete, active regional metadata
-ORDER BY h.nm_und_empresa;
+WHERE h.id_und_empresa LIKE 'H%'
+  AND h.fk_municipio IS NOT NULL
+  AND h.sn_ativa = 1
+  AND g.sn_ativa = 1
+  AND m.nm_municipio IS NOT NULL
+  AND g.nm_und_empresa IS NOT NULL
+ORDER BY m.nm_municipio;
 ```
 
-Each row gives the client everything for one option: `id_und_empresa` (the only id sent into the mutation), authoritative `municipio_id` + `nome_municipio` from `sep_municipio`, and non-null `regional_id` + `nome_regional` from the active G parent. `JOIN`, rather than `LEFT JOIN`, keeps incomplete hierarchy rows out of the selector.
+`H%` (starts-with) is intentional — `getRegionaisEmater` uses `%G%` and stays untouched (published contract). `fk_municipio IS NOT NULL` removes the NOT-NULL-município trap from the create path.
 
-**Two data gotchas, both addressed above:**
-- **`H%` (starts-with), not `%H%`/`%G%`.** The confirmed convention is H for local units and G for regionals. The existing `getRegionaisEmater` uses `LIKE '%G%'`; **do not change it** because it is a published REST contract. The new endpoint uses the tighter prefix checks.
-- **`fk_municipio IS NOT NULL`** filters out H rows with no município (the column is nullable on `ger_und_empresa`), so every selectable option yields a valid `municipioId` — this is what removes the old NOT-NULL-município trap from the create path.
+**Deterministic unit validation + município cross-check in the create.** Before writing:
+1. Query the selected unit with the same invariants (`H%`, active, non-null `fk_municipio`, active G parent). No match → logged + `null` (silent).
+2. Assert `input.municipioId === unidade.fk_municipio`. Mismatch → logged + `null` (silent).
 
-**Deterministic unit validation in the create.** Before writing, query the selected unit by `id_und_empresa` with the same invariants used by the endpoint (`H%`, active, non-null `fk_municipio`, active G parent). No match returns `BAD_REQUEST`. The resolved `fk_municipio` is then used for `ger_end_pessoa` whenever `endereco` is present.
+The validated `municipioId` is then used as `ger_end_pessoa.fk_municipio` when `endereco` is present.
+
+## Input validation at the API boundary
+
+Malformed input is already guarded upstream (frontend + calling-backend validators), so the resolver's checks here are **defensive**: they normalize, and on the rare bad payload that slips through they fail **silently** (log once, return `null` — see "Error handling and logging (silent failure)"). No `GraphQLError`, no `BAD_REQUEST`. The DTO is a shape contract, not a validator.
+
+- **CPF normalization (transform, always runs)** — strip formatting (`.` `-` spaces) and **store the normalized digits**; never the formatted form. Without this, `"111.222.333-44"` and `"11122233344"` are distinct values and the unique constraint on `nr_cpf_cnpj` doesn't help. This is a transform, not a throwing validator — it runs on every call.
+- **Defensive checks** — CPF length/check-digits; max-length bounds on bounded `String` columns (`nm_pessoa`, `email`, `identidade`, `tp_sexo`, `ds_logradouro`, `nr_logradouro`, `ds_complemento`, `bairro`, `cep`; lengths from the post-`db pull` `@db.VarChar(N)`); blank `""` on required fields; non-empty `unidadeEmpresa`; positive-Int `municipioId`. If any fails, the create aborts with **no insert** and returns `null` (logged). These guard against Postgres P2000 truncation and bad data, but the caller sees only `null`.
+- **`municipioId`** is cross-checked against the validated unit's `fk_municipio` in the repo (see "Município dropdown endpoint"); on mismatch it also returns `null` silently.
+
+## Lookup ID verification
+
+Categoria **39** (Agricultor Familiar), subcategoria **1** (Típico(a)), contact types 1 (Comercial) / 3 (Celular), `tp_endereco = 1`, and the eight `sep_tpo_logradouro` ids are encoded as constants. These ids are stable but not guaranteed identical across dev/hmg/prod.
+
+- **Deployment-time check, not boot-time.** A one-shot SQL assertion run before enabling writes in a new environment confirms each id resolves to the expected label (e.g. `SELECT id_cat_pessoa, ds_cat_pessoa FROM ger_cat_pessoa WHERE id_cat_pessoa = 39;`, the analogous queries for the other constants). Failing the shared gateway at boot because a lookup id drifted would take down every consumer for an issue unrelated to most of their traffic.
+- Document the expected `(id, label)` pairs in the produtor module alongside the constants so the assertion is reproducible.
+- **Open ambiguity on `fk_cat_pessoa`:** the cheat sheet pins **39 ("Agricultor Familiar")** but notes **35 ("Clientes")** as a possible alternative. Confirm the intended value against the lookup table during the deployment-time check before first write; if it should be 35, the change is a one-line constant flip.
 
 ## Tipo logradouro normalization (`fk_tpo_logradouro`)
 
-`fk_tpo_logradouro` is **derived** from the `logradouro` string by a pure, DB-free function — not client input (the column is nullable, so a non-match is fine). Put it in a new module-scoped mapper `src/modules/produtor/ProdutorDataMapper.ts` (matching the existing `UsuarioDataMapper.ts` convention) **alongside the phone-type derivation** — both are "derive a stable lookup id from free text," so they cohere in one file. Returns the `sep_tpo_logradouro.id_tpo_logradouro` or `null`.
+Derived from the `logradouro` string by a pure function in `src/modules/produtor/ProdutorDataMapper.ts` (matches the existing `UsuarioDataMapper.ts` convention). Returns the `sep_tpo_logradouro.id_tpo_logradouro` or `null` (column is nullable).
 
-The ids are the stable `sep_tpo_logradouro` PKs (from the DB): **1** Rua, **2** Avenida, **3** Praça, **4** Rodovia, **5** Alameda, **6** Beco, **7** Travessa, **8** Sítio.
+IDs: **1** Rua, **2** Avenida, **3** Praça, **4** Rodovia, **5** Alameda, **6** Beco, **7** Travessa, **8** Sítio.
 
-Rules — **all case-insensitive**:
-1. **Full-word prefix**: string starts with a `ds_tpo_logradouro` word → that id (`Rua …`→1, `Avenida …`→2, `Praça …`→3, `Rodovia …`→4, `Alameda`→5, `Beco`→6, `Travessa`→7, `Sítio`/`Sitio`→8).
-2. **Abbreviations**: `R.`→1; `Av ` / `Av.`→2; `Rod.`→4; `Pç`→3.
-3. **Highway pattern**: `BR`, `MG`, `LMG`, or `AMG` followed by an optional `-`/space/nothing then a digit (`BR-040`, `MG 050`, `LMG808`, `AMG-123`) → 4.
-4. **No match → null.**
+Rules — all case-insensitive:
 
-**Precedence**: test the most specific tokens first so `Av.` and `Avenida` both land on 2; a lone `R`/`A` with no dot must **not** match. Keep the full original string in `ds_logradouro` (`"Rua das Hortas"`), preserving user data; normalization derives only the lookup id.
+1. Full-word prefix: `Rua …`→1, `Avenida …`→2, `Praça …`→3, `Rodovia …`→4, `Alameda`→5, `Beco`→6, `Travessa`→7, `Sítio` / `Sitio`→8.
+2. Abbreviations: `R.`→1; `Av ` / `Av.`→2; `Rod.`→4; `Pç`→3.
+3. Highway pattern: `BR`, `MG`, `LMG`, or `AMG` followed by optional `-`/space/nothing then a digit → 4.
+4. No match → null.
 
-The repo calls this when building `ger_end_pessoa`: `fk_tpo_logradouro: tipoLogradouro(endereco.logradouro)`.
+Test specific tokens first so `Av.` and `Avenida` both land on 2; a lone `R`/`A` with no dot must not match. Keep the full original string in `ds_logradouro`.
 
 ## Phone normalization and contact type
 
-`telefone` is optional, but when supplied it has a strict wire contract:
+`telefone` is optional, but when supplied it has a strict wire contract validated at the API boundary:
 
-1. Accept digits with optional common formatting (`()`, spaces, `-`, leading `+55`). Reject letters and unsupported punctuation rather than silently deleting them.
-2. Strip formatting. Strip country code `55` only when the resulting digit string starts with `55` **and has 12 or 13 digits**; a local 10/11-digit number whose DDD is `55` must remain intact.
-3. Require exactly **10 or 11 digits including the two-digit DDD**. Anything else returns `BAD_REQUEST`; an invalid supplied phone is not silently omitted.
-4. Store only the normalized digits. This fits `contato_pessoa.telefone @db.Char(11)`.
-5. The mobility digit is `digits[2]`, the first digit after the DDD. Map `7`, `8`, or `9` to contact type **3** (`Celular`); otherwise map to **1** (`Comercial`).
+1. Accept digits with optional common formatting (`()`, spaces, `-`, leading `+55`). Reject letters / unsupported punctuation.
+2. Strip formatting. Strip country code `55` only when the resulting digit string starts with `55` **and has 12 or 13 digits**; a local 10/11-digit number whose DDD is `55` stays intact.
+3. Require exactly 10 or 11 digits including the two-digit DDD. A malformed/blank `telefone` that slips past the upstream guards fails **silently** (log once, return `null`) — never a surfaced error. (Phone is optional; an *omitted* `telefone` is fine and just skips `contato_pessoa`.)
+4. Store only normalized digits (`contato_pessoa.telefone @db.Char(11)`).
+5. Mobility digit is `digits[2]`. `7`, `8`, or `9` → contact type **3** (Celular); otherwise **1** (Comercial).
 
-Keep normalization and type derivation as pure functions in `ProdutorDataMapper.ts`. Add `src/modules/produtor/ProdutorDataMapper.test.ts` using `node:test` + `node:assert/strict`; this repo has no configured test framework, so run it directly with `node --import tsx --test src/modules/produtor/ProdutorDataMapper.test.ts`. Cover 10-digit landline, 11-digit mobile, formatted mobile, `+55` mobile, DDD 55 without country-code stripping, unsupported characters, and invalid lengths.
+Keep normalization and type derivation as pure functions in `ProdutorDataMapper.ts`.
+
+## Idempotency / retry contract
+
+**The mutation is non-idempotent on duplicate CPF.** A retry with an already-stored CPF triggers a `P2002` unique violation on `nr_cpf_cnpj`, which — like every failure — is **logged once and returns `null`** (no surfaced code; see "Error handling and logging (silent failure)"). The client distinguishes "created" from "rejected" by `id` vs `null`, and is responsible for deduping retries (check the response before retrying, or query the CPF first).
+
+Rationale: returning the existing `id_pessoa_demeter` on duplicate would make the mutation behave inconsistently (some calls insert, some don't) and risk masking that the record already existed. A `null` is honest without leaking why. Document the non-idempotency in the SDL description so consumers don't assume otherwise.
+
+## Error handling and logging (silent failure)
+
+**Business rule: every failure on the resolver/repository execution path logs exactly once via Winston and returns `null` to the caller.** No `GraphQLError`, no `extensions.code`, no message reaches the client — only `id` (success) or `null` (failure).
+
+**Scope — what the rule can and cannot cover.** The rule lives in the resolver and repo, so it governs everything from input validation through the nested write. It does **not** cover failures *before the resolver runs*: GraphQL parse/validation and input **coercion** (a non-`Int` `municipioId`, an omitted non-null `cpf`, a malformed `DateTime`/`BigInt` scalar) are rejected by Apollo and surface as standard GraphQL input errors. We deliberately **do not** mask those with a global `formatError` hook — that would change error formatting for every existing query/mutation on this shared gateway (a contract change). Those surfaced errors are generic input-shape messages (`"Int cannot represent…"`, `"Field cpf of required type String! was not provided"`) that leak no Demeter/DB internals, so the rule's intent — never expose business or DB failure detail — still holds. Upstream clients are validated/guarded, so coercion errors are rare in practice.
+
+- **Atomicity.** `prisma.produtor.create` with nested children runs as one implicit transaction: if any child insert fails, the whole write rolls back, so a failure never leaves a half-written producer.
+- **No `throwError` on the create path.** Do **not** route the create's catch through `ErrorHandlerImpl.throwError` — it logs again and re-throws, which would both double-log and surface a coded error.
+
+**One logging owner per failure** (no double-logging, no gaps). Use the Winston logger from `src/shared/utils/logger.ts` — never `console.log`. The `service` claim is read from **`context.service`** in the resolver (GraphQL has no `res`) and **threaded into the repo** so its log line can carry it; `res.locals.service` is the Express-only path used by REST handlers (the new `getMunicipiosEmater` route).
+
+- **Entry** — **resolver**, one line: `service`, `unidadeEmpresa`, whether `endereco` / `telefone` were supplied. (Lifecycle, not a failure log.)
+- **Validation failure (pre-repo)** — **resolver** owns it: log once (`service`, `unidadeEmpresa`, `validation`, short message) and return `null`. The repo is never reached.
+- **Execution failure (unit-lookup / município mismatch / `P2002` / `P2003` / unknown)** — **repo** owns it: the single `try/catch` logs once (`service`, `unidadeEmpresa`, internal class — for the log only, never surfaced — and a short message) and returns `null`. The resolver receives `null` and returns it **without** an additional failure line.
+- **Success** — **resolver**, one line: `service`, `unidadeEmpresa`, new `id_pessoa_demeter`.
+
+**Do not log CPF, phone, address, or any full request payload.** PII and personally identifying contact data stay out of logs — operations needs the `id_pessoa_demeter` to investigate, not the CPF.
+
+**Apollo context type fix (prerequisite for the resolver to see `context.service` typed).** `src/main.ts` declares `interface MyContext { token?: string }` but the runtime factory passes `{ service: res.locals.service }`. Widen `MyContext` to `{ service?: string }` (keep `token?: string` only if other resolvers already read it — current grep shows nothing does). This is a single-file edit, part of step 5 below.
+
+## Auth `service` claim
+
+The middleware attaches the decoded JWT `service` claim to `res.locals.service`; the Apollo context factory forwards it as `context.service` (requires the `MyContext` widening — see "Error handling and logging (silent failure)").
+
+**Decision: log only. Do not persist on `ger_pessoa`.** No `created_by`-style column is part of the introspected `ger_pessoa` shape, and adding one is out of scope (we don't own the Demeter schema). The `service` claim is captured in Winston logs (see logging section) for audit / triage and nothing more.
+
+Document this in the AGENTS.md change in step 8.
+
+## Concurrency: unit-validate-then-write race
+
+Unit validation runs as a separate query before the nested `create`. If the selected unit is deactivated between the validate query and the write, the write proceeds against a now-inactive unit. **Accepted behavior** — the window is small, deactivations are rare, and the row remains FK-valid because the unit still exists. No transaction wrapping for this case.
 
 ## Steps (gateway code)
 
-All file paths reflect the **current** per-module layout (repos live in `src/modules/<aggregate>/repository/`, not the central `repositories/prisma/` that AGENTS.md still describes — that doc is stale post-"Reorganização dos repositórios por módulo"; fix it in step 7).
+All paths reflect the current per-module layout (`src/modules/<aggregate>/repository/`).
 
-**Contract-safety constraint (per AGENTS.md "Contract stability"):** this whole change must be **purely additive with zero side effects on existing routes or resolvers** — this gateway serves several apps, and a change that perturbs a shipped query/mutation/route is unacceptable, even when the new work itself is "just an addition." Two shared seams in these steps carry that risk and must be treated carefully:
-- **`produtorResolver` is an existing resolver object** consumed by `src/schema/resolvers.ts`. Step 4 only **adds** a `Mutation` key — it must not alter the existing `Query` or `Produtor` resolvers, their shapes, or behavior.
-- **`ProdutorRepository` is shared** by the existing produtor queries. Step 2 replaces only the unused `create` stub and uses the new `ProdutorDataMapper` helpers; it must not touch `findOne` / `findAll` / `findMany` / `findManyMinimal` / `getUnidadeEmpresa` or any shared base behavior.
-The GraphQL schema additions (new `Mutation` + `*Input` types) and the Prisma schema growth (new models + generated back-relations) are likewise additive — no existing field, type, query, route, status code, or scalar serialization changes. New mutation/route names still get a consumer grep before they become published contract (none exists today — confirmed).
+1. **DTO** — `src/modules/produtor/dto/CreateProdutorDTO.ts`. Flat domain shape: `nome`, `cpf`, `email?`, `dataNascimento?`, `tpSexo?`, `identidade?`, `unidadeEmpresa`, `municipioId`, `telefone?`, `endereco?`. The `endereco` sub-type holds `logradouro?`, `numero?`, `complemento?`, `bairro?`, `cep?` only — no `tpEndereco` (fixed constant 1, repo-supplied). Keep the sub-type in the same file. Excludes PK / `id_sincronismo` / `dt_update_record` / `senha` / `auth_token`. The repo explicitly maps domain → Prisma column names; do not spread the DTO into Prisma `data`.
 
-1. **DTO** — `src/modules/produtor/dto/CreateProdutorDTO.ts` (new). The **flat domain shape**, not a mirror of the DB tables. The exact root fields are `nome`, `cpf`, `email?`, `dataNascimento?`, `tpSexo?`, `identidade?`, `unidadeEmpresa`, `telefone?`, and `endereco?`, matching the SDL below. **Exclude** PK / internal / default columns (`id_pessoa_demeter`, `id_sincronismo`, `dt_update_record`, `senha`, `auth_token`).
-   - `unidadeEmpresa: string` — required selected unit `id_und_empresa` (the H row). The repo validates it and derives its municipality, then writes the same unit id to **every** inserted table's `id_und_empresa`.
-   - `telefone?: string` — flat scalar; the repo normalizes it to 10/11 digits and derives `principal = true`, `id_tipo_contato_pessoa`, and `fk_operadora = null`.
-   - `endereco?: { tpEndereco; logradouro?; numero?; complemento?; bairro?; cep? }` — street-level only. No municipality field, no `tipoLogradouroId` (derived), and no `fk_*` keys.
-   - **No `categorias` / `subcategorias`** — `fk_cat_pessoa = 64` / `fk_sub_cat_pessoa = 11` are fixed constants the repo writes unconditionally.
-   Keep the `endereco` sub-type in the same file (single-file use). The repo explicitly maps domain fields to Prisma columns (`nome → nm_pessoa`, `cpf → nr_cpf_cnpj`, etc.); do not spread the domain DTO directly into Prisma data. It validates `unidadeEmpresa`, derives `fk_municipio`, injects the constants, derives contact-type and tipo-logradouro, sets `dt_update_record`, and lets Prisma wire `fk_pessoa`/`id_pessoa`. The repo returns the new `id_pessoa_demeter` (bigint) — no result type needed.
+2. **Validation helpers** — `src/modules/produtor/produtorValidation.ts` (new). Pure functions covering "Input validation at the API boundary": `normalizeCpf` (transform, always runs), `validateLengths`, etc. **No `validateTpEndereco`** — `tp_endereco` is a fixed constant (`1`), not client input. The resolver calls these before the repo; a failed defensive check aborts the create with **no insert** and returns `null` (logged) per "Error handling and logging (silent failure)" — it does not throw a coded error. The repo receives an already-normalized payload.
 
-2. **Repository method** — add `create(input: CreateProdutorDTO)` to `src/modules/produtor/repository/ProdutorRepository.ts`, replacing the current stub (`create(input: any) { return "This method is not implemented yet." }`). Mirror `AtendimentoRepository.create`:
-   - Destructure `unidadeEmpresa` / `endereco` / `telefone` off the root.
-   - Resolve the selected unit before the write with a deterministic query returning `id_und_empresa` and `fk_municipio`, constrained to an active H unit with an active G parent and non-null municipality. No match → `BAD_REQUEST` ("unidade EMATER inválida ou inativa").
-   - Explicitly map the remaining domain fields to the `ger_pessoa` column names. Do not use `...gerPessoa` while it still contains domain keys such as `nome`, `cpf`, or `dataNascimento`.
-   - Normalize and classify `telefone` according to "Phone normalization and contact type". `principal = true`, `fk_operadora = null`.
-   - **Derive `fk_tpo_logradouro`** from `endereco.logradouro` via `tipoLogradouro(...)` (same mapper). Null on no match.
-   - **Address:** include `ger_end_pessoa` whenever `endereco` is present; set `fk_municipio` from the validated unit lookup.
-   - **`create` vs. `connect`:** use **`create`** for the rows this mutation inserts (root + the two categoria rows + optional `ger_end_pessoa` / `contato_pessoa`); Prisma wires their `fk_pessoa`/`id_pessoa`. For lookup links inside a nested `create` (`tipo_contato_pessoa`, etc.), use **`connect`** with the generated relation field name — **but never both the relation `connect` and the raw scalar FK for the same relation** (Prisma rejects a relation specified twice). For the fixed categoria rows and `fk_municipio`/`fk_tpo_logradouro`, raw scalar FKs are simplest and are used below; switch a given one to `connect` only if `db pull` makes its FK settable solely via the relation field.
-   - Shape (illustrative — relation field names per the post-`db pull` schema):
+3. **Repository method** — add `create(input: CreateProdutorDTO, meta?: { service?: string })` to `src/modules/produtor/repository/ProdutorRepository.ts`, replacing the stub. The optional `meta` carries the resolver's `service` claim for the repo's failure log (see "Error handling and logging (silent failure)"); keeping it **optional** leaves `create` assignable to `Repository<T>`'s `create?: (input: any) => Promise<any>` — no interface change. Mirror `AtendimentoRepository.create`:
+   - Destructure `unidadeEmpresa` / `municipioId` / `endereco` / `telefone` from `input`; read `meta?.service` for the failure log.
+   - Resolve the unit via a deterministic query (active H, non-null `fk_municipio`, active G parent). No match → logged + `null` (silent).
+   - **Cross-check `municipioId === unidade.fk_municipio`. Mismatch → logged + `null` (silent).**
+   - Explicitly map domain fields → `ger_pessoa` columns. Do not `...spread` while domain keys remain.
+   - **`telefone` arrives already normalized + validated** (10/11 digits) or absent; the repo derives `id_tipo_contato_pessoa` via `tipoContato(...)`. No blank-string branch needed.
+   - Derive `fk_tpo_logradouro` via `tipoLogradouro(endereco.logradouro)`. Null on no match.
+   - Include `ger_end_pessoa` only when `endereco` is present; set `fk_municipio = municipioId`, `tp_endereco = 1` (fixed), `fk_distrito = null` (ignored lookup).
+   - For `contato_pessoa`: `fk_operadora = null` (ignored lookup).
+   - Use `create` for inserted rows (Prisma wires `fk_pessoa` / `id_pessoa`); raw scalar FKs are fine for `fk_cat_pessoa`, `fk_sub_cat_pessoa`, `fk_municipio`, `fk_tpo_logradouro`.
+   - **Silent failure in the `catch` (repo owns the execution-failure log):** classify `Prisma.PrismaClientKnownRequestError` (`P2002` duplicate CPF, `P2003` invalid FK), unit/município errors, and any other throw for the **log line only**, log once (with the `service` threaded in from the resolver), then return `null`. Do **not** call `this.throwError` (it re-throws and double-logs). No coded `GraphQLError`, no detail to the caller. See "Error handling and logging (silent failure)."
+   - Shape (illustrative — relation field names per post-`db pull` schema):
+
      ```ts
+     // entire body wrapped in try/catch: catch -> classify + logger.error once -> return null
      const unidade = await this.findCreateUnit(unidadeEmpresa);
+     if (!unidade || municipioId !== unidade.fk_municipio) {
+       logger.error("createProdutor: unidade inválida ou município divergente", { service: meta?.service, unidadeEmpresa });
+       return null; // silent failure — caller sees null, no error surfaced
+     }
      const id_und_empresa = unidade.id_und_empresa;
-     const normalizedTelefone = telefone
-       ? normalizeTelefone(telefone)
-       : undefined;
 
      const created = await this.prisma.produtor.create({
        data: {
          ...mapProdutorInput(produtorInput),
          id_und_empresa,
          dt_update_record: new Date(),
-         ger_pes_cat_ramo_relacao: { create: { fk_cat_pessoa: 64, id_und_empresa, dt_update_record: new Date() } },
-         sub_categoria_pessoa_relacao: { create: { fk_sub_cat_pessoa: 11, id_und_empresa, dt_update_record: new Date() } },
-         ...(endereco && {
-           ger_end_pessoa: { create: {
-             ...mapEndereco(endereco),                       // tp_endereco, ds_logradouro, nr_logradouro, …
-             fk_municipio: unidade.fk_municipio,
-             fk_tpo_logradouro: tipoLogradouro(endereco.logradouro),
+         ger_pes_cat_ramo_relacao: {
+           create: {
+             fk_cat_pessoa: 39,
              id_und_empresa,
              dt_update_record: new Date(),
-           } },
-         }),
-         ...(normalizedTelefone && {
-           contato_pessoa: { create: {
-             telefone: normalizedTelefone,
-             principal: true,
-             id_tipo_contato_pessoa: tipoContato(normalizedTelefone),
+           },
+         },
+         sub_categoria_pessoa_relacao: {
+           create: {
+             fk_sub_cat_pessoa: 1,
              id_und_empresa,
-           } },
+             dt_update_record: new Date(),
+           },
+         },
+         ...(endereco && {
+           ger_end_pessoa: {
+             create: {
+               ...mapEndereco(endereco),
+               tp_endereco: 1,
+               fk_municipio: municipioId,
+               fk_tpo_logradouro: tipoLogradouro(endereco.logradouro),
+               fk_distrito: null,
+               id_und_empresa,
+               dt_update_record: new Date(),
+             },
+           },
+         }),
+         ...(telefone && {
+           contato_pessoa: {
+             create: {
+               telefone,
+               principal: true,
+               id_tipo_contato_pessoa: tipoContato(telefone),
+               fk_operadora: null,
+               id_und_empresa,
+             },
+           },
          }),
        },
        select: { id_pessoa_demeter: true },
@@ -211,15 +267,14 @@ The GraphQL schema additions (new `Mutation` + `*Input` types) and the Prisma sc
 
      return created.id_pessoa_demeter;
      ```
-     The two categoria rows are **unconditional**; `endereco` / `telefone` are spread in only when present.
-   - `dt_update_record` is set on the root and on every child that has the column (`ger_end_pessoa`, `ger_pes_cat_ramo_relacao`, `sub_categoria_pessoa_relacao`; **not** `contato_pessoa`, which has none).
-   - **Return the new `id_pessoa_demeter`** (the `BigInt` scalar serializes it to a string on the wire). The client already has the unit/regional ids from the dropdown.
-   - **Mutation-local Prisma translation:** the shared `ErrorHandlerImpl` currently turns known Prisma errors into plain `Error`, so do not claim it already provides coded GraphQL errors. In this `create` catch, detect `Prisma.PrismaClientKnownRequestError` before calling `this.throwError`: map `P2002` (duplicate CPF/unique constraint) and `P2003` (invalid FK) to a custom `{ message, code: "BAD_REQUEST" }`, then call `this.throwError(customError)`. Unknown errors continue through `this.throwError(error)`. This preserves existing resolver behavior while giving the new mutation a stable coded error contract. Do **not** add a `console.log` line.
 
-3. **GraphQL schema** — add a `Mutation` block + input types to `src/modules/produtor/produtor.graphql`. `typedefs.ts` merges multiple `type Mutation` blocks across modules, so a new block here is safe. The SDL is the **flat domain contract** — no `fk_*`, no table names, no sync columns:
+   - Return the new `id_pessoa_demeter` on success; `null` on any failure (silent — logged once in the catch).
+
+4. **GraphQL schema** — add to `src/modules/produtor/produtor.graphql`. `typedefs.ts` merges multiple `type Mutation` blocks across modules:
+
    ```graphql
    type Mutation {
-     createProdutor(input: CreateProdutorInput!): BigInt!
+     createProdutor(input: CreateProdutorInput!): BigInt
    }
 
    input CreateProdutorInput {
@@ -229,70 +284,99 @@ The GraphQL schema additions (new `Mutation` + `*Input` types) and the Prisma sc
      dataNascimento: DateTime
      tpSexo: String
      identidade: String
-     unidadeEmpresa: String!     # selected unit id; repo validates and derives município
-     telefone: String            # flat scalar; repo derives principal/tipo/operadora
-     endereco: EnderecoInput     # at most one; street-level only
-     # No categorias/subcategorias — fixed constants (64/11) written by the repo.
+     unidadeEmpresa: String!
+     municipioId: Int!
+     telefone: String
+     endereco: EnderecoInput
    }
 
    input EnderecoInput {
-     tpEndereco: Int!
-     logradouro: String          # repo derives fk_tpo_logradouro from this
+     logradouro: String
      numero: String
      complemento: String
      bairro: String
      cep: String
    }
    ```
-   No `TelefoneInput` (telefone is a root scalar) and no município/tipoLogradouro fields in `EnderecoInput` (derived). `unidadeEmpresa` is the only location token accepted by the mutation; the repo derives its municipality. This SDL is the complete input field set; do not add DB/internal fields.
 
-   **Returns `BigInt!`** (the new `id_pessoa_demeter`). No result object — the client already holds the selected option's municipality/regional metadata, so there is nothing extra to surface.
+   Document in the SDL description: the input is non-null, but the **return is nullable** — `null` means the create did not succeed (no detail surfaced; see "Error handling and logging (silent failure)") — and the mutation is **non-idempotent** on duplicate CPF (see "Idempotency / retry contract").
 
-   **Nullability — recommend `input: CreateProdutorInput!` and `BigInt!` (both non-null).** Stricter, clearer for a new contract; the id always exists on success (errors surface as GraphQL errors, not `null`). **Caveat:** existing mutations use **nullable** input/returns (`createAtendimento(input: CreateAtendimentoInput): BigInt`). If you prefer SDL consistency, make `input` nullable and have the resolver guard `!input`. **Additive only** — do not touch the existing `Produtor` type or queries.
+5. **Resolver + Apollo context type** — add a `Mutation` key to `produtorResolver`:
+   - **Widen `MyContext` in `src/main.ts`** from `{ token?: string }` to `{ service?: string }` so the resolver sees `context.service` typed. The runtime factory already passes it; only the type lies. (Drop `token` unless a grep finds a current consumer — none today.)
+   - Read `service` from the resolver's `context: MyContext` (third argument), **not** `res.locals` (resolvers have no `res`).
+   - Log entry per "Error handling and logging (silent failure)" using `context.service`.
+   - Normalize/validate via `produtorValidation.ts` helpers (CPF normalize always; lengths/blank are defensive). A failed defensive check is **resolver-owned**: log once and return `null` (the repo is never reached) — no thrown error.
+   - Call `produtorRepository.create!(normalized, { service: context.service })` — it returns the new id or `null` and **owns the failure log** for everything from unit-resolution onward.
+   - On an `id`, log one success line (`service`, `unidadeEmpresa`, id). On `null`, **do not log again** (the repo already logged the cause) and never surface a code — just return `null`.
+   - Return the value straight through: the new id (the `BigInt` scalar serializes) or `null`. Keep thin — no orchestration. `create` is already optional on `Repository<T>` and the extra `meta` param is optional, so the method still satisfies `create?: (input: any) => Promise<any>` — no interface change.
 
-4. **Resolver** — add a `Mutation` key to `produtorResolver` in `src/modules/produtor/produtorResolver.ts` (it currently has only `Query` and `Produtor`):
-   ```ts
-   Mutation: {
-     createProdutor: (_root: any, { input }: { input: CreateProdutorDTO }) =>
-       produtorRepository.create!(input),
-   },
-   ```
-   Keep the resolver thin — no orchestration; it returns the repo's new `id_pessoa_demeter` straight through (the `BigInt` scalar serializes it). (`create` is already optional on the `Repository<T>` interface, so no interface change is needed; the `!` matches existing call sites like `findMany!`.)
+6. **`resolvers.ts` change**: none. `produtorResolver` is already composed.
 
-5. **No `resolvers.ts` change** — `produtorResolver` is already composed in `src/schema/resolvers.ts`; adding a `Mutation` key to the returned object is picked up automatically.
+7. **Município dropdown endpoint** — add `getMunicipiosEmater()` to `src/repositories/EnumPropsRepository.ts` and register the route in `src/routes/enumRoutes.ts`, mirroring `getRegionaisEmater`. **Do not touch `getRegionaisEmater`.**
 
-6. **Município dropdown endpoint** (`GET /api/getMunicipiosEmater`) — separate from the mutation but part of this feature (the client needs it to populate the select box). Add `getMunicipiosEmater()` to `src/repositories/EnumPropsRepository.ts` (the `$queryRaw` from "Município dropdown endpoint") and register the route in `src/routes/enumRoutes.ts`, mirroring the existing `getRegionaisEmater` handler exactly (no auth changes — the `/api/*` service-token middleware already covers it). Returns the H-row list with `nome_regional` joined. **New route = contract-safe** (additive), but grep `/home/apps/*` + `/home/pnae/*` for the name first to confirm no collision; **do not touch `getRegionaisEmater`**.
-
-7. **Update `AGENTS.md`** (a.k.a. `CLAUDE.md`, same file via symlink) in the same change:
-   - Note the new `createProdutor` mutation under the `produtor` aggregate.
-   - Note the new `GET /api/getMunicipiosEmater` route under the `enumRoutes` description.
-   - Correct the stale repository-location description (repos are under `src/modules/<aggregate>/repository/`, not `repositories/prisma/`).
+8. **Update `AGENTS.md`** (a.k.a. `CLAUDE.md`, same file via symlink) in the same change:
+   - Note `createProdutor` under the `produtor` aggregate.
+   - Note `GET /api/getMunicipiosEmater` under `enumRoutes`.
    - Note the schema grew by the introspected lookup/relation tables.
+   - Note the auth `service` claim is **logged, not persisted**, and `createProdutor` is **open to any valid service-token holder** (no per-`service` allowlist).
+   - Note the `MyContext` widening (`service?: string`) so future resolvers know the typed shape.
 
 ## Prerequisites (external, not code)
 
-- **Write grants for the prod DB user.** Today `db/cafe-app-user-demeter-db.sql` and `db/pnae-app-user.demeter-db.sql` grant only `SELECT` on `ger_pessoa` / `ger_pes_cat_ramo_relacao` etc. A create needs `INSERT` (and `USAGE` on the sequences behind the `autoincrement()` PKs) on all five insert-target tables for whichever DB role this gateway uses per environment. The requester noted prod-user perms are imminent; **hmg/staging already has them**, so the mutation can be built and tested against hmg first. This is a hard runtime prerequisite independent of the schema/code work — without it the write fails with a Postgres permission error at runtime even though the code is correct.
-- **Schema parity across environments.** Run `db pull` only once the prod grants land, so introspection sees the same table set everywhere and the committed `schema.prisma` is valid against all three DBs.
+- **Write grants for the prod DB user.** Today `db/cafe-app-user-demeter-db.sql` and `db/pnae-app-user.demeter-db.sql` grant only `SELECT`. A create needs `INSERT` (and `USAGE` on sequences) on all five insert-target tables. HMG already has them; build and test against hmg first.
+- **Authorization: open to any valid service-token holder.** Today every service-token holder gets full GraphQL access; `createProdutor` follows the same rule — no per-`service` allowlist in the resolver. Auditing happens via the `service` claim in Winston logs (see "Error handling and logging (silent failure)"). Document the open-access decision in the AGENTS.md change in step 8. **Excluding a caller that has access today is a breaking contract change for that caller — not an additive guard.** Only *adding* access for a brand-new caller is additive; restricting an existing one needs the same consumer audit + sign-off as any contract change.
+- **Schema parity across environments** (see Schema work step 1).
 
 ## Verification
 
-- After `db pull` + `generate`: `npx tsc --noEmit` (type-check only — **never** `npm run build`) to confirm the new client delegates and DTO types line up.
-- Exercise `createProdutor` against the **hmg** environment (port 4100) where write grants already exist:
-  - **Minimal call** (`unidadeEmpresa`, no `endereco`, no `telefone`) — still writes **three** rows: `ger_pessoa` + the two fixed categoria rows. Assert all three land: `ger_pes_cat_ramo_relacao` with `fk_cat_pessoa = 64` and `sub_categoria_pessoa_relacao` with `fk_sub_cat_pessoa = 11`, both linked to the new `fk_pessoa`.
-  - **Full call** (`unidadeEmpresa` from the dropdown, `endereco` + `telefone`) — writes all five rows; assert `contato_pessoa` has normalized digits, `principal = true`, and the derived `id_tipo_contato_pessoa`; `ger_end_pessoa` has the selected unit's `fk_municipio` and the derived `fk_tpo_logradouro`; every row's `id_und_empresa` equals the sent `unidadeEmpresa`.
-  - In both, confirm a real `id_pessoa_demeter` comes back and every inserted row has a populated `dt_update_record` (where the column exists) and a DB-generated `id_sincronismo`.
-- Confirm the **`getMunicipiosEmater` endpoint**: returns only active `H%` rows with a valid municipality and active G parent; each row carries authoritative `nome_municipio`, `municipio_id`, `regional_id`, and `nome_regional`. Confirm `getRegionaisEmater` is **unchanged**.
-- Confirm the **address** writes whenever `endereco` is present: `ger_end_pessoa.fk_municipio` equals the municipality resolved from the selected unit.
-- In `ProdutorDataMapper.test.ts`, confirm tipo-logradouro derivation: `"Rua das Hortas"`→1, `"Av. Brasil"`→2, `"BR-040"`/`"MG 050"`/`"LMG808"`/`"AMG-123"`→4, `"Pç da Sé"`→3, unknown→null; all case-insensitive.
-- Run `node --import tsx --test src/modules/produtor/ProdutorDataMapper.test.ts`. Confirm 10-digit landline→type 1, 11-digit mobile→type 3, formatted and `+55` mobile normalize correctly, DDD 55 remains intact, and unsupported characters/invalid lengths→`BAD_REQUEST`.
-- Confirm the unique-CPF path: creating two producers with the same CPF returns a `GraphQLError` with `extensions.code = BAD_REQUEST`, not a plain error.
-- Confirm an unknown, inactive, non-H, or municipality-less `unidadeEmpresa` returns `BAD_REQUEST` before any insert.
-- Confirm a forced nested FK failure returns a `GraphQLError` with `extensions.code = BAD_REQUEST`, exercising the mutation-local `P2003` translation.
+**Live checks (any HMG run, the dropdown endpoint, DB-state assertions) are executed manually by the user** — the agent supplies the procedure and reviews the user-pasted output, and never hits live dev/hmg/prod endpoints (AGENTS.md hard rule). The unit / mapper / validation tests below run locally via `tsx --test`.
+
+- After `db pull` + `generate`: `npx tsc --noEmit`.
+- **Repository tests** (`node --import tsx --test src/modules/produtor/repository/ProdutorRepository.test.ts`):
+  - Nested-write payload shape: minimal (3 rows), with `endereco` only (4 rows), with `telefone` only (4 rows), full (5 rows). Assert constants **39 / 1** land on the categoria rows, `tp_endereco = 1` on the address row, `fk_distrito = null` and `fk_operadora = null` where applicable.
+  - Unit rejection: unknown id, inactive H, non-H, null `fk_municipio`, inactive G parent — each returns `null` (logged) before any insert.
+  - **Município mismatch**: `municipioId` not equal to the validated unit's `fk_municipio` returns `null` (logged) before any insert.
+  - Silent failure: forced `P2002` (duplicate CPF) and `P2003` (invalid FK) return `null`, log exactly once, and surface no `GraphQLError`/code; assert the nested write rolled back (no orphan rows).
+  - Optional children: address-only, phone-only, neither.
+- **Mapper tests** (`ProdutorDataMapper.test.ts`, `node --import tsx --test`):
+  - Tipo logradouro: `"Rua das Hortas"`→1, `"Av. Brasil"`→2, `"BR-040"`/`"MG 050"`/`"LMG808"`/`"AMG-123"`→4, `"Pç da Sé"`→3, unknown→null. Case-insensitive.
+  - Phone: 10-digit landline→type 1, 11-digit mobile→type 3, formatted and `+55` mobile normalize correctly, DDD `55` stays intact; unsupported characters / invalid lengths / `""` are rejected by the normalizer (the create path turns a rejection into a silent `null`, not a surfaced error).
+- **Validation tests** (`produtorValidation.test.ts`): CPF (formatted, unformatted, invalid check digits, blank, wrong length), length bounds, blank optionals, `municipioId` positive Int.
+- **HMG end-to-end** (port 4100, write grants already exist; **user-executed** — agent provides the procedure and reviews output):
+  - **Fixture strategy:** each run generates a CPF from a deterministic test seed + run id to avoid collisions across reruns. Track the inserted `id_pessoa_demeter` for cleanup.
+  - **Cleanup:** delete the test `contato_pessoa` row first (NoAction FK), then `DELETE FROM ger_pessoa WHERE id_pessoa_demeter = ?` (Cascade handles the other children).
+  - Minimal call (`unidadeEmpresa` + `municipioId` only): 3 rows; assert constants **39 / 1**.
+  - Full call (with `endereco` + `telefone`): 5 rows; assert `fk_municipio` equals `input.municipioId` (and matches the validated unit), `tp_endereco = 1`, `fk_distrito = null`, `fk_operadora = null`, derived `fk_tpo_logradouro` and `id_tipo_contato_pessoa` are correct, every row's `id_und_empresa` matches the sent value.
+  - Confirm `dt_update_record` set where applicable, `id_sincronismo` DB-generated, a real `id_pessoa_demeter` returned.
+- **Endpoint check**: `getMunicipiosEmater` returns only active `H%` rows with valid município and active G parent. Confirm `getRegionaisEmater` is unchanged.
+- **Duplicate-CPF**: second create with the same CPF returns `null` (logged once), no surfaced error.
+- **Invalid unit**: unknown / inactive / non-H / null-município `unidadeEmpresa` returns `null` (logged) before any insert.
+- **Município mismatch**: `unidadeEmpresa` valid but `municipioId` not equal to `unidade.fk_municipio` returns `null` (logged) before any insert.
+- **Lookup verification**: run the deployment-time SQL assertion (see "Lookup ID verification") against hmg before enabling writes; record expected `(id, label)` pairs.
+- **Logging**: confirm Winston output contains `service`, `unidadeEmpresa`, and `id_pessoa_demeter` on success and **never** contains CPF / phone / address / full payload.
 
 ## Out of scope
 
 - Update / delete of produtor (create-only by request).
 - Any `/api/*` REST route for produtor create.
-- Inserting into the lookup tables (`ger_cat_pessoa`, `sub_categoria_pessoa`, `sep_*`, `operadora`, `tipo_contato_pessoa`, `spa_meta_categoria_municipio`, `ger_und_empresa`) — read-only here (`ger_und_empresa` is queried by `getMunicipiosEmater` for the dropdown, never written).
-- **Downstream app concerns** — storing `regionalId` in the `concurso_cafe` inscrição table, the "inscritos"/dashboard regional filter, and any UI. The gateway only *serves* the município/regional list (via `getMunicipiosEmater`) so the client can persist what it selected; how it does so is out of scope.
-- Wiring a consumer. (The `concurso_cafe` app now models producers that don't yet exist in Demeter, `idPessoaDemeter: null` — a plausible future caller — but no consumer is connected to this mutation today.)
+- Inserting into lookup tables.
+- Downstream app concerns (storing `regionalId` in `concurso_cafe`, the "inscritos" / dashboard filter, UI).
+- Wiring a consumer.
+
+## Appendix A: DB introspection notes
+
+The three models initially pasted (`ger_end_pessoa`, `sub_categoria_pessoa`, `contato_pessoa`) do not stand alone. Their relation fields reference tables also missing from `prisma/schema.prisma`. With three lookups **ignored** per the Decisions block (`operadora`, `sep_distrito`, `spa_meta_categoria_municipio`), the cascade simplifies to:
+
+- `ger_end_pessoa` → `sep_tpo_logradouro` (kept; needed for the `fk_tpo_logradouro` derivation). `sep_distrito` is **dropped** — `fk_distrito` stays an `Int?` scalar with no relation.
+- `sub_categoria_pessoa` → `ger_cat_pessoa` (kept). `spa_meta_categoria_municipio` is **dropped** — no FK from our INSERT targets even references it transitively.
+- `contato_pessoa` → `tipo_contato_pessoa` (kept). `operadora` is **dropped** — `fk_operadora` stays an `Int?` scalar with no relation.
+- `sub_categoria_pessoa_relacao` (4th write target, also missing) → `sub_categoria_pessoa`.
+
+One missing lookup still carries a back-relation array into a model already in the live schema, so hand-adding still touches existing models — but the surface is smaller than before:
+
+- `sep_tpo_logradouro` declares `pl_propriedade pl_propriedade[]` → `Propriedade` would need a reciprocal relation field. Today `Propriedade.id_tipo_logradouro` is a plain `Int?` scalar, not a relation.
+- `sep_tpo_logradouro` declares `ger_und_empresa ger_und_empresa[]` → `ger_und_empresa` would need a reciprocal field.
+
+(The `sep_distrito ↔ Propriedade` / `sep_distrito ↔ Municipio` reciprocal patches are no longer needed — `sep_distrito` is ignored.)
+
+`db/custom-schema.prisma` (a prior full `db pull`) holds the bodies for all these models but is a **stale snapshot** — it renders `ger_pes_cat_ramo_relacao.fk_pessoa`, `sub_categoria_pessoa_relacao.fk_pessoa`, and `contato_pessoa.id_pessoa` as `Int` / `Int?`, but `Produtor.id_pessoa_demeter` is `BigInt` and the current `prisma/schema.prisma` already carries `ger_pes_cat_ramo_relacao.fk_pessoa` as `BigInt`. A relation whose scalar FK type differs from the referenced PK type fails Prisma validation. The post-`db pull` schema must render these FKs as `BigInt`.
