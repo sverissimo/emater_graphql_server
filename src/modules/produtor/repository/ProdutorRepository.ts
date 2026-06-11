@@ -1,7 +1,29 @@
-import { Produtor } from "../../../generated/prisma/client.js";
+import { Prisma, type Produtor } from "../../../generated/prisma/client.js";
 import { PrismaRepository } from "../../../repositories/PrismaRepository.js";
 import { Repository } from "../../../repositories/Repository.js";
 import { EnumPropsRepository } from "../../../repositories/EnumPropsRepository.js";
+import { logger } from "../../../shared/utils/logger.js";
+import type { CreateProdutorDTO } from "../dto/CreateProdutorDTO.js";
+import { ProdutorDataMapper } from "../ProdutorDataMapper.js";
+import {
+  FK_CAT_PESSOA,
+  FK_SUB_CAT_PESSOA,
+  TP_ENDERECO,
+} from "../produtorConstants.js";
+
+type CreateProdutorMeta = {
+  service?: string;
+};
+
+const prismaFailureClass = (error: unknown): string => {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2002") return "duplicate_cpf";
+    if (error.code === "P2003") return "invalid_foreign_key";
+    return `prisma_${error.code}`;
+  }
+
+  return error instanceof Error ? error.name : "unknown";
+};
 
 export class ProdutorRepository
   extends PrismaRepository
@@ -193,7 +215,105 @@ export class ProdutorRepository
     return produtor;
   }
 
-  async create(input: any) {
-    return "This method is not implemented yet.";
+  async create(
+    input: CreateProdutorDTO,
+    meta?: CreateProdutorMeta,
+  ): Promise<bigint | null> {
+    let unidadeEmpresa = "unknown";
+    const logContext = () =>
+      `service=${meta?.service ?? "unknown"} unidadeEmpresa=${unidadeEmpresa}`;
+
+    try {
+      unidadeEmpresa = input.unidadeEmpresa;
+      const { municipioId, endereco, telefone } = input;
+
+      const unidade = await this.prisma.ger_und_empresa.findFirst({
+        where: {
+          id_und_empresa: {
+            equals: unidadeEmpresa,
+            startsWith: "H",
+          },
+          sn_ativa: 1,
+          fk_municipio: { not: null },
+          ger_und_empresa: {
+            is: {
+              id_und_empresa: { startsWith: "G" },
+              sn_ativa: 1,
+            },
+          },
+        },
+        select: {
+          id_und_empresa: true,
+          fk_municipio: true,
+        },
+      });
+
+      if (!unidade) {
+        logger.error(`createProdutor: invalid_unit ${logContext()}`);
+        return null;
+      }
+
+      if (unidade.fk_municipio !== municipioId) {
+        logger.error(`createProdutor: municipio_mismatch ${logContext()}`);
+        return null;
+      }
+
+      const now = new Date();
+      const created = await this.prisma.produtor.create({
+        data: {
+          ...ProdutorDataMapper.mapProdutorInput(input),
+          id_und_empresa: unidade.id_und_empresa,
+          dt_update_record: now,
+          ger_pes_cat_ramo_relacao: {
+            create: {
+              fk_cat_pessoa: FK_CAT_PESSOA,
+              id_und_empresa: unidade.id_und_empresa,
+              dt_update_record: now,
+            },
+          },
+          sub_categoria_pessoa_relacao: {
+            create: {
+              fk_sub_cat_pessoa: FK_SUB_CAT_PESSOA,
+              id_und_empresa: unidade.id_und_empresa,
+              dt_update_record: now,
+            },
+          },
+          ...(endereco && {
+            ger_end_pessoa: {
+              create: {
+                ...ProdutorDataMapper.mapEndereco(endereco),
+                tp_endereco: TP_ENDERECO,
+                fk_municipio: municipioId,
+                fk_tpo_logradouro:
+                  ProdutorDataMapper.tipoLogradouro(endereco.logradouro),
+                fk_distrito: null,
+                id_und_empresa: unidade.id_und_empresa,
+                dt_update_record: now,
+              },
+            },
+          }),
+          ...(telefone && {
+            contato_pessoa: {
+              create: {
+                telefone,
+                principal: true,
+                id_tipo_contato_pessoa:
+                  ProdutorDataMapper.tipoContato(telefone),
+                fk_operadora: null,
+                id_und_empresa: unidade.id_und_empresa,
+              },
+            },
+          }),
+        },
+        select: { id_pessoa_demeter: true },
+      });
+
+      return created.id_pessoa_demeter;
+    } catch (error: unknown) {
+      logger.error(
+        `createProdutor: execution_failure class=${prismaFailureClass(error)} ${logContext()}`,
+      );
+      return null;
+    }
   }
 }

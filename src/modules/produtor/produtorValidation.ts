@@ -1,4 +1,4 @@
-import { CreateProdutorDTO } from "./dto/CreateProdutorDTO.js";
+import type { CreateProdutorDTO } from "./dto/CreateProdutorDTO.js";
 
 // Defensive boundary validation + CPF normalization for createProdutor. Malformed input is already
 // guarded upstream, so failures here are rare; when one happens the resolver catches the thrown

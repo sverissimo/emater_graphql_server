@@ -6,7 +6,7 @@ Apollo Server v5 + Express 5 GraphQL gateway (TypeScript, ESM, Prisma 7 + Postgr
 
 ## Project Snapshot
 
-- **Role:** central gateway from the apps on this host to the external Demeter DB. Read-heavy plus a few writes (atendimento create/update, login, temas/numeroVisita sync).
+- **Role:** central gateway from the apps on this host to the external Demeter DB. Read-heavy plus a few writes (atendimento create/update, produtor create, login, temas/numeroVisita sync).
 - **Stack:** Node 22/24 (dev/hmg/prod images), TypeScript ESM (`"type": "module"`, all relative imports use `.js`), Apollo Server v5 over Express 5, Prisma 7 client, Winston logging, `jsonwebtoken` for service auth, `ldapts` for user login.
 - **Two surfaces in one process:**
   - GraphQL at `/` (Apollo middleware) — typedefs merged at runtime from every `src/modules/**/*.graphql`, resolvers composed in [src/schema/resolvers.ts](src/schema/resolvers.ts).
@@ -25,13 +25,13 @@ Top-level folders under [src/](src/):
 - [app.ts](src/app.ts) — Express app: CORS, JSON body parser, `auth` middleware, mounts the REST router at `/api`. The Apollo middleware is attached in `main.ts` after `server.start()`.
 - [routes.ts](src/routes.ts) — composes the REST route groups under [routes/](src/routes/) and mounts the `restErrorHandler` last. Route handlers are plain `async` functions and may throw/reject freely — Express 5 forwards rejected async handlers to the error middleware automatically (no wrapper). Groups share repos/`LoginService` via [routes/dependencies.ts](src/routes/dependencies.ts). Repositories throw `GraphQLError` with an `extensions.code`; `restErrorHandler` maps it to an HTTP status (`BAD_REQUEST`→400, `FORBIDDEN`→403, `NOT_FOUND`→404, else 500). `/login` keeps its own inline `403` contract.
 - [schema/](src/schema/) — `typedefs.ts` glob-loads every `*.graphql` under the repo and merges them; `resolvers.ts` constructs one repo per aggregate and composes the resolver map.
-- [modules/](src/modules/) — per-aggregate folder: `*.graphql` schema fragment, `<aggregate>Resolver.ts` (factory taking the repo), DTOs, optional `types/`, `dto/`, `data-mapper/`. Current aggregates: `atendimento`, `produtor`, `perfil`, `propriedade`, `usuario`.
+- [modules/](src/modules/) — per-aggregate folder: `*.graphql` schema fragment, `<aggregate>Resolver.ts` (factory taking the repo), DTOs, optional `types/`, `dto/`, `data-mapper/`. Current aggregates: `atendimento`, `produtor`, `perfil`, `propriedade`, `usuario`. The `produtor` aggregate exposes `createProdutor`, which returns the new BigInt id or `null` after logging any execution failure.
 - [repositories/](src/repositories/) — shared repository infrastructure plus cross-cutting repositories such as `EnumPropsRepository`; reusable repository response contracts live under `repositories/types/`. Aggregate repositories live under `modules/<aggregate>/repository/` and extend [PrismaRepository](src/repositories/PrismaRepository.ts).
 - [auth/](src/auth/) — `auth.ts` (JWT service-token middleware, dev-mode bypass, `/login` bypass), `LoginService.ts` (LDAP bind + Prisma lookup), `AuthLdapService.ts`.
 - [config/prismaClient.ts](src/config/prismaClient.ts) — Prisma client singleton.
 - [shared/scalars/](src/shared/scalars/) — `BigInt` and `DateTime` custom scalars. **Do not break these** — the Demeter DB uses BigInt PKs everywhere and clients rely on the string encoding.
 - [shared/utils/](src/shared/utils/) — Winston logger, `serializeBigInt`, `formatDate`, `getRequestedFields` (used by resolvers to project Prisma `select`), `ErrorHandler*`.
-- [prisma/schema.prisma](prisma/schema.prisma) — **introspected from the external Demeter DB.** Keep it in sync with reality via `prisma db pull`; **never** `migrate dev` / `migrate deploy` / `db push` from this repo — we are not the owner of that database.
+- [prisma/schema.prisma](prisma/schema.prisma) — **introspected from the external Demeter DB.** It includes the produtor child insert models `ger_end_pessoa`, `sub_categoria_pessoa_relacao`, and `contato_pessoa`. Keep it in sync with reality via `prisma db pull`; **never** `migrate dev` / `migrate deploy` / `db push` from this repo — we are not the owner of that database.
 
 ## Architecture Rules
 
@@ -57,13 +57,14 @@ This service is consumed by other apps on this host (PNAE backend and others). B
 - **Apply KISS principle when creating plans, solutions, fixes or new code, balanced with code reliability.** Prefer simpler / easier to read/maintain solutions over complex fancy ones. That should be balanced with code reliability though (fancier approaches with big reliability gains are ok too)
 - **No comments by default.** Add a one-liner only when _why_ is non-obvious (hidden constraint, subtle invariant, workaround for a specific bug). Never narrate _what_ the code does.
 - **No hidden reusable types.** A type/interface stays inside a single file only if used by that file alone. If imported elsewhere, move it next to the aggregate it describes (`modules/<aggregate>/types/` or a sibling file).
-- **Error handling at the boundary.** Repositories should throw; resolvers and route handlers translate to `GraphQLError` or HTTP status + logger.error. Don't swallow errors with `console.log` — use the Winston `logger` in [shared/utils/logger.ts](src/shared/utils/logger.ts). (Existing `console.log("🚀 ~ ...")` lines are legacy; don't add new ones.)
+- **Error handling at the boundary.** Repositories should throw; resolvers and route handlers translate to `GraphQLError` or HTTP status + logger.error. The explicit exception is `createProdutor`: validation failures are logged by its resolver, repository execution failures are logged by its repository, and both return `null` without exposing details. Don't swallow errors with `console.log` — use the Winston `logger` in [shared/utils/logger.ts](src/shared/utils/logger.ts). (Existing `console.log("🚀 ~ ...")` lines are legacy; don't add new ones.)
 
 ## Authentication
 
 Two flows, both handled by [auth/auth.ts](src/auth/auth.ts):
 
 - **Service-to-service (GraphQL + most REST):** clients send `Authorization: Bearer <jwt>` signed with `SERVICE_TOKEN`. The middleware verifies cryptographically and attaches the decoded `service` claim to `res.locals.service`. In `NODE_ENV=development` auth is **bypassed entirely** — never rely on that bypass for any other environment, and never extend the bypass list without a code-review reason.
+- **`createProdutor` authorization/audit:** any valid service-token holder may call it. Apollo forwards the claim as `context.service`; the mutation logs it for audit but does not persist it.
 - **End-user login (LDAP):** `POST /api/login` is explicitly bypassed in the auth middleware. `LoginService` binds to LDAP with `matricula_usuario` + `password`, then loads the user from Prisma. Credentials live in env (`LDAP_*`); never hard-code.
 
 ## Development environment

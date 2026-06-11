@@ -331,12 +331,14 @@ All paths reflect the current per-module layout (`src/modules/<aggregate>/reposi
 
 **Live checks (any HMG run, the dropdown endpoint, DB-state assertions) are executed manually by the user** — the agent supplies the procedure and reviews the user-pasted output, and never hits live dev/hmg/prod endpoints (AGENTS.md hard rule). The unit / mapper / validation tests below run locally via `tsx --test`.
 
+User-executed procedure and result checklist: [`docs/create-produtor.hmg-verification.md`](../create-produtor.hmg-verification.md).
+
 - After `db pull` + `generate`: `npx tsc --noEmit`.
 - **Repository tests** (`node --import tsx --test src/modules/produtor/repository/ProdutorRepository.test.ts`):
   - Nested-write payload shape: minimal (3 rows), with `endereco` only (4 rows), with `telefone` only (4 rows), full (5 rows). Assert constants **39 / 1** land on the categoria rows, `tp_endereco = 1` on the address row, `fk_distrito = null` and `fk_operadora = null` where applicable.
   - Unit rejection: unknown id, inactive H, non-H, null `fk_municipio`, inactive G parent — each returns `null` (logged) before any insert.
   - **Município mismatch**: `municipioId` not equal to the validated unit's `fk_municipio` returns `null` (logged) before any insert.
-  - Silent failure: forced `P2002` (duplicate CPF) and `P2003` (invalid FK) return `null`, log exactly once, and surface no `GraphQLError`/code; assert the nested write rolled back (no orphan rows).
+  - Silent failure: forced `P2002` (duplicate CPF) and `P2003` (invalid FK) return `null`, log exactly once, and surface no `GraphQLError`/code. These mocked failures verify handling, not a real PostgreSQL rollback; see the HMG runbook for the explicit rollback limitation.
   - Optional children: address-only, phone-only, neither.
 - **Mapper tests** (`ProdutorDataMapper.test.ts`, `node --import tsx --test`):
   - Tipo logradouro: `"Rua das Hortas"`→1, `"Av. Brasil"`→2, `"BR-040"`/`"MG 050"`/`"LMG808"`/`"AMG-123"`→4, `"Pç da Sé"`→3, unknown→null. Case-insensitive.
