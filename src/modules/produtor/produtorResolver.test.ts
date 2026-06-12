@@ -26,8 +26,11 @@ const input = {
 };
 
 describe("produtorResolver.createProdutor", { concurrency: false }, () => {
-  test("normalizes input and returns the created id", async () => {
-    const create = mock.fn(async (_input: unknown, _meta?: unknown) => 987n);
+  test("normalizes input and returns the created ids", async () => {
+    const create = mock.fn(async (_input: unknown, _meta?: unknown) => ({
+      produtorId: 987n,
+      propriedadeId: null,
+    }));
     const infoLog = mock.fn();
     logger.info = infoLog as unknown as typeof logger.info;
     const resolver = produtorResolver({ create } as any);
@@ -38,12 +41,39 @@ describe("produtorResolver.createProdutor", { concurrency: false }, () => {
       { service: "pnae" },
     );
 
-    assert.equal(result, 987n);
+    assert.deepEqual(result, { produtorId: 987n, propriedadeId: null });
     assert.equal(create.mock.callCount(), 1);
     const normalized = create.mock.calls[0].arguments[0] as typeof input;
     assert.equal(normalized.cpf, "52998224725");
     assert.equal(normalized.telefone, "31999998888");
     assert.deepEqual(create.mock.calls[0].arguments[1], { service: "pnae" });
+    assert.equal(infoLog.mock.callCount(), 2);
+  });
+
+  test("passes the propriedade through and returns both ids", async () => {
+    const create = mock.fn(async (_input: unknown, _meta?: unknown) => ({
+      produtorId: 987n,
+      propriedadeId: 555n,
+    }));
+    const infoLog = mock.fn();
+    logger.info = infoLog as unknown as typeof logger.info;
+    const resolver = produtorResolver({ create } as any);
+
+    const propriedade = {
+      nome: "Sítio Boa Vista",
+      areaTotal: 12.5,
+      municipioId: 456,
+      unidadeEmpresa: "H002",
+    };
+    const result = await resolver.Mutation.createProdutor(
+      undefined,
+      { input: { ...input, propriedade } },
+      { service: "pnae" },
+    );
+
+    assert.deepEqual(result, { produtorId: 987n, propriedadeId: 555n });
+    const normalized = create.mock.calls[0].arguments[0] as any;
+    assert.deepEqual(normalized.propriedade, propriedade);
     assert.equal(infoLog.mock.callCount(), 2);
   });
 

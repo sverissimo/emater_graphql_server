@@ -7,7 +7,7 @@ Do not paste the token itself into review output.
 
 > CPF fixture: use a **valid, unused** CPF per run (check-digit-valid; the validator rejects
 > fake ones like `111.111.111-11`). Generate one and note it for cleanup. The examples below
-> use `__CPF__` / `__CPF2__` as placeholders. Track both returned producer ids.
+> use `__CPF__` / `__CPF2__` / `__CPF3__` / `__CPF4__` as placeholders. Track every returned id.
 
 ## 0. Preflight (run FIRST, once per environment)
 
@@ -25,7 +25,9 @@ FROM (VALUES
   ('ger_end_pessoa'),
   ('ger_pes_cat_ramo_relacao'),
   ('sub_categoria_pessoa_relacao'),
-  ('contato_pessoa')
+  ('contato_pessoa'),
+  ('pl_propriedade'),
+  ('pl_propriedade_ger_pessoa')
 ) AS required(table_name)
 ORDER BY table_name;
 
@@ -44,7 +46,8 @@ FROM (
     ('ger_end_pessoa', 'id_end_pessoa_demeter'),
     ('ger_pes_cat_ramo_relacao', 'id_pes_cat_ramo_relacao_demeter'),
     ('sub_categoria_pessoa_relacao', 'id'),
-    ('contato_pessoa', 'id_contato_pessoa')
+    ('contato_pessoa', 'id_contato_pessoa'),
+    ('pl_propriedade', 'id_pl_propriedade')
   ) AS required(table_name, pk_column)
 ) AS sequences
 ORDER BY table_name;
@@ -116,11 +119,12 @@ curl -s -H "Authorization: Bearer $TOKEN" http://localhost:4100/api/getRegionais
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"query":"mutation($i: CreateProdutorInput!){ createProdutor(input: $i) }","variables":{"i":{"nome":"TESTE HMG createProdutor","cpf":"__CPF__","unidadeEmpresa":"__H_ID__","municipioId":__MUN_ID__}}}' \
+  -d '{"query":"mutation($i: CreateProdutorInput!){ createProdutor(input: $i) { produtorId propriedadeId } }","variables":{"i":{"nome":"TESTE HMG createProdutor","cpf":"__CPF__","unidadeEmpresa":"__H_ID__","municipioId":__MUN_ID__}}}' \
   http://localhost:4100/
 ```
 
-Expect: `{"data":{"createProdutor":"<new id as string>"}}`. Note the id as `__ID__`.
+Expect: `{"data":{"createProdutor":{"produtorId":"<new id as string>","propriedadeId":null}}}`.
+Note the id as `__ID__`.
 
 ```sql
 SELECT id_pessoa_demeter, nm_pessoa, nr_cpf_cnpj, id_und_empresa, dt_update_record, id_sincronismo
@@ -142,11 +146,11 @@ New CPF, same unit. `logradouro` starts with "Rua" and `telefone` is an 11-digit
 
 ```bash
 curl -s -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"query":"mutation($i: CreateProdutorInput!){ createProdutor(input: $i) }","variables":{"i":{"nome":"TESTE HMG full","cpf":"__CPF2__","unidadeEmpresa":"__H_ID__","municipioId":__MUN_ID__,"telefone":"(33) 99999-8888","endereco":{"logradouro":"Rua das Hortas","numero":"100","bairro":"Centro","cep":"36000000"}}}}' \
+  -d '{"query":"mutation($i: CreateProdutorInput!){ createProdutor(input: $i) { produtorId propriedadeId } }","variables":{"i":{"nome":"TESTE HMG full","cpf":"__CPF2__","unidadeEmpresa":"__H_ID__","municipioId":__MUN_ID__,"telefone":"(33) 99999-8888","endereco":{"logradouro":"Rua das Hortas","numero":"100","bairro":"Centro","cep":"36000000"}}}}' \
   http://localhost:4100/
 ```
 
-Expect a new id and note it as `__ID2__`.
+Expect a new `produtorId` (note it as `__ID2__`) with `propriedadeId: null`.
 
 ```sql
 SELECT id_und_empresa FROM ger_pessoa WHERE id_pessoa_demeter = __ID2__;
@@ -165,26 +169,64 @@ Expect: `tp_endereco = 1`, `fk_municipio = __MUN_ID__`, `fk_tpo_logradouro = 1` 
 `id_tipo_contato_pessoa = 3` (celular), `fk_operadora IS NULL`. Every row's `id_und_empresa`
 equals the sent value.
 
-## 5. Silent-failure cases (each returns `{"data":{"createProdutor":null}}`, HTTP 200, no error body)
+## 5. Create with propriedade (5 rows: 3 produtor + 2 propriedade)
+
+New CPF. The propriedade carries its own `municipioId`/`unidadeEmpresa` (here the same values,
+but they are independent client fields):
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"query":"mutation($i: CreateProdutorInput!){ createProdutor(input: $i) { produtorId propriedadeId } }","variables":{"i":{"nome":"TESTE HMG propriedade","cpf":"__CPF3__","unidadeEmpresa":"__H_ID__","municipioId":__MUN_ID__,"propriedade":{"nome":"TESTE HMG Sitio","areaTotal":12.5,"geoPontoTexto":"POINT(-43.9 -19.9)","municipioId":__MUN_ID__,"unidadeEmpresa":"__H_ID__"}}}}' \
+  http://localhost:4100/
+```
+
+Expect both ids non-null. Note them as `__ID3__` / `__PROP_ID__`.
+
+```sql
+SELECT nome_propriedade, area_total, geo_ponto_texto, id_municipio, id_und_empresa, ativo,
+       logradouro, bairro, cep, id_distrito,
+       id_sincronismo IS NOT NULL AS tem_sincronismo, dt_update_record
+  FROM pl_propriedade WHERE id_pl_propriedade = __PROP_ID__;
+SELECT id_pl_propriedade, id_pessoa_demeter, id_und_empresa, id_pl_tipo_posse, dt_update_record
+  FROM pl_propriedade_ger_pessoa WHERE id_pessoa_demeter = __ID3__;
+```
+
+Expect: the five requirement columns populated exactly as sent (`area_total = 12.5000`),
+`ativo = true` (repo-set), every other writable column `NULL`, `id_sincronismo` DB-generated,
+`dt_update_record` set; one join row linking `__PROP_ID__` + `__ID3__` with the sent
+`id_und_empresa` and `id_pl_tipo_posse IS NULL`.
+
+## 6. Silent-failure cases (each returns `{"data":{"createProdutor":null}}`, HTTP 200, no error body)
 
 1. **Duplicate CPF** — repeat the minimal create with the same `__CPF__`. Expect `null`; confirm via SQL
    that **no new rows** appeared (count by CPF stays 1).
 2. **Invalid unit** — `unidadeEmpresa: "H9999"` (nonexistent). Expect `null`, no insert.
 3. **Município mismatch** — valid `unidadeEmpresa` + wrong `municipioId` (e.g. `1`). Expect `null`, no insert.
 4. **Invalid CPF** — `cpf: "12345678900"` (bad check digit). Expect `null`, no insert.
-5. **Coercion error (NOT silent, by design)** — send `municipioId: "abc"`. Expect a standard
+5. **Blank propriedade nome** — repeat step 5's payload with a fresh CPF and
+   `propriedade.nome: " "`. Expect `null` (validation failure), no insert.
+6. **Invalid propriedade unit — proves rollback** — repeat step 5's payload with `__CPF4__` and
+   `propriedade.unidadeEmpresa: "H9999"`. The root ger_pessoa insert succeeds inside the
+   transaction, then the join-row unit `connect` fails — expect `null`, then:
+
+   ```sql
+   SELECT count(*) FROM ger_pessoa WHERE nr_cpf_cnpj = '__CPF4_DIGITS__'; -- expect 0 (rolled back)
+   ```
+
+7. **Invalid propriedade município (also rollback)** — same with valid units but
+   `propriedade.municipioId: 999999`. FK violation on `pl_propriedade.id_municipio`; expect `null`
+   and count 0 for that CPF.
+8. **Coercion error (NOT silent, by design)** — send `municipioId: "abc"`. Expect a standard
    GraphQL error (`Int cannot represent...`) — this is the documented pre-execution surface.
 
 ### Transaction rollback
 
-The normal API cannot safely induce a child-row failure: unit/município values are validated and
-all remaining FKs are fixed, verified constants. Duplicate CPF fails on the root row before nested
-children are attempted, so it **does not prove rollback**. Mark rollback as `not executed` unless a
-coordinated, disposable HMG fault-injection window is approved. The implementation uses one Prisma
-nested `create`, which is an implicit transaction; the local tests verify that single nested payload,
-not PostgreSQL rollback.
+Cases 6–7 above now prove PostgreSQL rollback through the normal API: the propriedade leg fails
+**after** the root row insert inside the single Prisma nested `create` (one implicit transaction),
+and the CPF count staying 0 shows the produtor row was rolled back with it. No fault-injection
+window needed anymore.
 
-## 6. Log review
+## 7. Log review
 
 ```bash
 grep "createProdutor" logs/hmg/errors-*.log | tail -30
@@ -192,24 +234,34 @@ grep "createProdutor" logs/hmg/errors-*.log | tail -30
 
 The rotating files contain **error-level lines only**. Expect one line per failure
 (`execution_failure class=duplicate_cpf`, `invalid_unit`, `municipio_mismatch`,
-`validation_failure`) and no duplicate failure lines.
+`validation_failure`, and for cases 6–7 `execution_failure class=prisma_P2025` /
+`prisma_P2003`) and no duplicate failure lines.
 
 Attempts and successes are `info` level and appear in the HMG process/container output, not in the
-error-only files. Review the relevant container output manually and confirm one `attempt` plus one
-`success ... id_pessoa_demeter=...` for each successful create.
+error-only files. Review the relevant container output manually and confirm one `attempt`
+(now ending in `propriedade=true|false`) plus one
+`success ... id_pessoa_demeter=... id_pl_propriedade=...` for each successful create
+(`id_pl_propriedade=none` for steps 3–4).
 
 Across both outputs, verify no CPF, phone, address, token, or full payload appears.
 
-## 7. Cleanup
+## 8. Cleanup
+
+The propriedade FKs are all `NoAction` — nothing cascades from `ger_pessoa`, so delete the
+propriedade rows explicitly and in this order:
 
 ```sql
-DELETE FROM contato_pessoa WHERE id_pessoa IN (__ID__, __ID2__);          -- NoAction FK: delete first
-DELETE FROM ger_pessoa     WHERE id_pessoa_demeter IN (__ID__, __ID2__);  -- Cascade removes the rest
+DELETE FROM contato_pessoa            WHERE id_pessoa IN (__ID__, __ID2__, __ID3__);         -- NoAction FK: delete first
+DELETE FROM pl_propriedade_ger_pessoa WHERE id_pessoa_demeter IN (__ID__, __ID2__, __ID3__); -- before its two parents
+DELETE FROM pl_propriedade            WHERE id_pl_propriedade = __PROP_ID__;
+DELETE FROM ger_pessoa                WHERE id_pessoa_demeter IN (__ID__, __ID2__, __ID3__); -- Cascade removes the rest
 SELECT count(*) FROM ger_pessoa
-  WHERE id_pessoa_demeter IN (__ID__, __ID2__)
-     OR nr_cpf_cnpj IN ('__CPF_DIGITS__', '__CPF2_DIGITS__');              -- expect 0
-SELECT count(*) FROM contato_pessoa WHERE id_pessoa IN (__ID__, __ID2__);  -- expect 0
-SELECT count(*) FROM ger_end_pessoa WHERE fk_pessoa IN (__ID__, __ID2__);  -- expect 0
+  WHERE id_pessoa_demeter IN (__ID__, __ID2__, __ID3__)
+     OR nr_cpf_cnpj IN ('__CPF_DIGITS__', '__CPF2_DIGITS__', '__CPF3_DIGITS__', '__CPF4_DIGITS__'); -- expect 0
+SELECT count(*) FROM contato_pessoa WHERE id_pessoa IN (__ID__, __ID2__, __ID3__);                  -- expect 0
+SELECT count(*) FROM ger_end_pessoa WHERE fk_pessoa IN (__ID__, __ID2__, __ID3__);                  -- expect 0
+SELECT count(*) FROM pl_propriedade_ger_pessoa WHERE id_pessoa_demeter IN (__ID__, __ID2__, __ID3__); -- expect 0
+SELECT count(*) FROM pl_propriedade WHERE id_pl_propriedade = __PROP_ID__;                          -- expect 0
 ```
 
 ## Result log
@@ -221,7 +273,8 @@ SELECT count(*) FROM ger_end_pessoa WHERE fk_pessoa IN (__ID__, __ID2__);  -- ex
 | 2 dropdown |  |  |
 | 3 minimal create |  |  |
 | 4 full create |  |  |
-| 5 silent failures |  |  |
-| rollback | not executed unless fault injection is approved |  |
-| 6 logs |  |  |
-| 7 cleanup |  |  |
+| 5 create with propriedade |  |  |
+| 6 silent failures |  |  |
+| rollback (cases 6–7) |  |  |
+| 7 logs |  |  |
+| 8 cleanup |  |  |

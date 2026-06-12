@@ -1,17 +1,17 @@
 import type { Produtor } from "../../generated/prisma/client.js";
 import { prismaClient } from "../../config/prismaClient.js";
-import { EnumPropsRepository } from "../../repositories/EnumPropsRepository.js";
 import { PropriedadeRepository } from "../propriedade/repository/PropriedadeRepository.js";
 import { Repository } from "@repositories/Repository.js";
 import type { GraphQLResolveInfo } from "graphql";
 import { getRequestedFields } from "../../shared/utils/getRequestedFields.js";
 import { logger } from "../../shared/utils/logger.js";
-import type { CreateProdutorDTO } from "./dto/CreateProdutorDTO.js";
-import { ProdutorDataMapper } from "./ProdutorDataMapper.js";
+import type {
+  CreateProdutorDTO,
+  CreateProdutorResult,
+} from "./dto/CreateProdutorDTO.js";
 import { validateAndNormalize } from "./produtorValidation.js";
 
 const propriedadeRepository = new PropriedadeRepository(prismaClient);
-const enumPropsRepository = new EnumPropsRepository(prismaClient);
 
 type ProdutorContext = {
   service?: string;
@@ -21,7 +21,7 @@ type ProdutorCreateRepository = Repository<Produtor> & {
   create?: (
     input: CreateProdutorDTO,
     meta?: { service?: string },
-  ) => Promise<bigint | null>;
+  ) => Promise<CreateProdutorResult | null>;
 };
 
 export const produtorResolver = (
@@ -58,23 +58,18 @@ export const produtorResolver = (
       _root: unknown,
       { input }: { input: CreateProdutorDTO },
       context: ProdutorContext,
-    ): Promise<bigint | null> => {
+    ): Promise<CreateProdutorResult | null> => {
       const service = context.service ?? "unknown";
       logger.info(
-        `createProdutor: attempt service=${service} unidadeEmpresa=${input.unidadeEmpresa} endereco=${Boolean(input.endereco)} telefone=${input.telefone != null}`,
+        `createProdutor: attempt service=${service} unidadeEmpresa=${input.unidadeEmpresa} endereco=${Boolean(input.endereco)} telefone=${input.telefone != null} propriedade=${Boolean(input.propriedade)}`,
       );
 
       let normalized: CreateProdutorDTO;
       try {
         normalized = validateAndNormalize(input);
-        if (normalized.telefone != null) {
-          normalized = {
-            ...normalized,
-            telefone: ProdutorDataMapper.normalizePhone(normalized.telefone),
-          };
-        }
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "invalid input";
+        const message =
+          error instanceof Error ? error.message : "invalid input";
         logger.error(
           `createProdutor: validation_failure service=${service} unidadeEmpresa=${input.unidadeEmpresa} message=${message}`,
         );
@@ -82,20 +77,21 @@ export const produtorResolver = (
       }
 
       try {
-        const id = await produtorRepository.create!(normalized, {
+        const result = await produtorRepository.create!(normalized, {
           service: context.service,
         });
 
-        if (id != null) {
+        if (result != null) {
           logger.info(
-            `createProdutor: success service=${service} unidadeEmpresa=${input.unidadeEmpresa} id_pessoa_demeter=${id}`,
+            `createProdutor: success service=${service} unidadeEmpresa=${input.unidadeEmpresa} id_pessoa_demeter=${result.produtorId} id_pl_propriedade=${result.propriedadeId ?? "none"}`,
           );
         }
 
-        return id;
-      } catch {
+        return result;
+      } catch (e) {
+        console.log({ e });
         logger.error(
-          `createProdutor: unexpected_failure service=${service} unidadeEmpresa=${input.unidadeEmpresa}`,
+          `createProdutor:service=${service} unidadeEmpresa=${input.unidadeEmpresa}`,
         );
         return null;
       }

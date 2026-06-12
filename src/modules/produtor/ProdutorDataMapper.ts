@@ -1,8 +1,13 @@
-import type { CreateProdutorDTO, EnderecoInput } from "./dto/CreateProdutorDTO.js";
+import type {
+  CreateProdutorDTO,
+  EnderecoInput,
+  PropriedadeInput,
+} from "./dto/CreateProdutorDTO.js";
 import { TIPO_CONTATO, TIPO_LOGRADOURO_IDS } from "./produtorConstants.js";
 
 // Pure mapping + derivation for createProdutor: domain input -> Prisma column names, plus the
-// fk_tpo_logradouro / id_tipo_contato_pessoa derivations and phone normalization. No DB, no side effects.
+// fk_tpo_logradouro / id_tipo_contato_pessoa derivations. No DB, no side effects, no throwing
+// (boundary validation/normalization, including telefone, lives in produtorValidation).
 
 export class ProdutorDataMapper {
   /** ger_pessoa scalar columns from the domain input (relations / fixed / repo-set fields excluded). */
@@ -28,6 +33,18 @@ export class ProdutorDataMapper {
     };
   }
 
+  /** pl_propriedade columns from the domain input (dt_update_record set by the repo). */
+  static mapPropriedade(propriedade: PropriedadeInput) {
+    return {
+      nome_propriedade: propriedade.nome,
+      area_total: propriedade.areaTotal ?? null,
+      geo_ponto_texto: propriedade.geoPontoTexto ?? null,
+      id_municipio: propriedade.municipioId,
+      id_und_empresa: propriedade.unidadeEmpresa,
+      ativo: true,
+    };
+  }
+
   /**
    * fk_tpo_logradouro derived from the logradouro string (case-insensitive), null if no match.
    * Full word | abbrev (R. Av/Av. Rod. Pç) | highway (BR/MG/LMG/AMG + opt sep + digit -> Rodovia).
@@ -38,7 +55,8 @@ export class ProdutorDataMapper {
     if (!s) return null;
 
     // highway: BR/MG/LMG/AMG followed by optional - / space then a digit
-    if (/^(br|mg|lmg|amg)[\s-]*\d/.test(s)) return TIPO_LOGRADOURO_IDS["Rodovia"];
+    if (/^(br|mg|lmg|amg)[\s-]*\d/.test(s))
+      return TIPO_LOGRADOURO_IDS["Rodovia"];
 
     const head = s.split(/\s+/)[0];
     const fullWords: Record<string, number> = {
@@ -64,28 +82,6 @@ export class ProdutorDataMapper {
       pc: TIPO_LOGRADOURO_IDS["Praça"],
     };
     return abbrevs[head] ?? null;
-  }
-
-  /**
-   * Normalize a phone to 10/11 digits (DDD + number). Accepts digits with () spaces - and a leading
-   * +55; strips a 55 country code only at 12-13 digits. Throws on anything else (the create path turns
-   * a throw into a silent null). Phone is optional; callers skip this when telefone is absent.
-   */
-  static normalizePhone(raw: string): string {
-    const cleaned = (raw ?? "").trim();
-    if (
-      cleaned === "" ||
-      !/^\+?[\d() -]+$/.test(cleaned) ||
-      (cleaned.startsWith("+") && !cleaned.startsWith("+55"))
-    ) {
-      throw new Error("telefone contém caracteres inválidos");
-    }
-    let digits = cleaned.replace(/\D/g, "");
-    if (digits.length >= 12 && digits.length <= 13 && digits.startsWith("55")) {
-      digits = digits.slice(2);
-    }
-    if (!/^\d{10,11}$/.test(digits)) throw new Error("telefone inválido");
-    return digits;
   }
 
   /** id_tipo_contato_pessoa: mobility digit (1st after the 2-digit DDD) 7/8/9 -> Celular, else Comercial. */

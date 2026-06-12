@@ -3,7 +3,10 @@ import { PrismaRepository } from "../../../repositories/PrismaRepository.js";
 import { Repository } from "../../../repositories/Repository.js";
 import { EnumPropsRepository } from "../../../repositories/EnumPropsRepository.js";
 import { logger } from "../../../shared/utils/logger.js";
-import type { CreateProdutorDTO } from "../dto/CreateProdutorDTO.js";
+import type {
+  CreateProdutorDTO,
+  CreateProdutorResult,
+} from "../dto/CreateProdutorDTO.js";
 import { ProdutorDataMapper } from "../ProdutorDataMapper.js";
 import {
   FK_CAT_PESSOA,
@@ -218,14 +221,14 @@ export class ProdutorRepository
   async create(
     input: CreateProdutorDTO,
     meta?: CreateProdutorMeta,
-  ): Promise<bigint | null> {
+  ): Promise<CreateProdutorResult | null> {
     let unidadeEmpresa = "unknown";
     const logContext = () =>
       `service=${meta?.service ?? "unknown"} unidadeEmpresa=${unidadeEmpresa}`;
 
     try {
       unidadeEmpresa = input.unidadeEmpresa;
-      const { municipioId, endereco, telefone } = input;
+      const { municipioId, endereco, telefone, propriedade } = input;
 
       const unidade = await this.prisma.ger_und_empresa.findFirst({
         where: {
@@ -284,8 +287,9 @@ export class ProdutorRepository
                 ...ProdutorDataMapper.mapEndereco(endereco),
                 tp_endereco: TP_ENDERECO,
                 fk_municipio: municipioId,
-                fk_tpo_logradouro:
-                  ProdutorDataMapper.tipoLogradouro(endereco.logradouro),
+                fk_tpo_logradouro: ProdutorDataMapper.tipoLogradouro(
+                  endereco.logradouro,
+                ),
                 fk_distrito: null,
                 id_und_empresa: unidade.id_und_empresa,
                 dt_update_record: now,
@@ -304,11 +308,36 @@ export class ProdutorRepository
               },
             },
           }),
+          ...(propriedade && {
+            // join row mixes the pl_propriedade nested create with the unit relation, so the
+            // unit must go through connect (Prisma checked input) instead of a raw scalar FK
+            pl_propriedade_ger_pessoa: {
+              create: {
+                dt_update_record: now,
+                ger_und_empresa: {
+                  connect: { id_und_empresa: propriedade.unidadeEmpresa },
+                },
+                pl_propriedade: {
+                  create: {
+                    ...ProdutorDataMapper.mapPropriedade(propriedade),
+                    dt_update_record: now,
+                  },
+                },
+              },
+            },
+          }),
         },
-        select: { id_pessoa_demeter: true },
+        select: {
+          id_pessoa_demeter: true,
+          pl_propriedade_ger_pessoa: { select: { id_pl_propriedade: true } },
+        },
       });
 
-      return created.id_pessoa_demeter;
+      return {
+        produtorId: created.id_pessoa_demeter,
+        propriedadeId:
+          created.pl_propriedade_ger_pessoa[0]?.id_pl_propriedade ?? null,
+      };
     } catch (error: unknown) {
       logger.error(
         `createProdutor: execution_failure class=${prismaFailureClass(error)} ${logContext()}`,

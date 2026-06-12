@@ -12,7 +12,7 @@ export class ProdutorValidationError extends Error {
   }
 }
 
-// Max lengths from the @db.VarChar(N) annotations on ger_pessoa / ger_end_pessoa.
+// Max lengths from the @db.VarChar(N)/@db.Char(N) annotations on ger_pessoa / ger_end_pessoa / pl_propriedade.
 const MAX_LENGTHS = {
   nome: 100,
   email: 80,
@@ -23,10 +23,40 @@ const MAX_LENGTHS = {
   complemento: 80,
   bairro: 80,
   cep: 8,
+  nomePropriedade: 100,
+  geoPontoTexto: 255,
+  unidadeEmpresa: 5,
 } as const;
+
+// area_total is Decimal(13,4): 9 integer digits max.
+const MAX_AREA_TOTAL = 1e9;
 
 /** Transform — strips all non-digits. Runs on every call; the unique constraint needs normalized digits. */
 export const normalizeCpf = (raw: string): string => (raw ?? "").replace(/\D/g, "");
+
+/**
+ * Normalize a phone to 10/11 digits (DDD + number). Accepts digits with () spaces - and a leading
+ * +55; strips a 55 country code only at 12-13 digits. Throws ProdutorValidationError on anything
+ * else (the create path turns the throw into a silent null). Callers skip this when telefone is absent.
+ */
+export const normalizePhone = (raw: string): string => {
+  const cleaned = (raw ?? "").trim();
+  if (
+    cleaned === "" ||
+    !/^\+?[\d() -]+$/.test(cleaned) ||
+    (cleaned.startsWith("+") && !cleaned.startsWith("+55"))
+  ) {
+    throw new ProdutorValidationError("telefone contém caracteres inválidos");
+  }
+  let digits = cleaned.replace(/\D/g, "");
+  if (digits.length >= 12 && digits.length <= 13 && digits.startsWith("55")) {
+    digits = digits.slice(2);
+  }
+  if (!/^\d{10,11}$/.test(digits)) {
+    throw new ProdutorValidationError("telefone inválido");
+  }
+  return digits;
+};
 
 /** CPF check-digit validation on the 11-digit normalized form. */
 export const isValidCpf = (digits: string): boolean => {
@@ -54,8 +84,9 @@ const checkMaxLength = (value: string | null | undefined, max: number, field: st
 };
 
 /**
- * Validate the boundary and normalize the CPF. Returns the input with `cpf` reduced to digits.
- * Throws ProdutorValidationError on any failure. Phone normalization lives in the data mapper.
+ * Validate the boundary and normalize the scalars it owns: `cpf` reduced to digits and, when
+ * present, `telefone` reduced to its 10/11-digit form. Returns the normalized input.
+ * Throws ProdutorValidationError on any failure.
  */
 export const validateAndNormalize = (input: CreateProdutorDTO): CreateProdutorDTO => {
   requireNonBlank(input.nome, "nome");
@@ -88,5 +119,39 @@ export const validateAndNormalize = (input: CreateProdutorDTO): CreateProdutorDT
     checkMaxLength(endereco.cep, MAX_LENGTHS.cep, "cep");
   }
 
-  return { ...input, cpf };
+  const propriedade = input.propriedade;
+  if (propriedade) {
+    requireNonBlank(propriedade.nome, "propriedade.nome");
+    requireNonBlank(propriedade.unidadeEmpresa, "propriedade.unidadeEmpresa");
+    checkMaxLength(propriedade.nome, MAX_LENGTHS.nomePropriedade, "propriedade.nome");
+    checkMaxLength(
+      propriedade.geoPontoTexto,
+      MAX_LENGTHS.geoPontoTexto,
+      "propriedade.geoPontoTexto",
+    );
+    checkMaxLength(
+      propriedade.unidadeEmpresa,
+      MAX_LENGTHS.unidadeEmpresa,
+      "propriedade.unidadeEmpresa",
+    );
+    if (
+      !Number.isInteger(propriedade.municipioId) ||
+      propriedade.municipioId <= 0
+    ) {
+      throw new ProdutorValidationError("propriedade.municipioId inválido");
+    }
+    if (
+      propriedade.areaTotal != null &&
+      (!Number.isFinite(propriedade.areaTotal) ||
+        propriedade.areaTotal <= 0 ||
+        propriedade.areaTotal >= MAX_AREA_TOTAL)
+    ) {
+      throw new ProdutorValidationError("propriedade.areaTotal inválida");
+    }
+  }
+
+  const telefone =
+    input.telefone != null ? normalizePhone(input.telefone) : input.telefone;
+
+  return { ...input, cpf, telefone };
 };

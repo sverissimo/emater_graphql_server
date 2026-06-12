@@ -29,6 +29,42 @@ describe("ProdutorDataMapper", () => {
     );
   });
 
+  test("maps propriedade fields to Prisma columns", () => {
+    assert.deepEqual(
+      ProdutorDataMapper.mapPropriedade({
+        nome: "Sítio Boa Vista",
+        areaTotal: 12.5,
+        geoPontoTexto: "POINT(-43.9 -19.9)",
+        municipioId: 456,
+        unidadeEmpresa: "H002",
+      }),
+      {
+        nome_propriedade: "Sítio Boa Vista",
+        area_total: 12.5,
+        geo_ponto_texto: "POINT(-43.9 -19.9)",
+        id_municipio: 456,
+        id_und_empresa: "H002",
+        ativo: true,
+      },
+    );
+
+    assert.deepEqual(
+      ProdutorDataMapper.mapPropriedade({
+        nome: "Sítio Boa Vista",
+        municipioId: 456,
+        unidadeEmpresa: "H002",
+      }),
+      {
+        nome_propriedade: "Sítio Boa Vista",
+        area_total: null,
+        geo_ponto_texto: null,
+        id_municipio: 456,
+        id_und_empresa: "H002",
+        ativo: true,
+      },
+    );
+  });
+
   test("derives tipo logradouro", () => {
     const cases: Array<[string, number | null]> = [
       ["Rua das Hortas", TIPO_LOGRADOURO_IDS.Rua],
@@ -46,23 +82,7 @@ describe("ProdutorDataMapper", () => {
     }
   });
 
-  test("normalizes valid phone formats and derives contact type", () => {
-    assert.equal(
-      ProdutorDataMapper.normalizePhone("(31) 3333-4444"),
-      "3133334444",
-    );
-    assert.equal(
-      ProdutorDataMapper.normalizePhone("(31) 99999-8888"),
-      "31999998888",
-    );
-    assert.equal(
-      ProdutorDataMapper.normalizePhone("+55 (31) 99999-8888"),
-      "31999998888",
-    );
-    assert.equal(
-      ProdutorDataMapper.normalizePhone("55999998888"),
-      "55999998888",
-    );
+  test("derives contact type from the mobility digit", () => {
     assert.equal(
       ProdutorDataMapper.tipoContato("3133334444"),
       TIPO_CONTATO.COMERCIAL,
@@ -71,20 +91,5 @@ describe("ProdutorDataMapper", () => {
       ProdutorDataMapper.tipoContato("31999998888"),
       TIPO_CONTATO.CELULAR,
     );
-  });
-
-  test("rejects malformed phone values", () => {
-    for (const phone of [
-      "",
-      "31ABC9999",
-      "31.99999.8888",
-      "31+99999-8888",
-      "+1 202 555 0198",
-      "319999",
-      "319999988889",
-      "31\t99999-8888",
-    ]) {
-      assert.throws(() => ProdutorDataMapper.normalizePhone(phone));
-    }
   });
 });

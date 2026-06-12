@@ -6,9 +6,9 @@ now just the data shapes; the *why* lives here.
 ## Scope
 
 What a single `createProdutor` mutation writes, table by table. Through THIS
-gateway: at most **one** `endereco` and **one** `telefone` per producer. The DB
-tables are 1:N, but multiple addresses/phones must go through another interface
-or straight into the DB — not here.
+gateway: at most **one** `endereco`, **one** `telefone` and **one** `propriedade`
+per producer. The DB tables are 1:N, but multiples must go through another
+interface or straight into the DB — not here.
 
 Cheat-sheet tags:
 
@@ -43,18 +43,37 @@ from `logradouro`.
 
 `getMunicipiosEmater` feeds a SELECT box; the chosen row's ids go into the input:
 
-- `id_und_empresa` → `input.unidadeEmpresa`; SAME value written to EVERY row.
+- `id_und_empresa` → `input.unidadeEmpresa`; SAME value written to every
+  ger_pessoa/categoria/endereço/contato row. The propriedade rows use the
+  separate `input.propriedade.unidadeEmpresa` (see below).
 - `ger_end_pessoa.fk_municipio` → `input.municipioId`.
 
 ## Derived by the repo (NOT client input)
 
-- `ger_end_pessoa.fk_tpo_logradouro` → `normalizeTipoLogradouro(logradouro)`
-  (case-insensitive), null if no match. Rules: full word ("Rua"/"Avenida"/…) |
-  abbrev (`R.`→1, `Av`/`Av.`→2, `Rod.`→4, `Pç`→3) | highway (`BR`/`MG` + opt sep
-  + digit → 4 Rodovia) | else null.
+- `ger_end_pessoa.fk_tpo_logradouro` → `ProdutorDataMapper.tipoLogradouro(logradouro)`
+  (case-insensitive on the first word), null if no match. Rules: full word
+  (rua 1, avenida 2, praça/praca 3, rodovia 4, alameda 5, beco 6, travessa 7,
+  sítio/sitio 8) | abbrev (`r.`→1, `av`/`av.`→2, `rod.`→4, `pç`/`pc`→3) |
+  highway (`BR`/`MG`/`LMG`/`AMG` + optional space/`-` + digit → 4 Rodovia) | else null.
 - `contato_pessoa.id_tipo_contato_pessoa` → 3 (celular) if the mobility digit is
   7/8/9, else 1 (Comercial). NB: the mobility digit is the 1st digit AFTER the
   2-digit DDD — for "33 9 9999-8888" it's the "9" → celular → 3.
+
+## Optional propriedade (added after the first implementation)
+
+`input.propriedade` adds two rows in the SAME nested write (all-or-nothing):
+
+- `pl_propriedade` — only `nome_propriedade`, `area_total`, `geo_ponto_texto`,
+  `id_municipio`, `id_und_empresa` (+ repo-set `ativo = true` and `dt_update_record`;
+  `id_sincronismo` DB-generated; everything else stays NULL).
+- `pl_propriedade_ger_pessoa` — join row: both ids + `id_und_empresa`.
+- `propriedade.municipioId` / `propriedade.unidadeEmpresa` are client-sent and
+  independent from the produtor's pair (a farm can sit in another município).
+  They are NOT pre-validated — a bad value fails the FK/connect inside the
+  transaction, rolls everything back, and returns the usual silent `null`.
+- Return shape is `CreateProdutorResult { produtorId, propriedadeId }`;
+  `propriedadeId` is null when no propriedade was sent.
+- Details: [plans/produtor-propriedade-create-plan.md](plans/produtor-propriedade-create-plan.md).
 
 ## GET /api/getMunicipiosEmater
 

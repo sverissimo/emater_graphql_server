@@ -2,6 +2,12 @@
 
 Add a **create-only** `createProdutor` GraphQL mutation plus the additive `GET /api/getMunicipiosEmater` lookup route needed to populate its unit selector. There is no REST producer-create route, update, or delete. The mutation inserts a `ger_pessoa` (the `Produtor` model) row plus related rows in one nested write, mirroring `AtendimentoRepository.create`.
 
+> **Superseded detail:** the mutation no longer returns a bare `BigInt`. A follow-up extension
+> ([produtor-propriedade-create-plan.md](produtor-propriedade-create-plan.md), implemented before
+> any consumer existed) added an optional propriedade child and changed the return to
+> `CreateProdutorResult { produtorId, propriedadeId }` (or `null`). Everything else in this plan
+> still describes the shipped behavior.
+
 ## Decisions
 
 - **Surface:** GraphQL for producer creation + one new read-only REST lookup. No `/api/*` producer-create route.
