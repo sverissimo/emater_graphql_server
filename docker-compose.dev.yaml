@@ -14,9 +14,9 @@ services:
     ports:
       - 4000:4000
     networks:
-      - emater_gql_dev
+      - demeter_gateway_dev
 
 networks:
-  emater_gql_dev:
-    name: emater_gql_dev
+  demeter_gateway_dev:
+    name: demeter_gateway_dev
 

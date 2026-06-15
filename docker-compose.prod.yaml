@@ -21,14 +21,9 @@ services:
           cpus: '2'
           memory: 2048M
     networks:
-      - pnae_prod
-      - cmc_prod
-      - cmc_hmg
+      - demeter_gateway_prod
 
 networks:
-  pnae_prod:
+  demeter_gateway_prod:
     external: true
-  cmc_prod:
-    external: true
-  cmc_hmg:
-    external: true
+

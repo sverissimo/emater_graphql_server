@@ -21,15 +21,9 @@ services:
           cpus: '2'
           memory: 2048M
     networks:
-      - pnae_hmg
-      - cmc_hmg
-      - emater_gql_hmg
+      - demeter_gateway_hmg
 
 networks:
-  pnae_hmg:
-    external: true
-  cmc_hmg:
-    external: true
-  emater_gql_hmg:
-    name: emater_gql_hmg
+  demeter_gateway_hmg:
+    name: demeter_gateway_hmg
 

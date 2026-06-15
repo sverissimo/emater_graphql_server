@@ -49,6 +49,7 @@ This service is consumed by other apps on this host (PNAE backend and others). B
 - **Same rule for `/api/*` routes**: the path, HTTP method, request shape, response shape, and status codes are observed externally. New routes are fine and should be obvious from their name; modifying an existing one needs a consumer audit first.
 - The custom scalars `BigInt` (serializes to string) and `DateTime` are part of the wire format. Don't change their serialization.
 - **No side effects on existing routes/resolvers — even from "additive" work.** Adding a new field, query, mutation, or `/api/*` route is allowed, but it must not change the observable behavior of anything already shipped. Watch the shared seams: a new resolver key is added to an **existing resolver object** (e.g. `produtorResolver`), new repo methods sit on a **repo other resolvers already use**, and DTOs/types may be **imported elsewhere**. When touching any of these, change only the new surface — do not alter, reorder, re-type, or re-implement existing fields, methods, query shapes, or error/status behavior that current consumers rely on. If a change can't be expressed as purely additive, it's a contract change: grep consumers and get sign-off first.
+- `Atendimento.sn_validacao` is a deprecated compatibility alias for `sn_validado`; old PNAE production images still query it. Keep both fields until every deployed consumer has migrated.
 
 ## Code style
 
