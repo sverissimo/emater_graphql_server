@@ -6,6 +6,11 @@ import { UpdateAtendimentoDTO } from "./dto/UpdateAtendimentoDTO.js";
 export const atendimentoResolver = (
   atendimentoRepository: AtendimentoRepository,
 ) => ({
+  Atendimento: {
+    sn_validacao: (atendimento: { sn_validado?: number | null }) =>
+      atendimento.sn_validado,
+  },
+
   Query: {
     atendimento: (_root: any, { id }: { id: bigint }) => {
       return atendimentoRepository.findOne(id);

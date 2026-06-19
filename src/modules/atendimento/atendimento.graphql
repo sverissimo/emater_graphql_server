@@ -65,6 +65,7 @@ type Atendimento {
   ativo: Boolean
   link_pdf: String
   sn_pendencia: Int
+  sn_validacao: Int @deprecated(reason: "Use sn_validado")
   sn_validado: Int
   id_und_empresa: String
   fk_und_empresa: String

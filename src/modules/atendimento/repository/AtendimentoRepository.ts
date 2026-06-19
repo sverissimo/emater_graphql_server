@@ -137,9 +137,10 @@ export class AtendimentoRepository
           UPDATE at_atendimento_indi_camp_acess a
           SET valor_campo_acessorio = ${temasAtendimento}
           WHERE a.id_at_indicador_camp_acessorio = 14033
-            AND a.id_at_atendimento_indicador = (
-              SELECT atind.id_at_atendimento_indicador FROM at_atendimento_indicador atind
-              WHERE atind.id_at_atendimento = ${idAtendimento}
+            AND EXISTS (
+              SELECT 1 FROM at_atendimento_indicador atind
+              WHERE atind.id_at_atendimento_indicador = a.id_at_atendimento_indicador
+                AND atind.id_at_atendimento = ${idAtendimento}
             )
         `;
     }
@@ -149,9 +150,10 @@ export class AtendimentoRepository
           UPDATE at_atendimento_indi_camp_acess a
           SET valor_campo_acessorio = ${numeroVisita}
           WHERE a.id_at_indicador_camp_acessorio = 14032
-            AND a.id_at_atendimento_indicador = (
-              SELECT atind.id_at_atendimento_indicador FROM at_atendimento_indicador atind
-              WHERE atind.id_at_atendimento = ${idAtendimento}
+            AND EXISTS (
+              SELECT 1 FROM at_atendimento_indicador atind
+              WHERE atind.id_at_atendimento_indicador = a.id_at_atendimento_indicador
+                AND atind.id_at_atendimento = ${idAtendimento}
             )
         `;
     }
@@ -177,7 +179,11 @@ export class AtendimentoRepository
   async setValidacaoStatus(idAtendimento: bigint, aprovado: boolean) {
     try {
       const data = aprovado
-        ? { sn_validado: 1, sn_pendencia: 0, data_validacao: getTodayBrTimezone() }
+        ? {
+            sn_validado: 1,
+            sn_pendencia: 0,
+            data_validacao: getTodayBrTimezone(),
+          }
         : { sn_validado: 0, sn_pendencia: 1, data_validacao: null };
 
       await this.prisma.at_atendimento.update({
