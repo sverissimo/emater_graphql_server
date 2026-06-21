@@ -1,4 +1,4 @@
-import { GraphQLResolveInfo } from "graphql";
+import { GraphQLError, GraphQLResolveInfo } from "graphql";
 import { PrismaRepository } from "../../../repositories/PrismaRepository.js";
 import { CreateAtendimentoDTO } from "../dto/CreateAtendimentoDTO.js";
 import { at_atendimento } from "../../../generated/prisma/client.js";
@@ -192,6 +192,35 @@ export class AtendimentoRepository
       });
     } catch (error: any) {
       this.handleRecordNotFound(error);
+    }
+  }
+
+  async setDataSeiStatus(idAtendimento: bigint, aprovado: boolean) {
+    if (!aprovado) {
+      try {
+        await this.prisma.at_atendimento.update({
+          where: { id_at_atendimento: idAtendimento },
+          data: { data_sei: null },
+        });
+      } catch (error: any) {
+        this.handleRecordNotFound(error);
+      }
+      return;
+    }
+
+    // Approve only if the coordenador already validated. Conditional updateMany is
+    // atomic (no read-then-write race) and returns count 0 — instead of throwing —
+    // when the id is missing OR data_validacao is null, so we map both to 400.
+    const { count } = await this.prisma.at_atendimento.updateMany({
+      where: { id_at_atendimento: idAtendimento, data_validacao: { not: null } },
+      data: { data_sei: getTodayBrTimezone() },
+    });
+
+    if (count === 0) {
+      throw new GraphQLError(
+        "Atendimento inexistente ou ainda não validado pelo coordenador regional.",
+        { extensions: { code: "BAD_REQUEST" } },
+      );
     }
   }
 

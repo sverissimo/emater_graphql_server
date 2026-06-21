@@ -66,4 +66,22 @@ router.patch(
   },
 );
 
+router.patch(
+  "/aprovarSei/:atendimentoId",
+  async (req: Request, res: Response) => {
+    const id = parseAtendimentoId(routeParam(req.params.atendimentoId));
+    await atendimentoRepository.setDataSeiStatus(id, true);
+    return res.status(204).send();
+  },
+);
+
+router.patch(
+  "/removerAprovacaoSei/:atendimentoId",
+  async (req: Request, res: Response) => {
+    const id = parseAtendimentoId(routeParam(req.params.atendimentoId));
+    await atendimentoRepository.setDataSeiStatus(id, false);
+    return res.status(204).send();
+  },
+);
+
 export const atendimentoRoutes = router;

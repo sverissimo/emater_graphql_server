@@ -56,6 +56,19 @@ Both endpoints are intentionally idempotent: approving an already-approved atend
 
 6. **Update `AGENTS.md`** — add the two new `/api/*` routes to the `routes.ts` description so the documented REST surface doesn't drift. If `CLAUDE.md` is restored as a symlink later, this remains the same file.
 
+## SEI approval endpoints (`data_sei`) — added later
+
+The admin DETEC/SEI approval feature added two sibling routes on the same `atendimentoRoutes` router. They mirror the shape above (PATCH, id-only path param, `204` on success) but write a **different column** (`data_sei`) and carry their own precondition. The full server-side + frontend design lives in the PNAE backend plan `docs/plans/admin-aprovar-relatorio-sei-plan.md`; this is the gateway slice only.
+
+- `PATCH /api/aprovarSei/:atendimentoId` → `setDataSeiStatus(id, true)` → sets `data_sei = getTodayBrTimezone()`.
+- `PATCH /api/removerAprovacaoSei/:atendimentoId` → `setDataSeiStatus(id, false)` → sets `data_sei = null`.
+
+`setDataSeiStatus` writes **only** `data_sei` and never touches the validation triple (`sn_validado` / `sn_pendencia` / `data_validacao`) — they are distinct lifecycle operations.
+
+**Precondition on approve (atomic).** Admin approval is only allowed when the coordenador already validated. Rather than a read-then-write check, the approve path uses a conditional `updateMany` filtered on `data_validacao: { not: null }`; a `count === 0` (missing id **or** not-yet-validated) throws a `BAD_REQUEST` `GraphQLError` → `400` with the message *"Atendimento inexistente ou ainda não validado pelo coordenador regional."*. The remove path has no precondition (an admin can always undo) and uses a plain `update`, mapping `P2025` → `404` via `handleRecordNotFound`.
+
+**Downstream-stage locking is UX-only in v1** — the gateway does not block `removerAprovacaoSei` on a later-stage row (`data_see` / `dt_export_ok` set). The ready-to-enable hardened variant (conditional `updateMany` on the remove path too) is documented in the PNAE backend plan §1A; promote it only if downstream locking is confirmed a hard data invariant.
+
 ## Out of scope
 
 - The PNAE backend consumer (will call these routes later).
