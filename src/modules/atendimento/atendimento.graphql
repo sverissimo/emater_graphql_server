@@ -1,6 +1,61 @@
 type Query {
   atendimento(id: BigInt): Atendimento
   atendimentos(ids: [BigInt]): [Atendimento]
+  atendimentosComRelatorioManual(
+    pageSize: Int = 200
+    cursor: BigInt
+    id_usuario: BigInt
+    id_reg_empresa: String
+  ): AtendimentoPage!
+}
+
+type AtendimentoPage {
+  items: [AtendimentoListItem!]!
+  pageSize: Int!
+  nextCursor: BigInt
+  hasMore: Boolean!
+}
+
+type AtendimentoListItem {
+  id_at_atendimento: BigInt!
+  data_inicio_atendimento: DateTime!
+  data_fim_atendimento: DateTime
+  data_validacao: DateTime
+  data_atualizacao: DateTime!
+  data_criacao: DateTime!
+  data_sei: DateTime
+  data_see: DateTime
+  sn_pendencia: Int
+  sn_validado: Int
+  dt_update_record: DateTime
+  id_at_anterior: BigInt
+  id_und_empresa: String!
+  ativo: Boolean!
+  clientes: [AtendimentoClienteResumo!]!
+  usuarios: [AtendimentoUsuarioResumo!]!
+}
+
+type AtendimentoClienteResumo {
+  produtor: ProdutorResumo!
+  propriedade: PropriedadeResumo
+}
+
+type ProdutorResumo {
+  nm_pessoa: String
+  nr_cpf_cnpj: String
+  dap: String
+  caf: String
+}
+
+type PropriedadeResumo {
+  nome_propriedade: String!
+  geo_ponto_texto: String
+}
+
+type AtendimentoUsuarioResumo {
+  id_usuario: BigInt!
+  nome_usuario: String
+  id_und_empresa: String
 }
 
 type Mutation {

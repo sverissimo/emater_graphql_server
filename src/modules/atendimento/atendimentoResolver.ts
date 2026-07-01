@@ -2,6 +2,11 @@ import { GraphQLResolveInfo } from "graphql";
 import { AtendimentoRepository } from "@modules/atendimento/repository/AtendimentoRepository.js";
 import { CreateAtendimentoDTO } from "./dto/CreateAtendimentoDTO.js";
 import { UpdateAtendimentoDTO } from "./dto/UpdateAtendimentoDTO.js";
+import {
+  ATENDIMENTO_KEYSET_START_CURSOR,
+  ATENDIMENTO_PAGE_SIZE_DEFAULT,
+  ATENDIMENTO_PAGE_SIZE_MAX,
+} from "./atendimentoConstants.js";
 
 export const atendimentoResolver = (
   atendimentoRepository: AtendimentoRepository,
@@ -23,6 +28,31 @@ export const atendimentoResolver = (
       info: GraphQLResolveInfo,
     ) => {
       return atendimentoRepository.findMany(ids, info);
+    },
+
+    atendimentosComRelatorioManual: (
+      _root: any,
+      {
+        pageSize,
+        cursor,
+        id_usuario,
+        id_reg_empresa,
+      }: {
+        pageSize?: number | null;
+        cursor?: bigint | null;
+        id_usuario?: bigint | null;
+        id_reg_empresa?: string | null;
+      },
+    ) => {
+      const size = Math.min(
+        ATENDIMENTO_PAGE_SIZE_MAX,
+        Math.max(1, pageSize ?? ATENDIMENTO_PAGE_SIZE_DEFAULT),
+      );
+      const startCursor = cursor ?? ATENDIMENTO_KEYSET_START_CURSOR;
+      return atendimentoRepository.findComRelatorioManual(size, startCursor, {
+        id_usuario,
+        id_reg_empresa,
+      });
     },
   },
 
