@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Usage example:
-# bash rebuild-docker.sh hmg
+# bash recreate-docker.sh hmg
 
 if [ -z "$1" ]; then
   echo "Usage: $0 <environment>"

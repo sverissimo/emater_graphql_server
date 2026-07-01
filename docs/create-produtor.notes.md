@@ -98,6 +98,8 @@ ORDER BY m.nm_municipio;
 ```
 
 `H%` rows = municípios (local units), `G%` rows = regionais. An H row's
-`fk_und_empresa` points to its G parent; a G row's `fk_und_empresa` is null.
+`fk_und_empresa` points to its G parent. G rows normally have `fk_und_empresa`
+null, but Demeter has at least one bad regional row, so treat the `id_und_empresa`
+prefix (`H%`/`G%`) as the discriminator, not FK nullability.
 ⚠️ the existing `getRegionaisEmater` uses `LIKE '%G%'`; the new endpoint uses
 `'H%'` (starts-with) for precision.
