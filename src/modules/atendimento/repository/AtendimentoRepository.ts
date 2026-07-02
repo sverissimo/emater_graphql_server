@@ -453,6 +453,30 @@ export class AtendimentoRepository
     return row?.arquivo ?? null;
   }
 
+  /**
+   * Every **active** file of an atendimento (metadata + raw `arquivo` binary), ordered lowest
+   * `id_at_arquivo` first. Consumed by the PNAE combined manual-PDF flow, which needs all
+   * relatório PDFs and proof photos — not just the lowest-id match per MIME.
+   */
+  async getArquivosAtendimento(idAtendimento: bigint): Promise<
+    {
+      idArquivo: string;
+      tipoArquivo: string | null;
+      arquivo: string | null;
+    }[]
+  > {
+    const rows = await this.prisma.at_arquivo.findMany({
+      where: { id_at_atendimento: idAtendimento, ativo: true },
+      orderBy: { id_at_arquivo: "asc" },
+      select: { id_at_arquivo: true, tipo_arquivo: true, arquivo: true },
+    });
+    return rows.map((row) => ({
+      idArquivo: String(row.id_at_arquivo),
+      tipoArquivo: row.tipo_arquivo,
+      arquivo: row.arquivo,
+    }));
+  }
+
   async getReplacedAtendimentos() {
     const query = (await this.prisma.$queryRaw`
       SELECT at.id_at_atendimento, at.id_at_anterior

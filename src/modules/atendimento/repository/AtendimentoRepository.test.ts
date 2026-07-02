@@ -284,3 +284,48 @@ describe("AtendimentoRepository.getArquivoByTipo", () => {
     assert.equal(await repo.getArquivoByTipo(2291872n, "image/png"), null);
   });
 });
+
+describe("AtendimentoRepository.getArquivosAtendimento", () => {
+  function build(
+    findManyResult: {
+      id_at_arquivo: bigint;
+      tipo_arquivo: string | null;
+      arquivo: string | null;
+    }[],
+  ) {
+    const calls: unknown[] = [];
+    const prisma = {
+      at_arquivo: {
+        findMany: async (args: unknown) => {
+          calls.push(args);
+          return findManyResult;
+        },
+      },
+    };
+    return { repo: new AtendimentoRepository(prisma as any), calls };
+  }
+
+  test("returns every active file (id asc) with stringified ids and raw binaries", async () => {
+    const { repo, calls } = build([
+      { id_at_arquivo: 5n, tipo_arquivo: "application/pdf", arquivo: "JVBERi0=" },
+      { id_at_arquivo: 9n, tipo_arquivo: "image/jpeg", arquivo: "/9j/4A==" },
+    ]);
+
+    const result = await repo.getArquivosAtendimento(2291872n);
+
+    assert.deepEqual(result, [
+      { idArquivo: "5", tipoArquivo: "application/pdf", arquivo: "JVBERi0=" },
+      { idArquivo: "9", tipoArquivo: "image/jpeg", arquivo: "/9j/4A==" },
+    ]);
+    assert.deepEqual(calls[0], {
+      where: { id_at_atendimento: 2291872n, ativo: true },
+      orderBy: { id_at_arquivo: "asc" },
+      select: { id_at_arquivo: true, tipo_arquivo: true, arquivo: true },
+    });
+  });
+
+  test("returns an empty list when the atendimento has no active files", async () => {
+    const { repo } = build([]);
+    assert.deepEqual(await repo.getArquivosAtendimento(2291872n), []);
+  });
+});

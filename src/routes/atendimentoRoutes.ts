@@ -53,6 +53,23 @@ router.get("/getArquivos", async (req: Request, res: Response) => {
   return res.json({ arquivo });
 });
 
+// All active files of an atendimento (metadata + raw binary), lowest `idArquivo` first. Consumed
+// by the PNAE combined manual-PDF flow, which embeds every relatório PDF and proof photo — the
+// single-file `getArquivos` probe above stays untouched for the raw-download path.
+router.get("/getArquivosAtendimento", async (req: Request, res: Response) => {
+  const atendimentoId = routeParam(req.query.atendimentoId as string);
+
+  if (!atendimentoId) {
+    throw new GraphQLError("atendimentoId é obrigatório.", {
+      extensions: { code: "BAD_REQUEST" },
+    });
+  }
+
+  const id = parseAtendimentoId(atendimentoId);
+  const arquivos = await atendimentoRepository.getArquivosAtendimento(id);
+  return res.json({ arquivos });
+});
+
 router.patch(
   "/updateTemasAndVisitaAtendimento/:atendimentoId",
   async (req: Request, res: Response) => {
