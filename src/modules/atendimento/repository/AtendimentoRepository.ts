@@ -13,7 +13,10 @@ import {
   AtendimentoListScope,
   AtendimentoPage,
 } from "../types/atendimentoList.types.js";
-import { toAtendimentoListItem } from "../atendimentoListMapper.js";
+import {
+  AtendimentoArquivoRow,
+  toAtendimentoListItem,
+} from "../atendimentoListMapper.js";
 
 export class AtendimentoRepository
   extends PrismaRepository
@@ -213,9 +216,31 @@ export class AtendimentoRepository
       },
     });
 
+    // Step 3 — batched child load of the atendimentos' files (metadata only; the `arquivo`
+    // binary is never selected here). Ordered by id asc so each atendimento's `arquivos` array
+    // is "lowest idArquivo first". Keeps the keyset pagination model untouched.
+    const arquivoRows = await this.prisma.at_arquivo.findMany({
+      where: { id_at_atendimento: { in: pageIds }, ativo: true },
+      orderBy: { id_at_arquivo: "asc" },
+      select: {
+        id_at_arquivo: true,
+        id_at_atendimento: true,
+        tipo_arquivo: true,
+      },
+    });
+
+    const arquivosByAtendimento = new Map<bigint, AtendimentoArquivoRow[]>();
+    for (const a of arquivoRows) {
+      const list = arquivosByAtendimento.get(a.id_at_atendimento) ?? [];
+      list.push({ id_at_arquivo: a.id_at_arquivo, tipo_arquivo: a.tipo_arquivo });
+      arquivosByAtendimento.set(a.id_at_atendimento, list);
+    }
+
     // Re-apply Step-1 order (keyset DESC); `in` does not preserve it.
     const byId = new Map(rows.map((r) => [r.id_at_atendimento, r]));
-    const items = pageIds.map((id) => toAtendimentoListItem(byId.get(id)!));
+    const items = pageIds.map((id) =>
+      toAtendimentoListItem(byId.get(id)!, arquivosByAtendimento.get(id) ?? []),
+    );
 
     return {
       items,
@@ -403,6 +428,29 @@ export class AtendimentoRepository
     } catch (error) {
       this.throwError(error);
     }
+  }
+
+  /**
+   * Lowest-`id_at_arquivo` **active** file for an atendimento matching an exact stored MIME
+   * (`tipo_arquivo`). Returns the raw `arquivo` text column (the binary payload the PNAE decoder
+   * handles) or null when there is no match. `orderBy id_at_arquivo asc` makes the pick
+   * deterministic ("lowest idArquivo first"); the PNAE client probes one MIME at a time, so a miss
+   * is a normal "try the next MIME" signal, not an error.
+   */
+  async getArquivoByTipo(
+    idAtendimento: bigint,
+    tipoArquivo: string,
+  ): Promise<string | null> {
+    const row = await this.prisma.at_arquivo.findFirst({
+      where: {
+        id_at_atendimento: idAtendimento,
+        tipo_arquivo: tipoArquivo,
+        ativo: true,
+      },
+      orderBy: { id_at_arquivo: "asc" },
+      select: { arquivo: true },
+    });
+    return row?.arquivo ?? null;
   }
 
   async getReplacedAtendimentos() {

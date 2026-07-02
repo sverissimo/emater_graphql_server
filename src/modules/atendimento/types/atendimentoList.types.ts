@@ -28,6 +28,18 @@ export type AtendimentoUsuarioResumo = {
   id_und_empresa: string | null;
 };
 
+/**
+ * One `at_arquivo` row projected for the list. `nomeArquivo` is an app-generated presentation name
+ * (from `tipoArquivo` + atendimento id), never Demeter's raw `nome_arquivo`. `tipoArquivo` is the
+ * raw stored MIME so the consumer can decide actions without sniffing bytes. Ordered by `idArquivo`
+ * asc at the source, so "lowest idArquivo first" holds wherever this array is consumed.
+ */
+export type ArquivoRelatorioManualResumo = {
+  idArquivo: bigint;
+  tipoArquivo: string;
+  nomeArquivo: string;
+};
+
 export type AtendimentoListItem = {
   id_at_atendimento: bigint;
   data_inicio_atendimento: Date;
@@ -45,6 +57,7 @@ export type AtendimentoListItem = {
   ativo: boolean;
   clientes: AtendimentoClienteResumo[];
   usuarios: AtendimentoUsuarioResumo[];
+  arquivos: ArquivoRelatorioManualResumo[];
 };
 
 export type AtendimentoPage = {

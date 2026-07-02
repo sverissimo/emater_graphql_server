@@ -33,6 +33,13 @@ type AtendimentoListItem {
   ativo: Boolean!
   clientes: [AtendimentoClienteResumo!]!
   usuarios: [AtendimentoUsuarioResumo!]!
+  arquivos: [ArquivoRelatorioManualResumo!]!
+}
+
+type ArquivoRelatorioManualResumo {
+  idArquivo: BigInt!
+  tipoArquivo: String!
+  nomeArquivo: String!
 }
 
 type AtendimentoClienteResumo {

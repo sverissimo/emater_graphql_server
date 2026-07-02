@@ -34,6 +34,25 @@ router.get("/getReplacedAtendimentos", async (_req: Request, res: Response) => {
   return res.send(replacedAtendimentos);
 });
 
+// The PNAE REST client maps its semantic `foto`/`relatorio` to a concrete stored MIME and probes
+// one MIME at a time, so `fileType` here is a `tipo_arquivo` value (e.g. `application/pdf`). Returns
+// the lowest-id active match's raw binary as `{ arquivo }`, or `{ arquivo: null }` when there is
+// none — a miss is a normal "try the next MIME" signal, so it is a 200, not a 404.
+router.get("/getArquivos", async (req: Request, res: Response) => {
+  const atendimentoId = routeParam(req.query.atendimentoId as string);
+  const tipoArquivo = routeParam(req.query.fileType as string);
+
+  if (!atendimentoId || !tipoArquivo) {
+    throw new GraphQLError("atendimentoId e fileType são obrigatórios.", {
+      extensions: { code: "BAD_REQUEST" },
+    });
+  }
+
+  const id = parseAtendimentoId(atendimentoId);
+  const arquivo = await atendimentoRepository.getArquivoByTipo(id, tipoArquivo);
+  return res.json({ arquivo });
+});
+
 router.patch(
   "/updateTemasAndVisitaAtendimento/:atendimentoId",
   async (req: Request, res: Response) => {

@@ -36,12 +36,20 @@ function row(id: bigint): AtendimentoListRow {
   };
 }
 
+type ArquivoRow = {
+  id_at_arquivo: bigint;
+  id_at_atendimento: bigint;
+  tipo_arquivo: string;
+};
+
 function buildRepository(
   idRows: { id_at_atendimento: bigint }[],
   rows: AtendimentoListRow[] = [],
+  arquivoRows: ArquivoRow[] = [],
 ) {
   const queryCalls: QueryCall[] = [];
   const findManyCalls: unknown[] = [];
+  const arquivoFindManyCalls: unknown[] = [];
   const prisma = {
     // The keyset query uses the call form -> a single Prisma.Sql object with .sql/.values.
     $queryRaw: async (query: any) => {
@@ -54,12 +62,19 @@ function buildRepository(
         return rows;
       },
     },
+    at_arquivo: {
+      findMany: async (args: unknown) => {
+        arquivoFindManyCalls.push(args);
+        return arquivoRows;
+      },
+    },
   };
 
   return {
     repo: new AtendimentoRepository(prisma as any),
     queryCalls,
     findManyCalls,
+    arquivoFindManyCalls,
   };
 }
 
@@ -190,5 +205,82 @@ describe("AtendimentoRepository.findComRelatorioManual", () => {
     const blank = buildRepository([]);
     await blank.repo.findComRelatorioManual(200, 999n, { id_reg_empresa: "   " });
     assert.equal(blank.queryCalls[0].values.includes("   "), false);
+  });
+
+  test("skips the arquivo child query entirely when Step 1 finds no ids", async () => {
+    const { repo, arquivoFindManyCalls } = buildRepository([]);
+    await repo.findComRelatorioManual(200, 999n);
+    assert.equal(arquivoFindManyCalls.length, 0);
+  });
+
+  test("batch-loads active at_arquivo (id asc) and groups them per atendimento", async () => {
+    const { repo, arquivoFindManyCalls } = buildRepository(
+      [{ id_at_atendimento: 30n }, { id_at_atendimento: 20n }],
+      [row(30n), row(20n)],
+      [
+        { id_at_arquivo: 5n, id_at_atendimento: 30n, tipo_arquivo: "application/pdf" },
+        { id_at_arquivo: 9n, id_at_atendimento: 30n, tipo_arquivo: "image/jpeg" },
+        { id_at_arquivo: 7n, id_at_atendimento: 20n, tipo_arquivo: "image/png" },
+      ],
+    );
+
+    const page = await repo.findComRelatorioManual(2, 999n);
+
+    // Metadata-only, active-only, ordered by id asc; scoped to the page ids.
+    assert.deepEqual(arquivoFindManyCalls[0], {
+      where: { id_at_atendimento: { in: [30n, 20n] }, ativo: true },
+      orderBy: { id_at_arquivo: "asc" },
+      select: {
+        id_at_arquivo: true,
+        id_at_atendimento: true,
+        tipo_arquivo: true,
+      },
+    });
+
+    const byId = new Map(page.items.map((i) => [i.id_at_atendimento, i]));
+    assert.deepEqual(byId.get(30n)!.arquivos, [
+      { idArquivo: 5n, tipoArquivo: "application/pdf", nomeArquivo: "relatorio_30" },
+      { idArquivo: 9n, tipoArquivo: "image/jpeg", nomeArquivo: "foto_30" },
+    ]);
+    assert.deepEqual(byId.get(20n)!.arquivos, [
+      { idArquivo: 7n, tipoArquivo: "image/png", nomeArquivo: "foto_20" },
+    ]);
+  });
+});
+
+describe("AtendimentoRepository.getArquivoByTipo", () => {
+  function build(findFirstResult: { arquivo: string } | null) {
+    const calls: unknown[] = [];
+    const prisma = {
+      at_arquivo: {
+        findFirst: async (args: unknown) => {
+          calls.push(args);
+          return findFirstResult;
+        },
+      },
+    };
+    return { repo: new AtendimentoRepository(prisma as any), calls };
+  }
+
+  test("selects the lowest-id active file for the exact tipo and returns its binary", async () => {
+    const { repo, calls } = build({ arquivo: "JVBERi0=" });
+
+    const result = await repo.getArquivoByTipo(2291872n, "application/pdf");
+
+    assert.equal(result, "JVBERi0=");
+    assert.deepEqual(calls[0], {
+      where: {
+        id_at_atendimento: 2291872n,
+        tipo_arquivo: "application/pdf",
+        ativo: true,
+      },
+      orderBy: { id_at_arquivo: "asc" },
+      select: { arquivo: true },
+    });
+  });
+
+  test("returns null when no active file matches the tipo", async () => {
+    const { repo } = build(null);
+    assert.equal(await repo.getArquivoByTipo(2291872n, "image/png"), null);
   });
 });

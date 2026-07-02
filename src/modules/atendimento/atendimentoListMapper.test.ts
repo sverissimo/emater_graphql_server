@@ -126,4 +126,45 @@ describe("toAtendimentoListItem", () => {
       { id_usuario: 8842n, nome_usuario: "MARIA TECNICA", id_und_empresa: "H1234" },
     ]);
   });
+
+  test("defaults arquivos to [] when the second arg is omitted", () => {
+    assert.deepEqual(toAtendimentoListItem(baseRow).arquivos, []);
+  });
+
+  test("maps arquivos with app-generated nomeArquivo (image -> foto, else -> relatorio)", () => {
+    const item = toAtendimentoListItem(baseRow, [
+      { id_at_arquivo: 501n, tipo_arquivo: "application/pdf" },
+      { id_at_arquivo: 777n, tipo_arquivo: "image/jpeg" },
+      { id_at_arquivo: 900n, tipo_arquivo: "application/msword" },
+    ]);
+
+    assert.deepEqual(item.arquivos, [
+      {
+        idArquivo: 501n,
+        tipoArquivo: "application/pdf",
+        nomeArquivo: "relatorio_1980461",
+      },
+      {
+        idArquivo: 777n,
+        tipoArquivo: "image/jpeg",
+        nomeArquivo: "foto_1980461",
+      },
+      {
+        idArquivo: 900n,
+        tipoArquivo: "application/msword",
+        nomeArquivo: "relatorio_1980461",
+      },
+    ]);
+  });
+
+  test("preserves the incoming (id asc) arquivos order", () => {
+    const item = toAtendimentoListItem(baseRow, [
+      { id_at_arquivo: 10n, tipo_arquivo: "image/png" },
+      { id_at_arquivo: 20n, tipo_arquivo: "application/pdf" },
+    ]);
+    assert.deepEqual(
+      item.arquivos.map((a) => a.idArquivo),
+      [10n, 20n],
+    );
+  });
 });
