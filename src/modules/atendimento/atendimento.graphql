@@ -25,6 +25,7 @@ type AtendimentoListItem {
   data_criacao: DateTime!
   data_sei: DateTime
   data_see: DateTime
+  dt_export_ok: DateTime
   sn_pendencia: Int
   sn_validado: Int
   dt_update_record: DateTime

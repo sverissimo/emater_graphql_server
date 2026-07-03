@@ -15,6 +15,7 @@ const baseRow: AtendimentoListRow = {
   data_criacao: new Date("2026-06-20"),
   data_sei: null,
   data_see: null,
+  dt_export_ok: null,
   sn_pendencia: 0,
   sn_validado: 1,
   dt_update_record: new Date("2026-06-21T13:42:05.000Z"),
@@ -27,11 +28,16 @@ const baseRow: AtendimentoListRow = {
 
 describe("toAtendimentoListItem", () => {
   test("passes scalar columns through unchanged (native bigint/Date)", () => {
-    const item = toAtendimentoListItem(baseRow);
+    const exportDate = new Date("2026-06-25");
+    const item = toAtendimentoListItem({
+      ...baseRow,
+      dt_export_ok: exportDate,
+    });
     assert.equal(item.id_at_atendimento, 1980461n);
     assert.equal(item.id_und_empresa, "H1234");
     assert.equal(item.sn_validado, 1);
     assert.equal(item.id_at_anterior, null);
+    assert.equal(item.dt_export_ok, exportDate);
     assert.ok(item.data_inicio_atendimento instanceof Date);
   });
 

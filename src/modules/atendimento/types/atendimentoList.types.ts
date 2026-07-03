@@ -49,6 +49,7 @@ export type AtendimentoListItem = {
   data_criacao: Date;
   data_sei: Date | null;
   data_see: Date | null;
+  dt_export_ok: Date | null;
   sn_pendencia: number | null;
   sn_validado: number | null;
   dt_update_record: Date | null;

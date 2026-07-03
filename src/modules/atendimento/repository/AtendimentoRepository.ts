@@ -179,6 +179,7 @@ export class AtendimentoRepository
         data_criacao: true,
         data_sei: true,
         data_see: true,
+        dt_export_ok: true,
         sn_pendencia: true,
         sn_validado: true,
         dt_update_record: true,

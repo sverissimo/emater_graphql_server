@@ -19,6 +19,7 @@ export type AtendimentoListRow = {
   data_criacao: Date;
   data_sei: Date | null;
   data_see: Date | null;
+  dt_export_ok: Date | null;
   sn_pendencia: number | null;
   sn_validado: number | null;
   dt_update_record: Date | null;
@@ -76,6 +77,7 @@ export function toAtendimentoListItem(
     data_criacao: row.data_criacao,
     data_sei: row.data_sei,
     data_see: row.data_see,
+    dt_export_ok: row.dt_export_ok,
     sn_pendencia: row.sn_pendencia,
     sn_validado: row.sn_validado,
     dt_update_record: row.dt_update_record,
