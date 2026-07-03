@@ -24,7 +24,7 @@ function buildResolver() {
     cursor: bigint;
     scope?: { id_usuario?: bigint | null; id_reg_empresa?: string | null };
   }[] = [];
-  const findComRelatorioManual = async (
+  const findComRelatorioDemeter = async (
     pageSize: number,
     cursor: bigint,
     scope?: { id_usuario?: bigint | null; id_reg_empresa?: string | null },
@@ -32,7 +32,7 @@ function buildResolver() {
     calls.push({ pageSize, cursor, scope });
     return emptyPage;
   };
-  const resolver = atendimentoResolver({ findComRelatorioManual } as any);
+  const resolver = atendimentoResolver({ findComRelatorioDemeter } as any);
   return { resolver, calls };
 }
 

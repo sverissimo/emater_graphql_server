@@ -126,7 +126,29 @@ export class AtendimentoRepository
    * first. Two steps: a raw `$queryRaw` keyset over ids (filter is index-backed), then a Prisma
    * hydrate-by-ids that stitches the children. See the plan's "The filter" / §1–§3.
    */
-  async findComRelatorioManual(
+  // Start dates of active manual relatórios (link_pdf IS NULL + manual indicator) from the last
+  // 30 days — dashboard count + line series. EXISTS avoids the duplicate rows a join on
+  // at_atendimento_indicador could produce; only the date is selected. Day-bucketing happens in the
+  // PNAE backend so it stays aligned (same timezone) with its other dashboard series.
+  async findManuaisUltimos30Dias(): Promise<Date[]> {
+    const rows = await this.prisma.$queryRaw<{ data_inicio_atendimento: Date }[]>(
+      Prisma.sql`
+        SELECT a.data_inicio_atendimento
+        FROM at_atendimento a
+        WHERE a.ativo = true
+          AND a.link_pdf IS NULL
+          AND a.data_inicio_atendimento >= (CURRENT_DATE - INTERVAL '30 days')
+          AND EXISTS (
+                SELECT 1 FROM at_atendimento_indicador ai
+                WHERE ai.id_at_atendimento = a.id_at_atendimento
+                  AND ai.id_at_indicador = ${RELATORIO_MANUAL_INDICADOR_ID}
+              )
+      `,
+    );
+    return rows.map((r) => r.data_inicio_atendimento);
+  }
+
+  async findComRelatorioDemeter(
     pageSize: number,
     cursor: bigint,
     scope: AtendimentoListScope = {},

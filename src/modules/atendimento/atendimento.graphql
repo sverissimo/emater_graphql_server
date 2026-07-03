@@ -7,6 +7,8 @@ type Query {
     id_usuario: BigInt
     id_reg_empresa: String
   ): AtendimentoPage!
+  # Start dates of active manual relatórios from the last 30 days (dashboard count + line series).
+  atendimentosManuaisUltimos30Dias: [DateTime!]!
 }
 
 type AtendimentoPage {

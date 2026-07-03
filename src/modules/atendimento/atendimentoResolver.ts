@@ -49,10 +49,14 @@ export const atendimentoResolver = (
         Math.max(1, pageSize ?? ATENDIMENTO_PAGE_SIZE_DEFAULT),
       );
       const startCursor = cursor ?? ATENDIMENTO_KEYSET_START_CURSOR;
-      return atendimentoRepository.findComRelatorioManual(size, startCursor, {
+      return atendimentoRepository.findComRelatorioDemeter(size, startCursor, {
         id_usuario,
         id_reg_empresa,
       });
+    },
+
+    atendimentosManuaisUltimos30Dias: () => {
+      return atendimentoRepository.findManuaisUltimos30Dias();
     },
   },
 

@@ -79,11 +79,11 @@ function buildRepository(
   };
 }
 
-describe("AtendimentoRepository.findComRelatorioManual", () => {
+describe("AtendimentoRepository.findComRelatorioDemeter", () => {
   test("returns an empty page envelope without hydrating when Step 1 finds no ids", async () => {
     const { repo, findManyCalls } = buildRepository([]);
 
-    const page = await repo.findComRelatorioManual(200, 999n);
+    const page = await repo.findComRelatorioDemeter(200, 999n);
 
     assert.deepEqual(page, {
       items: [],
@@ -104,7 +104,7 @@ describe("AtendimentoRepository.findComRelatorioManual", () => {
       [row(20n), row(30n)],
     );
 
-    const page = await repo.findComRelatorioManual(2, 999n);
+    const page = await repo.findComRelatorioDemeter(2, 999n);
 
     assert.equal(page.hasMore, true);
     assert.equal(page.nextCursor, 20n);
@@ -168,7 +168,7 @@ describe("AtendimentoRepository.findComRelatorioManual", () => {
       [row(30n), row(20n)],
     );
 
-    const page = await repo.findComRelatorioManual(2, 999n);
+    const page = await repo.findComRelatorioDemeter(2, 999n);
 
     assert.equal(page.hasMore, false);
     assert.equal(page.nextCursor, null);
@@ -181,7 +181,7 @@ describe("AtendimentoRepository.findComRelatorioManual", () => {
   test("clamps pageSize and binds the keyset limit as pageSize plus one", async () => {
     const { repo, queryCalls } = buildRepository([]);
 
-    const page = await repo.findComRelatorioManual(5000, 999n);
+    const page = await repo.findComRelatorioDemeter(5000, 999n);
 
     assert.equal(page.pageSize, 1000);
     // unscoped -> single keyset query; LIMIT is the last bound value.
@@ -191,7 +191,7 @@ describe("AtendimentoRepository.findComRelatorioManual", () => {
 
   test("normalizes trusted scope params before binding them into the keyset SQL", async () => {
     const scoped = buildRepository([]);
-    await scoped.repo.findComRelatorioManual(200, 999n, {
+    await scoped.repo.findComRelatorioDemeter(200, 999n, {
       id_usuario: 7n,
       id_reg_empresa: " G0040 ",
     });
@@ -205,13 +205,13 @@ describe("AtendimentoRepository.findComRelatorioManual", () => {
 
     // A blank regional collapses to null: no regional branch is composed in.
     const blank = buildRepository([]);
-    await blank.repo.findComRelatorioManual(200, 999n, { id_reg_empresa: "   " });
+    await blank.repo.findComRelatorioDemeter(200, 999n, { id_reg_empresa: "   " });
     assert.equal(blank.queryCalls[0].values.includes("   "), false);
   });
 
   test("skips the arquivo child query entirely when Step 1 finds no ids", async () => {
     const { repo, arquivoFindManyCalls } = buildRepository([]);
-    await repo.findComRelatorioManual(200, 999n);
+    await repo.findComRelatorioDemeter(200, 999n);
     assert.equal(arquivoFindManyCalls.length, 0);
   });
 
@@ -226,7 +226,7 @@ describe("AtendimentoRepository.findComRelatorioManual", () => {
       ],
     );
 
-    const page = await repo.findComRelatorioManual(2, 999n);
+    const page = await repo.findComRelatorioDemeter(2, 999n);
 
     // Metadata-only, active-only, ordered by id asc; scoped to the page ids.
     assert.deepEqual(arquivoFindManyCalls[0], {
