@@ -7,6 +7,9 @@ type Query {
     id_usuario: BigInt
     id_reg_empresa: String
   ): AtendimentoPage!
+  # Single "relatório manual" atendimento by id (same shape as one list item), or null when the
+  # id is not a manual-relatório atendimento. Fast single-id lookup for the PNAE search box.
+  atendimentoComRelatorioManual(id: BigInt!): AtendimentoListItem
   # Start dates of active manual relatórios from the last 30 days (dashboard count + line series).
   atendimentosManuaisUltimos30Dias: [DateTime!]!
 }

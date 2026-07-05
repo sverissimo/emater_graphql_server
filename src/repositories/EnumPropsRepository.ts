@@ -124,19 +124,30 @@ export class EnumPropsRepository extends PrismaRepository {
   }
 
   async getMunicipiosEmater(): Promise<MunicipioEmater[]> {
+    // LATERAL LIMIT 1 keeps the row set identical to the pre-SRE version even if a município
+    // ever maps to more than one regional de ensino.
     return this.prisma.$queryRaw<MunicipioEmater[]>`
       SELECT
         h.id_und_empresa,
         m.nm_municipio AS nome_municipio,
         h.fk_municipio AS municipio_id,
         h.fk_und_empresa AS regional_id,
-        g.nm_und_empresa AS nome_regional
+        g.nm_und_empresa AS nome_regional,
+        sre.nm_regional_ensino AS regional_sre
       FROM ger_und_empresa h
       JOIN sep_municipio m
         ON m.id_municipio = h.fk_municipio
       JOIN ger_und_empresa g
         ON g.id_und_empresa = h.fk_und_empresa
         AND g.id_und_empresa LIKE 'G%'
+      LEFT JOIN LATERAL (
+        SELECT re.nm_regional_ensino
+        FROM ger_municipio_ensino me
+        JOIN ger_regional_ensino re
+          ON re.id_regional_ensino = me.fk_regional_ensino
+        WHERE me.fk_municipio = h.fk_municipio
+        LIMIT 1
+      ) sre ON true
       WHERE h.id_und_empresa LIKE 'H%'
         AND h.fk_municipio IS NOT NULL
         AND h.sn_ativa = 1

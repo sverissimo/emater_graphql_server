@@ -4,4 +4,5 @@ export interface MunicipioEmater {
   municipio_id: number;
   regional_id: string;
   nome_regional: string;
+  regional_sre: string | null;
 }

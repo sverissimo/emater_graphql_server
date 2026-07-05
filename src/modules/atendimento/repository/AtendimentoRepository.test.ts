@@ -331,3 +331,64 @@ describe("AtendimentoRepository.getArquivosAtendimento", () => {
     assert.deepEqual(await repo.getArquivosAtendimento(2291872n), []);
   });
 });
+
+describe("AtendimentoRepository.findOneComRelatorioDemeter", () => {
+  function buildOneRepo(
+    row: AtendimentoListRow | null,
+    arquivoRows: ArquivoRow[] = [],
+  ) {
+    const findFirstCalls: unknown[] = [];
+    const arquivoCalls: unknown[] = [];
+    const prisma = {
+      at_atendimento: {
+        findFirst: async (args: unknown) => {
+          findFirstCalls.push(args);
+          return row;
+        },
+      },
+      at_arquivo: {
+        findMany: async (args: unknown) => {
+          arquivoCalls.push(args);
+          return arquivoRows;
+        },
+      },
+    };
+    return {
+      repo: new AtendimentoRepository(prisma as any),
+      findFirstCalls,
+      arquivoCalls,
+    };
+  }
+
+  test("returns null and skips the arquivo query when the id is not a Demeter atendimento", async () => {
+    const { repo, arquivoCalls } = buildOneRepo(null);
+
+    assert.equal(await repo.findOneComRelatorioDemeter(42n), null);
+    assert.equal(arquivoCalls.length, 0);
+  });
+
+  test("applies the Demeter filter and maps the row with its files (id asc)", async () => {
+    const { repo, findFirstCalls } = buildOneRepo(row(42n), [
+      { id_at_arquivo: 5n, id_at_atendimento: 42n, tipo_arquivo: "application/pdf" },
+      { id_at_arquivo: 9n, id_at_atendimento: 42n, tipo_arquivo: "image/jpeg" },
+    ]);
+
+    const item = await repo.findOneComRelatorioDemeter(42n);
+
+    assert.equal(item?.id_at_atendimento, 42n);
+    assert.deepEqual(
+      item?.arquivos.map((a) => [a.idArquivo, a.tipoArquivo, a.nomeArquivo]),
+      [
+        [5n, "application/pdf", "relatorio_42"],
+        [9n, "image/jpeg", "foto_42"],
+      ],
+    );
+
+    const where = (findFirstCalls[0] as { where: any }).where;
+    assert.equal(where.id_at_atendimento, 42n);
+    assert.equal(where.link_pdf, null);
+    assert.deepEqual(where.at_atendimento_indicador, {
+      some: { id_at_indicador: 4550n },
+    });
+  });
+});

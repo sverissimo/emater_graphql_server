@@ -17,6 +17,58 @@ import {
   AtendimentoArquivoRow,
   toAtendimentoListItem,
 } from "../atendimentoListMapper.js";
+import { AtendimentoListItem } from "../types/atendimentoList.types.js";
+
+/**
+ * Shared Step-2 hydrate projection for the Demeter/manual list. Kept in one place so the
+ * paginated list (`findComRelatorioDemeter`) and the single-id lookup
+ * (`findOneComRelatorioDemeter`) return byte-identical row shapes and can't drift.
+ */
+const atendimentoListSelect = {
+  id_at_atendimento: true,
+  data_inicio_atendimento: true,
+  data_fim_atendimento: true,
+  data_validacao: true,
+  data_atualizacao: true,
+  data_criacao: true,
+  data_sei: true,
+  data_see: true,
+  dt_export_ok: true,
+  sn_pendencia: true,
+  sn_validado: true,
+  dt_update_record: true,
+  id_at_anterior: true,
+  id_und_empresa: true,
+  ativo: true,
+  at_cli_atend_prop: {
+    orderBy: { id_at_cli_atend_prop: "asc" },
+    select: {
+      ger_pessoa: {
+        select: {
+          nm_pessoa: true,
+          nr_cpf_cnpj: true,
+          dap: true,
+          caf: true,
+        },
+      },
+      pl_propriedade: {
+        select: { nome_propriedade: true, geo_ponto_texto: true },
+      },
+    },
+  },
+  at_atendimento_usuario: {
+    orderBy: { id_usuario: "asc" },
+    select: {
+      usuario: {
+        select: {
+          id_usuario: true,
+          nome_usuario: true,
+          id_und_empresa: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.at_atendimentoSelect;
 
 export class AtendimentoRepository
   extends PrismaRepository
@@ -192,51 +244,7 @@ export class AtendimentoRepository
     // Step 2 — hydrate the page ids; Prisma stitches the children.
     const rows = await this.prisma.at_atendimento.findMany({
       where: { id_at_atendimento: { in: pageIds } },
-      select: {
-        id_at_atendimento: true,
-        data_inicio_atendimento: true,
-        data_fim_atendimento: true,
-        data_validacao: true,
-        data_atualizacao: true,
-        data_criacao: true,
-        data_sei: true,
-        data_see: true,
-        dt_export_ok: true,
-        sn_pendencia: true,
-        sn_validado: true,
-        dt_update_record: true,
-        id_at_anterior: true,
-        id_und_empresa: true,
-        ativo: true,
-        at_cli_atend_prop: {
-          orderBy: { id_at_cli_atend_prop: "asc" },
-          select: {
-            ger_pessoa: {
-              select: {
-                nm_pessoa: true,
-                nr_cpf_cnpj: true,
-                dap: true,
-                caf: true,
-              },
-            },
-            pl_propriedade: {
-              select: { nome_propriedade: true, geo_ponto_texto: true },
-            },
-          },
-        },
-        at_atendimento_usuario: {
-          orderBy: { id_usuario: "asc" },
-          select: {
-            usuario: {
-              select: {
-                id_usuario: true,
-                nome_usuario: true,
-                id_und_empresa: true,
-              },
-            },
-          },
-        },
-      },
+      select: atendimentoListSelect,
     });
 
     // Step 3 — batched child load of the atendimentos' files (metadata only; the `arquivo`
@@ -271,6 +279,42 @@ export class AtendimentoRepository
       nextCursor: hasMore ? pageIds[pageIds.length - 1] : null,
       hasMore,
     };
+  }
+
+  /**
+   * Single "relatório manual" atendimento by id, same shape as one list item. Applies the same
+   * Demeter filter (link_pdf IS NULL + indicador 4550) so a non-Demeter id resolves to null.
+   * One indexed lookup — the fast counterpart to walking the keyset list client-side. Scope/auth
+   * is enforced by the PNAE backend (hasAccessTo), so no scope predicate here.
+   */
+  async findOneComRelatorioDemeter(
+    id: bigint,
+  ): Promise<AtendimentoListItem | null> {
+    const row = await this.prisma.at_atendimento.findFirst({
+      where: {
+        id_at_atendimento: id,
+        link_pdf: null,
+        at_atendimento_indicador: {
+          some: { id_at_indicador: RELATORIO_MANUAL_INDICADOR_ID },
+        },
+      },
+      select: atendimentoListSelect,
+    });
+    if (!row) return null;
+
+    const arquivoRows = await this.prisma.at_arquivo.findMany({
+      where: { id_at_atendimento: id, ativo: true },
+      orderBy: { id_at_arquivo: "asc" },
+      select: { id_at_arquivo: true, tipo_arquivo: true },
+    });
+
+    return toAtendimentoListItem(
+      row,
+      arquivoRows.map((a) => ({
+        id_at_arquivo: a.id_at_arquivo,
+        tipo_arquivo: a.tipo_arquivo,
+      })),
+    );
   }
 
   /**

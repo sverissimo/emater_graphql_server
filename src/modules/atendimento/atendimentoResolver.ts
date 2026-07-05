@@ -55,6 +55,10 @@ export const atendimentoResolver = (
       });
     },
 
+    atendimentoComRelatorioManual: (_root: any, { id }: { id: bigint }) => {
+      return atendimentoRepository.findOneComRelatorioDemeter(id);
+    },
+
     atendimentosManuaisUltimos30Dias: () => {
       return atendimentoRepository.findManuaisUltimos30Dias();
     },
