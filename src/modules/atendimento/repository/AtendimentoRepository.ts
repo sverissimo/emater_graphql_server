@@ -182,19 +182,23 @@ export class AtendimentoRepository
   // 30 days — dashboard count + line series. EXISTS avoids the duplicate rows a join on
   // at_atendimento_indicador could produce; only the date is selected. Day-bucketing happens in the
   // PNAE backend so it stays aligned (same timezone) with its other dashboard series.
-  async findManuaisUltimos30Dias(): Promise<Date[]> {
+  async findManuaisUltimos30Dias(scopeReg?: string | null): Promise<Date[]> {
+    // Regional-only reuse of buildScopeClause (null usuario). Empty/absent scopeReg yields
+    // Prisma.empty, keeping the query byte-identical to the previous unscoped form.
+    const scopeClause = this.buildScopeClause(null, scopeReg?.trim() || null);
     const rows = await this.prisma.$queryRaw<{ data_inicio_atendimento: Date }[]>(
       Prisma.sql`
-        SELECT a.data_inicio_atendimento
-        FROM at_atendimento a
-        WHERE a.ativo = true
-          AND a.link_pdf IS NULL
-          AND a.data_inicio_atendimento >= (CURRENT_DATE - INTERVAL '30 days')
+        SELECT atend.data_inicio_atendimento
+        FROM at_atendimento atend
+        WHERE atend.ativo = true
+          AND atend.link_pdf IS NULL
+          AND atend.data_inicio_atendimento >= (CURRENT_DATE - INTERVAL '30 days')
           AND EXISTS (
                 SELECT 1 FROM at_atendimento_indicador ai
-                WHERE ai.id_at_atendimento = a.id_at_atendimento
+                WHERE ai.id_at_atendimento = atend.id_at_atendimento
                   AND ai.id_at_indicador = ${RELATORIO_MANUAL_INDICADOR_ID}
               )
+          ${scopeClause}
       `,
     );
     return rows.map((r) => r.data_inicio_atendimento);

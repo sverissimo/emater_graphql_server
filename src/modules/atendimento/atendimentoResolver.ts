@@ -59,8 +59,11 @@ export const atendimentoResolver = (
       return atendimentoRepository.findOneComRelatorioDemeter(id);
     },
 
-    atendimentosManuaisUltimos30Dias: () => {
-      return atendimentoRepository.findManuaisUltimos30Dias();
+    atendimentosManuaisUltimos30Dias: (
+      _root: any,
+      { id_reg_empresa }: { id_reg_empresa?: string | null },
+    ) => {
+      return atendimentoRepository.findManuaisUltimos30Dias(id_reg_empresa);
     },
   },
 
