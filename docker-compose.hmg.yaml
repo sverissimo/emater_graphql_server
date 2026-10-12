@@ -1,17 +1,14 @@
 services:
   graphql_server_hmg:
+    container_name: graphql_server_hmg
     image: graphql_server_hmg
     build:
       context: .
-      dockerfile: Dockerfile.hmg
-      args:
-        - HOST_UID=${HOST_UID}
-        - HOST_GID=${HOST_GID}
-    command: "npm run start:prod"
+      dockerfile: Dockerfile.prod
     env_file:
       - .env.homolog
     environment:
-      - NODE_ENV=staging
+      - NODE_ENV=production
     volumes:
       - /home/apps/emater_graphql_server/logs/hmg:/home/node/logs
     deploy:
@@ -26,4 +23,3 @@ services:
 networks:
   demeter_gateway_hmg:
     name: demeter_gateway_hmg
-
