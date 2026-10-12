@@ -23,7 +23,11 @@
     "activityBarTop.inactiveForeground": "#15202b99",
     "commandCenter.foreground": "#e7e7e7",
     "statusBar.debuggingBackground": "#ff3d00",
-    "statusBar.debuggingForeground": "#e7e7e7"
+    "statusBar.debuggingForeground": "#e7e7e7",
+    "activityBar.activeBorder": "#15202b",
+    "activityBarTop.activeBorder": "#15202b",
+    "statusBar.inactiveBackground": "#ff3d00",
+    "editorCursor.foreground": "#FFBDBD"
   },
   "peacock.remoteColor": "#ff3d00",
   "editor.fontFamily": "JetBrains Mono, Consolas, 'Courier New', monospace",

@@ -13,6 +13,7 @@ type Query {
   # Start dates of active manual relatórios from the last 30 days (dashboard count + line series).
   # Optional id_reg_empresa scopes the result to a regional unit (its local units + itself).
   atendimentosManuaisUltimos30Dias(id_reg_empresa: String): [DateTime!]!
+  atendimentosManuaisUltimos60Dias(id_reg_empresa: String): [DateTime!]!
 }
 
 type AtendimentoPage {

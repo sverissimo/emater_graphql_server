@@ -204,6 +204,26 @@ export class AtendimentoRepository
     return rows.map((r) => r.data_inicio_atendimento);
   }
 
+  async findManuaisUltimos60Dias(scopeReg?: string | null): Promise<Date[]> {
+    const scopeClause = this.buildScopeClause(null, scopeReg?.trim() || null);
+    const rows = await this.prisma.$queryRaw<{ data_inicio_atendimento: Date }[]>(
+      Prisma.sql`
+        SELECT atend.data_inicio_atendimento
+        FROM at_atendimento atend
+        WHERE atend.ativo = true
+          AND atend.link_pdf IS NULL
+          AND atend.data_inicio_atendimento >= (CURRENT_DATE - INTERVAL '60 days')
+          AND EXISTS (
+                SELECT 1 FROM at_atendimento_indicador ai
+                WHERE ai.id_at_atendimento = atend.id_at_atendimento
+                  AND ai.id_at_indicador = ${RELATORIO_MANUAL_INDICADOR_ID}
+              )
+          ${scopeClause}
+      `,
+    );
+    return rows.map((r) => r.data_inicio_atendimento);
+  }
+
   async findComRelatorioDemeter(
     pageSize: number,
     cursor: bigint,

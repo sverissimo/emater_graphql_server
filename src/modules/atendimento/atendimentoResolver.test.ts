@@ -95,3 +95,25 @@ describe("atendimentoResolver.atendimentosComRelatorioManual", () => {
     assert.deepEqual(result, emptyPage);
   });
 });
+
+describe("atendimentoResolver.atendimentosManuaisUltimos60Dias", () => {
+  for (const scope of [undefined, null, "G0040"]) {
+    test(`forwards regional scope ${scope} and returns dates unchanged`, async () => {
+      const dates = [new Date("2026-08-14T12:00:00Z")];
+      const calls: (string | null | undefined)[] = [];
+      const resolver = atendimentoResolver({
+        findManuaisUltimos60Dias: async (id_reg_empresa?: string | null) => {
+          calls.push(id_reg_empresa);
+          return dates;
+        },
+      } as any);
+
+      const result = await resolver.Query.atendimentosManuaisUltimos60Dias(
+        undefined, { id_reg_empresa: scope },
+      );
+
+      assert.deepEqual(calls, [scope]);
+      assert.equal(result, dates);
+    });
+  }
+});

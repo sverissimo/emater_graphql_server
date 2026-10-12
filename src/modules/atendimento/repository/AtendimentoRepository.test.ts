@@ -392,3 +392,32 @@ describe("AtendimentoRepository.findOneComRelatorioDemeter", () => {
     });
   });
 });
+
+describe("AtendimentoRepository manual dashboard dates", () => {
+  for (const days of [30, 60] as const) {
+    for (const scope of [undefined, " G0040 "]) {
+      test(`keeps the ${days}-day query and regional scope ${scope}`, async () => {
+        const dates = [new Date("2026-08-14T12:00:00Z")];
+        let query: any;
+        const repo = new AtendimentoRepository({
+          $queryRaw: async (input: unknown) => {
+            query = input;
+            return dates.map((data_inicio_atendimento) => ({ data_inicio_atendimento }));
+          },
+        } as any);
+
+        const result = days === 30
+          ? await repo.findManuaisUltimos30Dias(scope)
+          : await repo.findManuaisUltimos60Dias(scope);
+
+        assert.deepEqual(result, dates);
+        assert.match(query.sql, new RegExp(`INTERVAL '${days} days'`));
+        assert.match(query.sql, /atend\.ativo = true/);
+        assert.match(query.sql, /atend\.link_pdf IS NULL/);
+        assert.match(query.sql, /EXISTS/);
+        assert.ok(query.values.includes(4550n) || query.values.includes(4550));
+        assert.equal(query.values.includes("G0040"), !!scope);
+      });
+    }
+  }
+});

@@ -65,6 +65,13 @@ export const atendimentoResolver = (
     ) => {
       return atendimentoRepository.findManuaisUltimos30Dias(id_reg_empresa);
     },
+
+    atendimentosManuaisUltimos60Dias: (
+      _root: any,
+      { id_reg_empresa }: { id_reg_empresa?: string | null },
+    ) => {
+      return atendimentoRepository.findManuaisUltimos60Dias(id_reg_empresa);
+    },
   },
 
   Mutation: {

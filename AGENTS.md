@@ -41,6 +41,8 @@ Top-level folders under [src/](src/):
 - ESM imports: all relative imports end in `.js` (TypeScript ESM with `moduleResolution: node`). The `paths` aliases in [tsconfig.json](tsconfig.json) — `@config/*`, `@modules/*`, `@repositories/*`, `@utils/*` — are honored at compile time only; runtime resolution is relative-`.js`. Mirror existing import style in the file you're editing.
 - BigInt IDs: convert string → `BigInt(...)` at the boundary (resolver or route handler), then pass BigInt down. Outbound, the `BigInt` scalar handles GraphQL; REST uses `serializeBigInt` from [shared/utils/serializeBigInt.ts](src/shared/utils/serializeBigInt.ts). Don't compare BigInt and string without coercion.
 
+PNAE dashboard dates: `atendimentosManuaisUltimos60Dias(id_reg_empresa: String)` returns active manual-report start dates over the last 60 calendar days, with optional regional scope. PNAE performs weekday filtering and day bucketing. The existing `atendimentosManuaisUltimos30Dias` query remains unchanged for deployed consumers.
+
 ## Contract stability — hard rule
 
 This service is consumed by other apps on this host (PNAE backend and others). Both the **GraphQL schema** and the **`/api/*` REST routes** are part of a contract those clients depend on. Treat existing fields, argument names, response shapes, and status codes as load-bearing:
