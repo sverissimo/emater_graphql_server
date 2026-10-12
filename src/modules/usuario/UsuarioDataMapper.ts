@@ -19,8 +19,11 @@ export class UsuarioDataMapper {
     const perfis = usuario.perfil_demeter.map(
       (p) => p.perfil?.descricao_perfil
     );
-    const id_reg_empresa =
-      ger_und_empresa?.ger_und_empresa?.id_und_empresa || null;
+    // A "G" unit is itself a regional, so it carries no parent regional to read.
+    const unidadeId = ger_und_empresa?.id_und_empresa || id_und_empresa;
+    const id_reg_empresa = unidadeId?.startsWith("G")
+      ? unidadeId
+      : ger_und_empresa?.ger_und_empresa?.id_und_empresa || null;
 
     return {
       id_usuario: id_usuario?.toString(),

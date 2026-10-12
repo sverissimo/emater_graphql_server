@@ -21,7 +21,7 @@ export class LoginService {
     );
     if (!authenticated) throw new Error("Usuário não encontrado");
 
-    const user = (await this.usuarioRepository.findMany({
+    const user = (await this.usuarioRepository.findForLogin({
       matricula_usuario,
     })) as UsuarioRepositoryOutputDto[];
 

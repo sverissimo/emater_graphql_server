@@ -3,6 +3,8 @@ import { PrismaRepository } from "./PrismaRepository.js";
 import type { MunicipioEmater } from "./types/MunicipioEmater.js";
 import humps from "humps";
 
+const MUNICIPIOS_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+
 type enumKeys = {
   tipo: string;
 };
@@ -15,6 +17,10 @@ type optionRow = {
 };
 
 export class EnumPropsRepository extends PrismaRepository {
+  private cachedMunicipios: MunicipioEmater[] | null = null;
+  private municipiosExpiresAt = 0;
+  private municipiosInFlight: Promise<MunicipioEmater[]> | null = null;
+
   async getEnumKeys() {
     const enumKeys: enumKeys[] = await this.prisma
       .$queryRaw`SELECT DISTINCT tipo FROM ger_enum_descricao`;
@@ -124,6 +130,28 @@ export class EnumPropsRepository extends PrismaRepository {
   }
 
   async getMunicipiosEmater(): Promise<MunicipioEmater[]> {
+    if (this.cachedMunicipios && this.municipiosExpiresAt > Date.now()) {
+      return this.cachedMunicipios;
+    }
+
+    if (this.municipiosInFlight) {
+      return this.municipiosInFlight;
+    }
+
+    this.municipiosInFlight = this.fetchMunicipiosEmater()
+      .then((municipios) => {
+        this.cachedMunicipios = municipios;
+        this.municipiosExpiresAt = Date.now() + MUNICIPIOS_CACHE_TTL_MS;
+        return municipios;
+      })
+      .finally(() => {
+        this.municipiosInFlight = null;
+      });
+
+    return this.municipiosInFlight;
+  }
+
+  private fetchMunicipiosEmater(): Promise<MunicipioEmater[]> {
     // LATERAL LIMIT 1 keeps the row set identical to the pre-SRE version even if a município
     // ever maps to more than one regional de ensino.
     return this.prisma.$queryRaw<MunicipioEmater[]>`

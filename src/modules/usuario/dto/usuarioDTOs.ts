@@ -13,6 +13,7 @@ export interface UsuarioRepositoryOutputDto extends Usuario {
     ger_und_empresa?: ger_und_empresa;
   };
   perfil_demeter: PerfilDemeter[];
+  nomeRegional?: string | null;
 }
 
 export interface UsuarioLoginOutputDto {
