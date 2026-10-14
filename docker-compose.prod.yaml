@@ -20,6 +20,7 @@ services:
         limits:
           cpus: '2'
           memory: 2048M
+    restart: unless-stopped
     networks:
       - demeter_gateway_prod
 

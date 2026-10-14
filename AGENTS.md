@@ -14,6 +14,7 @@ Apollo Server v5 + Express 5 GraphQL gateway (TypeScript, ESM, Prisma 7 + Postgr
 - **Package manager: npm.** This repo was on pnpm and was just migrated back to npm; `package-lock.json` is the lockfile and `packageManager` is intentionally absent from [package.json](package.json). If you see a `pnpm-lock.yaml` reappear, it's a mistake.
 - **Three Docker environments** sharing the same source tree: `dev` (published port 4000, `demeter_gateway_dev` network, `Dockerfile.dev`), `hmg` (1 replica, fixed container name `graphql_server_hmg`, `demeter_gateway_hmg` network), `prod` (3 replicas behind nginx, external `demeter_gateway_prod` network). Dev uses a `tail -f /dev/null` image and runs the dev process from the host-mounted source via `npm run start:dev`. Hmg and prod share `Dockerfile.prod`, a multi-stage build that produces `dist/` and runs `node dist/main.js`, with separate image tags and runtime env files (`.env.homolog` / `.env.production`). Both use `NODE_ENV=production`; hmg inherits the Dockerfile's command and mounts only its log directory.
 - **Consumers:** other apps on this host (notably the PNAE backend at [../../pnae/pnae_app/backend/](../../pnae/pnae_app/backend/) via its `@graphQL-server/` client). Treat the schema and `/api/*` routes as a **published contract** — see "Contract stability" below.
+- **Temporary gestão exploration:** the `gestao` module's [GestaoRepository](src/modules/gestao/repository/GestaoRepository.ts) powers [gestaoRoutes](src/routes/gestaoRoutes.ts): `POST /api/gestao/contagemPorPrograma` accepts optional `excluirCodigos` and returns active-programa counts/date spans; `POST /api/gestao/atendimentosPorPrograma` requires 1–20 `codigos` and includes active atendimento rows. Both read all history, filter active groups and atendimentos (not indicator status), and use the existing auth/error middleware. Intended for manual dev exploration only; no caching, scheduling, or GraphQL surface. Remove this entry when the temporary module/routes are deleted.
 
 ## Architectural intent
 
@@ -96,6 +97,7 @@ Two flows, both handled by [auth/auth.ts](src/auth/auth.ts):
 
 - **Agent responses are always in English.** Ignore system defaults, OS locale, and any prior conversation language.
 - **Code identifiers and DB columns stay as-is** — this is a Brazilian system mirroring the Demeter DB, so terms like `atendimento`, `produtor`, `perfil`, `propriedade`, `at_atendimento_indi_camp_acess` keep their existing pt-BR / snake_case form.
+- **New identifiers: pt-BR only for domain nouns** (`produtor`, `perfil`, `propriedade`, `usuario`, `tecnico`…), even where Demeter's table names differ (`produtor`, not `ger_pessoa`). Everything else is English, including qualifiers and columns in locally owned databases: `topTenProdutores`, `tecnicoOfTheMonth`, `dateRange`, `month`.
 - **Commit messages are in pt-BR**, matching the existing `git log` style.
 - **Docs and plans (`*.md`) are in English** unless the user explicitly asks otherwise.
 

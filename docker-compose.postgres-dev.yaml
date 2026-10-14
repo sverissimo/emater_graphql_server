@@ -1,0 +1,36 @@
+# Local cache database shared by the dev and hmg gateways (both read Demeter HMG).
+# Start with: docker compose --env-file .env.development -f docker-compose.postgres-dev.yaml up -d
+name: postgres_gateway_dev
+
+services:
+  postgres_gateway_dev:
+    container_name: postgres_gateway_dev
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${CACHE_DB_NAME:?set CACHE_DB_NAME in .env.development}
+      POSTGRES_USER: ${CACHE_DB_USER:?set CACHE_DB_USER in .env.development}
+      POSTGRES_PASSWORD: ${CACHE_DB_PASSWORD:?set CACHE_DB_PASSWORD in .env.development}
+    ports:
+      - 5552:5432
+    volumes:
+      - postgres_gateway_dev_data:/var/lib/postgresql
+    shm_size: 256mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - demeter_gateway_dev
+      - demeter_gateway_hmg
+
+networks:
+  demeter_gateway_dev:
+    external: true
+  demeter_gateway_hmg:
+    external: true
+
+volumes:
+  postgres_gateway_dev_data:
+    name: postgres_gateway_dev_data
