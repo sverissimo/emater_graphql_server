@@ -14,6 +14,7 @@ const CODE_TO_STATUS: Record<string, number> = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   INTERNAL_SERVER_ERROR: 500,
+  SERVICE_UNAVAILABLE: 503,
 };
 
 // REST-only error sink, mounted last on the /api router. Repositories throw

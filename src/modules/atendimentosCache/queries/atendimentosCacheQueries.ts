@@ -46,6 +46,13 @@ export const INSERT_REFRESH_INFO =
 export const ANALYZE_TABLES =
   "ANALYZE atendimento, atendimento_programa, atendimento_tecnico, atendimento_produtor, programa, unidade, tecnico, refresh_info";
 
+export const SELECT_REFRESH_INFO = `
+  SELECT to_char(snapshot_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "snapshotAt",
+         to_char(range_start, 'YYYY-MM-DD') AS "rangeStart",
+         to_char(range_end, 'YYYY-MM-DD') AS "rangeEnd",
+         snapshot_at < CURRENT_TIMESTAMP - INTERVAL '36 hours' AS stale
+  FROM refresh_info`;
+
 // unnest array type per column; key order is the insert column order.
 export const ARRAY_TYPES: {
   [T in AtendimentosCacheTable]: Record<keyof AtendimentosCacheRows[T], string>;

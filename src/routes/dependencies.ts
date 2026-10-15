@@ -4,6 +4,7 @@ import { UsuarioRepository } from "../modules/usuario/repository/UsuarioReposito
 import { LoginService } from "../auth/LoginService.js";
 import { createPrismaClient } from "../config/prismaClient.js";
 import { GestaoRepository } from "../modules/gestao/repository/GestaoRepository.js";
+import { AtendimentosCacheRepository } from "../modules/atendimentosCache/repository/AtendimentosCacheRepository.js";
 
 // Single Prisma client shared by every REST route group, wired once here.
 const prismaClient = createPrismaClient();
@@ -13,3 +14,5 @@ export const enumPropsRepository = new EnumPropsRepository(prismaClient);
 export const usuarioRepository = new UsuarioRepository(prismaClient);
 export const loginService = new LoginService(usuarioRepository);
 export const gestaoRepository = new GestaoRepository(prismaClient);
+
+export const atendimentosCacheRepository = new AtendimentosCacheRepository();

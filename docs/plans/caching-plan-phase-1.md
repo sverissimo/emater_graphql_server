@@ -19,7 +19,7 @@ This plan does not authorize agents to access databases, provision containers, d
 | Unique counts | `COUNT(DISTINCT …)` for the requested filters/grouping; never sum grouped distinct counts. |
 | Refresh | A full rebuild every night at 01:00 **America/Sao_Paulo**, triggered by host crontab, with no incremental updates (see [Out of scope](#out-of-scope)). |
 | Storage | Locally owned PostgreSQL with persistent storage. Reuse the existing `pg` driver; no Prisma upgrade or new runtime dependency is required. |
-| Environments | There is no Demeter dev. **Dev and hmg share one cache database** (`postgres_gateway_dev`, defined in `docker-compose.postgres-dev.yaml`), filled from Demeter HMG; it publishes host port 5552 for inspection with pgAdmin. **Only hmg and prod run the scheduled refresh.** Dev may run it manually for testing, never against Demeter PROD (see the safety line under the nightly job). Prod gets its own cache database, filled from Demeter prod, with no published port. |
+| Environments | There is no Demeter dev. **Dev and hmg share one cache database** (`postgres_gateway_dev`, defined in `docker-compose.postgres-dev.yaml`), filled from Demeter HMG; it publishes host port 5552 for inspection with pgAdmin. **Only hmg and prod run the scheduled refresh.** Dev may run it manually for testing, never against Demeter PROD (see the safety line under the nightly job). Prod gets its own cache database, filled from Demeter prod; its port is published on a single host address only (never `0.0.0.0`) and inspected through an SSH tunnel. |
 
 The job extracts bounded cursor batches, loads the `atendimentos_build` schema, adds indexes, and atomically replaces the `atendimentos` schema. Pre-publication failure preserves the last generation; a logging/cleanup failure after commit cannot undo publication. Budget disk for both generations, indexes, temporary files, and WAL; measure the first run.
 
@@ -273,7 +273,7 @@ Add `node:test` tests for pure functions only: date-range rollovers, H/G/unmatch
 
 ## Operations (user)
 
-1. Provision the cache databases. Dev/hmg: `docker compose --env-file .env.development -f docker-compose.postgres-dev.yaml up -d` (attached to `demeter_gateway_dev` and `demeter_gateway_hmg`, host port 5552). Prod: its own container on `demeter_gateway_prod`, no published port, `demeter_cache` database and owning role.
+1. Provision the cache databases. Dev/hmg: `docker compose --env-file .env.development -f docker-compose.postgres-dev.yaml up -d` (attached to `demeter_gateway_dev` and `demeter_gateway_hmg`, host port 5552). Prod: its own container on `demeter_gateway_prod`, with its port published on localhost only (`127.0.0.1:5553:5432`, never `0.0.0.0`) for SSH-tunnel inspection, plus the `demeter_cache` database and owning role.
 2. Set `CACHE_DATABASE_URL` privately: dev and hmg point at `postgres_gateway_dev`, prod at its own database. Manually rebuild hmg/prod images for `dist/jobs/`.
 3. Schedule at 01:00 **America/Sao_Paulo**, for hmg and prod only (never dev), redirecting output to `logs/<env>/`. The database advisory lock is the sole overlap guard; no `flock`. Record the actual cron lines in repo docs. User-run command examples:
 

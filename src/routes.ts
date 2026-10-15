@@ -4,6 +4,7 @@ import { atendimentoRoutes } from "./routes/atendimentoRoutes.js";
 import { authRoutes } from "./routes/authRoutes.js";
 import { restErrorHandler } from "./routes/routeHelpers.js";
 import { gestaoRoutes } from "./routes/gestaoRoutes.js";
+import { atendimentosCacheRoutes } from "./routes/atendimentosCacheRoutes.js";
 
 const router = Router();
 
@@ -11,6 +12,7 @@ router.use(enumRoutes);
 router.use(atendimentoRoutes);
 router.use(authRoutes);
 router.use(gestaoRoutes);
+router.use(atendimentosCacheRoutes);
 
 // REST-only error sink — must be last so it catches forwarded handler errors.
 router.use(restErrorHandler);

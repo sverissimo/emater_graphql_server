@@ -46,3 +46,54 @@ export type AtendimentosSourceRows = Omit<
 > & { atendimento: AtendimentoSourceRow };
 
 export type AtendimentosSourceTable = keyof AtendimentosSourceRows;
+
+export type AtendimentosAggregateDimension =
+  | "month"
+  | "programa"
+  | "regional"
+  | "municipio"
+  | "tecnico";
+
+export type AtendimentosAggregateMetric =
+  | "atendimentos"
+  | "produtores"
+  | "propriedades";
+
+export type AtendimentosAggregatesFilters = {
+  monthFrom?: string;
+  monthTo?: string;
+  programas: string[];
+  regionais: string[];
+  municipios: string[];
+  tecnicos: string[];
+};
+
+export type AtendimentosAggregatesRequest = {
+  groupBy: AtendimentosAggregateDimension[];
+  filters: AtendimentosAggregatesFilters;
+  orderBy?: AtendimentosAggregateMetric;
+  limit: number;
+};
+
+export type AtendimentosAggregateRow = {
+  month?: string;
+  codigoPrograma?: string | null;
+  programa?: string | null;
+  regionalId?: string | null;
+  regional?: string | null;
+  idUndEmpresa?: string | null;
+  municipio?: string | null;
+  idUsuario?: string | null;
+  tecnico?: string | null;
+  atendimentos: number;
+  produtores: number;
+  propriedades: number;
+};
+
+export type AtendimentosAggregatesResponse = {
+  snapshotAt: string;
+  stale: boolean;
+  dateRange: Pick<AtendimentosDateRange, "start" | "end">;
+  truncated: boolean;
+  rows: AtendimentosAggregateRow[];
+};
