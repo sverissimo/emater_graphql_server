@@ -57,6 +57,12 @@ This service is consumed by other apps on this host (PNAE backend and others). B
 ## Code style
 
 - **SRP with cohesion limits.** A 200-line cohesive repository beats six 30-line ones split by Prisma method. Equally, don't let a single file mix unrelated aggregates.
+- **Class files open with the class.** In repositories, services, and orchestrators, imports are followed by the class, so its methods are what a reader sees first. Don't stack SQL blocks, constant tables, type definitions, or helper functions above it. A long preamble means the code belongs in the class (a private method or static member) or in its own file. Reference layout: [modules/atendimentosCache/](src/modules/atendimentosCache/).
+  - Data SQL (table definitions, extraction/read queries, inserts, indexes) → exported string constants in the module's `queries/` folder. Transaction, lock, cursor, and schema-swap statements stay inline in the methods that sequence them.
+  - Constants → `<module>Constants.ts`, as in `modules/atendimento/atendimentoConstants.ts`.
+  - Shared types → the module's `types/` folder; helpers only the class uses → private methods; reusable logic → its own module.
+  - A one-line constant or small type used only by that class may stay.
+- **Prefer classes to loose functions.** Group related functions in a class, using static methods when stateless, so callers see where behavior lives (`ClassName.method()`) instead of importing scattered top-level functions. Exceptions: generic helpers in [shared/utils/](src/shared/utils/), framework-shaped exports (resolver factories, Express route modules), and entry points (`main.ts`, `src/jobs/*`). This applies to new code; don't refactor existing modules only to satisfy it.
 - **DRY only when it pays.** A one-liner used twice — leave inline. 3+ call sites or non-trivial logic → extract to the relevant module folder or [shared/utils/](src/shared/utils/).
 - **Apply KISS principle when creating plans, solutions, fixes or new code, balanced with code reliability.** Prefer simpler / easier to read/maintain solutions over complex fancy ones. That should be balanced with code reliability though (fancier approaches with big reliability gains are ok too)
 - **No comments by default.** Add a one-liner only when _why_ is non-obvious (hidden constraint, subtle invariant, workaround for a specific bug). Never narrate _what_ the code does.

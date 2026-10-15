@@ -168,7 +168,7 @@ Keep parameter arrays equal-length, preserve null property IDs, and await insert
 
 ## Read API
 
-`POST /api/gestao/atendimentosAgregados`, under existing service-token auth. Example request (all fields optional):
+`POST /api/atendimentosCache/aggregates`, under existing service-token auth. Example request (all fields optional):
 
 ```json
 {
@@ -252,12 +252,16 @@ Example values are illustrative; `dateRange.end` is inclusive. `snapshotAt` iden
 | File | Responsibility |
 | --- | --- |
 | New `src/config/cacheDbPool.ts` | Lazy `pg.Pool` from `CACHE_DATABASE_URL`, or null when unset; fixed serving timeout, finite connection timeout, and `search_path=atendimentos`. Gateway must start without cache config. |
-| New `src/modules/gestao/refresh/refreshAtendimentosCache.ts` | Date range, lookup capture, extraction/load/publication orchestration; database access stays in repositories. |
+| New `src/modules/atendimentosCache/refresh/AtendimentosCacheRefresh.ts` | Single-use class whose `run()` captures the date range and lookup and orchestrates extraction, load, and publication; database access stays in repositories. |
+| New `src/modules/atendimentosCache/refresh/AtendimentosCacheRules.ts` | Static, side-effect-free `dateRange()` and `unidadeLookup()` (H/G unit mapping); the only module the refresh tests (`AtendimentosCacheRules.test.ts`) import. |
+| New `src/modules/atendimentosCache/atendimentosCacheConstants.ts` | Job connection options, advisory-lock key, and fetch size. |
+| New `src/modules/atendimentosCache/queries/` | Data SQL kept out of repositories: `atendimentosSourceQueries.ts` (extraction and snapshot queries) and `atendimentosCacheQueries.ts` (build schema/tables, keys/indexes, `refresh_info`, `ANALYZE`, `unnest` column types); later read/aggregate SQL also goes here. Transaction, lock, cursor, and schema-swap statements stay in the repository methods that sequence them. |
 | New `src/jobs/refreshAtendimentosCache.ts` | Run, log, cleanup, exit code; never import Express or the REST dependencies composer. |
-| New `src/modules/gestao/repository/AtendimentosCacheRepository.ts` | Cohesive cache build/load/publish/read methods and query builder; dedicated job client versus serving pool. |
-| New `src/modules/gestao/repository/AtendimentosSourceRepository.ts` | Dedicated Demeter client, transaction, cursors, extraction SQL; reuse enum repository for lookup. |
-| New `src/modules/gestao/types/atendimentosCache.types.ts` | Shared request/response/date-range/batch contracts; single-file types stay local. |
-| `src/routes/gestaoRoutes.ts` | Thin aggregates handler plus validation; preserve temporary exploration routes. |
+| New `src/modules/atendimentosCache/repository/AtendimentosCacheRepository.ts` | Cohesive cache build/load/publish/read methods and query builder; dedicated job client versus serving pool. |
+| New `src/modules/atendimentosCache/repository/AtendimentosSourceRepository.ts` | Dedicated Demeter client, transaction, cursors, extraction SQL; reuse enum repository for lookup. |
+| New `src/modules/atendimentosCache/types/atendimentosCache.types.ts` | Shared request/response/date-range/batch contracts; single-file types stay local. |
+| `src/config/prismaClient.ts` | `createPrismaClient` accepts optional extra pool options (default unchanged), so the job's lookup client gets the refresh timeouts. |
+| New `src/routes/atendimentosCacheRoutes.ts` | Thin aggregates handler plus validation, mounted in `src/routes.ts` before `restErrorHandler`; the temporary `gestao` exploration routes stay unchanged. |
 | `src/routes/dependencies.ts` | Lazy `atendimentosCacheRepository` wiring; no eager cache requirement or source client. |
 | `src/routes/routeHelpers.ts` | Add `SERVICE_UNAVAILABLE: 503`. |
 | `.env.example` | Empty `CACHE_DATABASE_URL=` key only. |
