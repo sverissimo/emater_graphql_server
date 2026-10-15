@@ -33,3 +33,8 @@ out/
 # Prisma config — local-only (db pull / migrations); eagerly resolves
 # DATABASE_URL which isn't available during docker build
 prisma.config.ts
+
+# Private agent artifacts
+.agent-runs/
+**/__pycache__/
+**/*.py[cod]

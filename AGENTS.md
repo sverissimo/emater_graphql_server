@@ -1,6 +1,6 @@
 # AGENTS.md — emater_graphql_server
 
-> This file is the canonical agent-instructions document for this repo. `CLAUDE.md` at the repo root is a symlink to it, so Claude Code, Codex, Cursor, and any other AGENTS.md-aware tool all read the same content. Edit either path — they point to the same file.
+> This file is the canonical agent-instructions document for this repo. `.claude/CLAUDE.md` is a symlink to it, so Claude Code, Codex, Cursor, and any other AGENTS.md-aware tool all read the same content. Edit either path — they point to the same file.
 
 Apollo Server v5 + Express 5 GraphQL gateway (TypeScript, ESM, Prisma 7 + PostgreSQL). Runs alongside the other apps under [/home/apps/](../) and acts as the **shared gateway to the external Emater "Demeter" database**: every fullstack app on this host that needs Demeter data reaches it through this service. Also exposes a small REST surface at `/api/*` for callers that don't speak GraphQL (legacy login, enum lookups, atendimento writes).
 
@@ -74,6 +74,7 @@ Two flows, both handled by [auth/auth.ts](src/auth/auth.ts):
 
 ## Development environment
 
+- **Local agent tooling:** [docs/agent-workflow.md](docs/agent-workflow.md) describes the user-run implementation/review coordinator in [scripts/agent-loop.py](scripts/agent-loop.py) and its protected [manual review routines](docs/routines/review-and-tweak.md). Agents must not launch the coordinator or [finish-run.sh](scripts/finish-run.sh) without an explicit request authorizing their Git mutations. Node check sandboxes mount the host's root `node_modules` and `src/generated/prisma` read-only; agents receive neither mount. Dependency-manifest or Prisma-schema edits stop runs using those inputs before verification. Consumer audit mounts include `pnae`, `cmc`, `concurso_cafe`, `gestao_estrategica`, and `nginx`; audits requiring other roots need user input. Offline tooling tests: `python3 -B -m unittest discover -s tests -p 'test_*.py'`. Run artifacts under `.agent-runs/` are private, ignored by Git, and excluded from Docker contexts. Checks receive temporary scratch directories instead of agent reports.
 - The dev container uses a `tail -f /dev/null` image and executes the dev process via the compose `command:` (`npm run start:dev` → `tsx watch src/main.ts`). The repo is host-volume-mounted into the container at `/home/node/app`, so file changes hot-reload. `node_modules` is **the host's** `node_modules` — you must `npm install` on the host before starting the container.
 - All environments' `node` user is remapped to UID/GID **1003** to match the host `apps` user; don't change that without coordinating filesystem permissions. The Dockerfiles hardcode these IDs rather than accepting build arguments.
 - Hmg and prod share `Dockerfile.prod`, a real multi-stage build: `deps` (`npm ci`), `build` (`npx prisma generate` + `npm run build` + copy `*.graphql` into `dist/`), `prod-deps` (`npm ci` + `npx prisma generate` + `npm prune --omit=dev`), `runner` (Node slim, copies `dist/` and pruned `node_modules`, runs `node dist/main.js`). Hmg has no source mount or hot reload; source changes require a manual image rebuild. Container builds and lifecycle changes are **never** run by an agent.
@@ -111,4 +112,4 @@ Two flows, both handled by [auth/auth.ts](src/auth/auth.ts):
   check the **context7 MCP** for current docs before guessing. If context7 is
   unreachable, **ask permission to fetch updated docs from the web** — don't rely
   on possibly-stale recall.
-- After any structural change (new module, new route, new env var, schema change), update this AGENTS.md (a.k.a. `CLAUDE.md` — same file via symlink) in the same change so it doesn't drift.
+- After any structural change (new module, new route, new env var, schema change), update this AGENTS.md (a.k.a. `.claude/CLAUDE.md` — same file via symlink) in the same change so it doesn't drift.

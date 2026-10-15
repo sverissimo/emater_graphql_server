@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "reviewedSha", "findings", "question", "scores", "suggestions"],
+  "properties": {
+    "verdict": { "type": "string", "enum": ["approve", "changes", "needs_user"] },
+    "reviewedSha": { "type": "string", "pattern": "^[0-9a-f]{40,64}$" },
+    "findings": {
+      "type": "array",
+      "description": "Required fixes; each states the evidence and concrete change.",
+      "items": { "type": "string" }
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quality", "kiss"],
+      "properties": {
+        "quality": { "type": "number" },
+        "kiss": { "type": "number" }
+      }
+    },
+    "suggestions": {
+      "type": "array",
+      "description": "Optional improvements; use an empty array when there are none.",
+      "items": { "type": "string" }
+    },
+    "question": { "type": ["string", "null"] }
+  }
+}

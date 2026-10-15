@@ -22,3 +22,8 @@ node_modules
 database/**/*
 .vscode/settings.json
 undefined
+
+# Local agent runs and Python bytecode
+/.agent-runs/
+__pycache__/
+*.py[cod]

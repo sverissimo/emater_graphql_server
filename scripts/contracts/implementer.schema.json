@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "responses", "question"],
+  "properties": {
+    "status": { "type": "string", "enum": ["done", "needs_user"] },
+    "responses": { "type": "array", "items": { "type": "string" } },
+    "question": { "type": ["string", "null"] }
+  }
+}
