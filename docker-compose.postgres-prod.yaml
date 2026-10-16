@@ -1,0 +1,34 @@
+# Local cache database for the prod gateways (reads Demeter PROD through the nightly job).
+# Start with: docker compose --env-file .env.production -f docker-compose.postgres-prod.yaml up -d
+name: postgres_gateway_prod
+
+services:
+  postgres_gateway_prod:
+    container_name: postgres_gateway_prod
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${CACHE_DB_NAME:?set CACHE_DB_NAME in .env.production}
+      POSTGRES_USER: ${CACHE_DB_USER:?set CACHE_DB_USER in .env.production}
+      POSTGRES_PASSWORD: ${CACHE_DB_PASSWORD:?set CACHE_DB_PASSWORD in .env.production}
+    # Localhost only: inspect it through an SSH tunnel, never from the network.
+    ports:
+      - "127.0.0.1:5553:5432"
+    volumes:
+      - postgres_gateway_prod_data:/var/lib/postgresql
+    shm_size: 256mb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - demeter_gateway_prod
+
+networks:
+  demeter_gateway_prod:
+    external: true
+
+volumes:
+  postgres_gateway_prod_data:
+    name: postgres_gateway_prod_data

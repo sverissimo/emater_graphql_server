@@ -17,7 +17,7 @@ This plan does not authorize agents to access databases, provision containers, d
 | Técnico | `at_atendimento_usuario`, covering every técnico linked to the atendimento. For this project, usuario = técnico = extensionista. Confirm this with the [pre-check](#pre-implementation-check-user-run) first. |
 | Produtor | `at_cli_atend_prop`, keeping only `id_at_atendimento`, `id_pessoa_demeter` and `id_pl_propriedade`. Every linked person counts. |
 | Unique counts | `COUNT(DISTINCT …)` for the requested filters/grouping; never sum grouped distinct counts. |
-| Refresh | A full rebuild every night at 01:00 **America/Sao_Paulo**, triggered by host crontab, with no incremental updates (see [Out of scope](#out-of-scope)). |
+| Refresh | A full rebuild every night at 01:00 **America/Sao_Paulo**, triggered by the [in-app scheduler](cache-jobs-scheduler-task.md), with no incremental updates (see [Out of scope](#out-of-scope)). |
 | Storage | Locally owned PostgreSQL with persistent storage. Reuse the existing `pg` driver; no Prisma upgrade or new runtime dependency is required. |
 | Environments | There is no Demeter dev. **Dev and hmg share one cache database** (`postgres_gateway_dev`, defined in `docker-compose.postgres-dev.yaml`), filled from Demeter HMG; it publishes host port 5552 for inspection with pgAdmin. **Only hmg and prod run the scheduled refresh.** Dev may run it manually for testing, never against Demeter PROD (see the safety line under the nightly job). Prod gets its own cache database, filled from Demeter prod; its port is published on a single host address only (never `0.0.0.0`) and inspected through an SSH tunnel. |
 
@@ -273,13 +273,10 @@ Add `node:test` tests for pure functions only: date-range rollovers, H/G/unmatch
 
 ## Operations (user)
 
-1. Provision the cache databases. Dev/hmg: `docker compose --env-file .env.development -f docker-compose.postgres-dev.yaml up -d` (attached to `demeter_gateway_dev` and `demeter_gateway_hmg`, host port 5552). Prod: its own container on `demeter_gateway_prod`, with its port published on localhost only (`127.0.0.1:5553:5432`, never `0.0.0.0`) for SSH-tunnel inspection, plus the `demeter_cache` database and owning role.
-2. Set `CACHE_DATABASE_URL` privately: dev and hmg point at `postgres_gateway_dev`, prod at its own database. Manually rebuild hmg/prod images for `dist/jobs/`.
-3. Schedule at 01:00 **America/Sao_Paulo**, for hmg and prod only (never dev), redirecting output to `logs/<env>/`. The database advisory lock is the sole overlap guard; no `flock`. Record the actual cron lines in repo docs. User-run command examples:
-
-   - hmg: `docker exec graphql_server_hmg node dist/jobs/refreshAtendimentosCache.js`
-   - prod (any running replica): `docker exec "$(docker ps -q -f name=graphql_server_prod -f status=running | head -n 1)" node dist/jobs/refreshAtendimentosCache.js`
-4. Confirm container names with `docker ps`. Cron's timezone must be configured explicitly using host-supported facilities. The gateway containers currently have restart policy `no` (checked 2026-10-14), so a crashed container stays down. The prod line therefore targets whichever replica is running. A failed run leaves the previous generation serving, and `stale` surfaces repeated failures.
+1. Provision the cache databases. Dev/hmg: `docker compose --env-file .env.development -f docker-compose.postgres-dev.yaml up -d` (attached to `demeter_gateway_dev` and `demeter_gateway_hmg`, host port 5552). Prod: `docker compose --env-file .env.production -f docker-compose.postgres-prod.yaml up -d` (container `postgres_gateway_prod` on `demeter_gateway_prod`, port published on localhost only as `127.0.0.1:5553:5432` for SSH-tunnel inspection, never `0.0.0.0`; database and owning role from `CACHE_DB_*`).
+2. Set `CACHE_DATABASE_URL` privately: dev and hmg point at `postgres_gateway_dev`, prod at `postgres_gateway_prod:5432`. Manually rebuild hmg/prod images for `dist/jobs/`.
+3. Enable the [in-app scheduler](cache-jobs-scheduler-task.md) after its implementation: set `CACHE_JOBS_ENABLED=true` in hmg/prod env files only, then manually rebuild/deploy. No host cron was installed; do not add cron lines or output redirects. The existing advisory lock remains the sole overlap guard.
+4. Follow that task's rollout checks: verify scheduler registration at startup and job outcomes after 01:00 America/Sao_Paulo in the normal gateway logs. Missed runs are not replayed; the previous generation keeps serving and `stale` surfaces prolonged failure. Manual refresh entry points remain available.
 5. Run manually first: inspect table counts, unmatched units, duration, peak memory, source temporary files, and disk (`SELECT pg_size_pretty(pg_database_size('demeter_cache'));`). Measure during the build with both generations present. Adjust budgets/timeouts before scheduling. The job shares container resources with HTTP traffic; if contention occurs, stop scheduling and adjust its execution context manually.
 
 ## Pre-implementation check (user-run)
