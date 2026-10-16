@@ -57,6 +57,13 @@ export class AtendimentosCacheRules {
     };
   }
 
+  static refusesProdSource(env: NodeJS.ProcessEnv): boolean {
+    return (
+      env.NODE_ENV !== "production" &&
+      (env.DATABASE_URL ?? "").toUpperCase().includes("PROD")
+    );
+  }
+
   private static pad(value: number): string {
     return String(value).padStart(2, "0");
   }

@@ -103,3 +103,44 @@ describe("AtendimentosCacheRules.unidadeLookup", () => {
     assert.equal(empty.regionalIdOf("H0001"), null);
   });
 });
+
+describe("AtendimentosCacheRules.refusesProdSource", () => {
+  const prodUrls = [
+    "postgres://reader@db.example/demeter_prod",
+    "postgres://reader@PROD.example/demeter",
+  ];
+
+  test("refuses any non-production environment pointed at a PROD source", () => {
+    for (const NODE_ENV of [undefined, "", "development", "Production"]) {
+      for (const DATABASE_URL of prodUrls) {
+        assert.equal(
+          AtendimentosCacheRules.refusesProdSource({ NODE_ENV, DATABASE_URL }),
+          true,
+        );
+      }
+    }
+  });
+
+  test("allows production pointed at a PROD source", () => {
+    for (const DATABASE_URL of prodUrls) {
+      assert.equal(
+        AtendimentosCacheRules.refusesProdSource({ NODE_ENV: "production", DATABASE_URL }),
+        false,
+      );
+    }
+  });
+
+  test("allows non-production with a non-PROD or missing source", () => {
+    assert.equal(
+      AtendimentosCacheRules.refusesProdSource({
+        NODE_ENV: "development",
+        DATABASE_URL: "postgres://reader@db.example/demeter_hmg",
+      }),
+      false,
+    );
+    assert.equal(
+      AtendimentosCacheRules.refusesProdSource({ NODE_ENV: "development" }),
+      false,
+    );
+  });
+});

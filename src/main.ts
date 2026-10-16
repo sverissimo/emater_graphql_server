@@ -7,6 +7,7 @@ import { typeDefs } from "./schema/typedefs.js";
 import { resolvers } from "./schema/resolvers.js";
 import { app } from "./app.js";
 import { logger } from "./shared/utils/logger.js";
+import { CacheJobsScheduler } from "./jobs/CacheJobsScheduler.js";
 import type { RequestHandler } from "express";
 import { expressMiddleware } from "@as-integrations/express5";
 
@@ -30,6 +31,7 @@ const apolloMiddleware: RequestHandler = expressMiddleware(server, {
 
 app.use(apolloMiddleware);
 
-httpServer.listen(PORT, () =>
-  logger.info(`🚀 Server listening on port ${PORT}...`)
-);
+httpServer.listen(PORT, () => {
+  logger.info(`🚀 Server listening on port ${PORT}...`);
+  CacheJobsScheduler.startIfEnabled();
+});

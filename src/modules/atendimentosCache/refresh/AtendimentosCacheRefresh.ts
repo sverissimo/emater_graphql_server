@@ -1,5 +1,7 @@
 import { createPrismaClient } from "../../../config/prismaClient.js";
+import type { PrismaClient } from "../../../generated/prisma/client.js";
 import { EnumPropsRepository } from "../../../repositories/EnumPropsRepository.js";
+import type { MunicipioEmater } from "../../../repositories/types/MunicipioEmater.js";
 import { logger } from "../../../shared/utils/logger.js";
 import { REFRESH_CONNECTION_OPTIONS } from "../atendimentosCacheConstants.js";
 import { AtendimentosCacheRepository } from "../repository/AtendimentosCacheRepository.js";
@@ -16,12 +18,17 @@ export class AtendimentosCacheRefresh {
     "tecnico",
   ] as const;
 
-  private readonly lookupPrisma = createPrismaClient(REFRESH_CONNECTION_OPTIONS);
-  private readonly enumProps = new EnumPropsRepository(this.lookupPrisma);
   private readonly source = new AtendimentosSourceRepository();
   private readonly cache = new AtendimentosCacheRepository();
+  private lookupPrisma: PrismaClient | null = null;
 
   async run(): Promise<void> {
+    if (AtendimentosCacheRules.refusesProdSource(process.env)) {
+      throw new Error(
+        "Refusing to refresh: non-production environment pointed at Demeter PROD.",
+      );
+    }
+
     const startedAt = Date.now();
     let outcome = "failed";
     let cleanedUp = false;
@@ -46,9 +53,8 @@ export class AtendimentosCacheRefresh {
     }
 
     const range = AtendimentosCacheRules.dateRange(new Date());
-    const lookup = AtendimentosCacheRules.unidadeLookup(
-      await this.enumProps.getMunicipiosEmater(),
-    );
+    const municipios = await this.loadMunicipios();
+    const lookup = AtendimentosCacheRules.unidadeLookup(municipios);
     await this.cache.prepareBuild();
 
     const counts: Record<string, number> = {};
@@ -90,12 +96,17 @@ export class AtendimentosCacheRefresh {
     return "published";
   }
 
+  private loadMunicipios(): Promise<MunicipioEmater[]> {
+    this.lookupPrisma = createPrismaClient(REFRESH_CONNECTION_OPTIONS);
+    return new EnumPropsRepository(this.lookupPrisma).getMunicipiosEmater();
+  }
+
   private async closeAll(): Promise<boolean> {
     let cleanedUp = true;
     for (const close of [
       () => this.source.close(),
       () => this.cache.closeJobClient(),
-      () => this.lookupPrisma.$disconnect(),
+      () => this.lookupPrisma?.$disconnect(),
     ]) {
       try {
         await close();
